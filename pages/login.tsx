@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Logo from '@/components/logo'
 
 export default function Login() {
   return (
@@ -10,11 +11,7 @@ export default function Login() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
           {/* Logo e título */}
-          <div className="mb-6 text-center">
-            <h1 className="text-4xl">🌿</h1>
-            <h1 className="text-4xl font-bold text-blue-500">LeMori</h1>
-            <p className="text-gray-500 italic text-sm">Lembrança e Memória</p>
-          </div>
+          <Logo />
           {/* Formulário */}
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             <div>
