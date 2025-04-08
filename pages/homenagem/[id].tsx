@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useState } from 'react'
 import { Share2Icon } from 'lucide-react'
+import Footer from '@/components/Footer'
 
 export default function HomenagemPage() {
   const [abaAtiva, setAbaAtiva] = useState<'sobre' | 'fotos' | 'musica'>('sobre')
@@ -12,10 +13,9 @@ export default function HomenagemPage() {
         <title>Homenagem | LeMori</title>
       </Head>
       
-      <div className="min-h-screen bg-gray-100 text-gray-800">
+      <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
         {/* Header */}
         <header className="mb-6 text-center">
-          {/* Logo e título */}
           <h1 className="text-4xl">🌿</h1>
           <h1 className="text-4xl font-bold text-blue-500">LeMori</h1>
           <p className="text-gray-500 italic text-sm">Lembrança e Memória</p>
@@ -112,12 +112,8 @@ export default function HomenagemPage() {
             </div>
           )}
         </div>
-
-        {/* Rodapé */}
-        <footer className="mt-12 py-6 bg-indigo-300 text-center text-white text-sm">
-          © 2025 Equipe de LeMori. Todos os direitos reservados.
-        </footer>
       </div>
+      <Footer />
     </>
   )
 }

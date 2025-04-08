@@ -1,5 +1,7 @@
 import Head from 'next/head'
 import { Menu } from '@headlessui/react'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import {
   EllipsisVerticalIcon,
   PencilIcon,
@@ -22,18 +24,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Head>
-        <title>Dashboard | LeMori</title>
-      </Head>
-        {/* Logo e título */}
-        <div className="justify-between bg-gradient-to-br from-purple-100 to-purple-300 px-4">
-          <div className="text-center">
-            <h1 className="text-4xl">🌿</h1>
-            <h1 className="text-4xl font-bold text-blue-500">LeMori</h1>
-            <p className="text-gray-500 italic text-sm">Lembrança e Memória</p>
-          </div>
-        </div>
-
+      <Header />
       <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
           <h1 className="text-2xl font-bold text-blue-600 mb-4">Bem-vindo, {user.nome}</h1>
@@ -118,6 +109,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   )
 }
