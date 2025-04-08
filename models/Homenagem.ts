@@ -1,14 +1,22 @@
-import mongoose, { Schema, models } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose'
 
-const HomenagemSchema = new Schema({
+export interface IHomenagem extends Document {
+  nomeHomenageado: string
+  dataNascimento?: Date
+  dataFalecimento?: Date
+  biografia?: string
+  fotos?: string[]
+  musica?: string
+}
+
+const HomenagemSchema = new Schema<IHomenagem>({
   nomeHomenageado: { type: String, required: true },
-  dataNascimento: { type: Date, required: true },
-  dataFalecimento: { type: Date, required: true },
-  biografia: { type: String },
-  imagemURL: { type: String },
-  criadoPor: { type: String, required: true }, // e-mail ou ID do usuário
-}, {
-  timestamps: true // cria createdAt e updatedAt automaticamente
-});
+  dataNascimento: Date,
+  dataFalecimento: Date,
+  biografia: String,
+  fotos: [String],
+  musica: String,
+})
 
-export const Homenagem = models.Homenagem || mongoose.model('Homenagem', HomenagemSchema);
+const Homenagem = mongoose.models.Homenagem || mongoose.model<IHomenagem>('Homenagem', HomenagemSchema)
+export default Homenagem

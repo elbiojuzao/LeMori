@@ -1,18 +1,32 @@
 import Head from 'next/head'
 import Image from 'next/image'
-import { useState } from 'react'
-import { Share2Icon } from 'lucide-react'
+import { GetServerSideProps } from 'next'
+import mongooseConnect from '@/lib/mongoose'
+import Homenagem, { IHomenagem } from '@/models/Homenagem'
 import Footer from '@/components/Footer'
+import { useState } from 'react'
 
-export default function HomenagemPage() {
+interface HomenagemProps {
+  homenagem: {
+    _id: string
+    nomeHomenageado: string
+    biografia?: string
+    dataNascimento?: string | null
+    dataFalecimento?: string | null
+    fotos?: string[]
+    musica?: string
+  }
+}
+
+export default function HomenagemPage({ homenagem }: HomenagemProps) {
   const [abaAtiva, setAbaAtiva] = useState<'sobre' | 'fotos' | 'musica'>('sobre')
 
   return (
     <>
       <Head>
-        <title>Homenagem | LeMori</title>
+        <title>{homenagem.nomeHomenageado} | LeMori</title>
       </Head>
-      
+
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
         {/* Header */}
         <header className="mb-6 text-center">
@@ -26,7 +40,7 @@ export default function HomenagemPage() {
           <div className="max-w-3xl mx-auto flex justify-between items-start">
             <div className="flex gap-4 items-center">
               <Image
-                src="/img/avatar.png"
+                src={homenagem.fotos?.[0] || '/img/avatar.png'}
                 alt="Avatar"
                 width={100}
                 height={100}
@@ -34,66 +48,47 @@ export default function HomenagemPage() {
               />
               <div>
                 <p className="text-sm text-gray-500">Em lembrança a</p>
-                <h2 className="text-3xl font-bold">Marcos Junior</h2>
+                <h2 className="text-3xl font-bold">{homenagem.nomeHomenageado}</h2>
                 <div className="flex items-center text-gray-600 mt-1">
                   <span className="mr-2">†</span>
-                  <span>06/04/2024</span>
+                  <span>{homenagem.dataFalecimento?.split('T')[0]}</span>
                 </div>
               </div>
             </div>
-
-            <button className="p-2 rounded-full hover:bg-gray-200 transition">
-              <Share2Icon size={20} />
-            </button>
           </div>
         </section>
 
         {/* Tabs */}
         <div className="flex justify-center space-x-2 mt-4">
-          <button
-            className={`px-4 py-2 rounded-md ${
-              abaAtiva === 'sobre' ? 'bg-indigo-600 text-white' : 'bg-gray-200'
-            }`}
-            onClick={() => setAbaAtiva('sobre')}
-          >
-            Sobre
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md ${
-              abaAtiva === 'fotos' ? 'bg-indigo-600 text-white' : 'bg-gray-200'
-            }`}
-            onClick={() => setAbaAtiva('fotos')}
-          >
-            Fotos
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md ${
-              abaAtiva === 'musica' ? 'bg-indigo-600 text-white' : 'bg-gray-200'
-            }`}
-            onClick={() => setAbaAtiva('musica')}
-          >
-            Música
-          </button>
+          {['sobre', 'fotos', 'musica'].map((aba) => (
+            <button
+              key={aba}
+              className={`px-4 py-2 rounded-md ${
+                abaAtiva === aba ? 'bg-indigo-600 text-white' : 'bg-gray-200'
+              }`}
+              onClick={() => setAbaAtiva(aba as any)}
+            >
+              {aba.charAt(0).toUpperCase() + aba.slice(1)}
+            </button>
+          ))}
         </div>
 
         {/* Conteúdo das abas */}
         <div className="max-w-3xl mx-auto mt-6 px-4">
           {abaAtiva === 'sobre' && (
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-bold mb-2">Marcos Junior</h3>
-              <p>
-                Marcos Junior foi um cunhado gente fina bebum exemplar da nossa família. Com paixão por cachassa e um coração generoso, ele marcou todos que o conheceram.
-              </p>
+              <h3 className="text-xl font-bold mb-2">{homenagem.nomeHomenageado}</h3>
+              <p>{homenagem.biografia}</p>
             </div>
           )}
 
-          {abaAtiva === 'fotos' && (
+          {abaAtiva === 'fotos' && homenagem.fotos && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5].map((num) => (
+              {homenagem.fotos.map((foto, idx) => (
                 <Image
-                  key={num}
-                  src={`/img/${num}.jpg`}
-                  alt={`Foto ${num}`}
+                  key={idx}
+                  src={foto}
+                  alt={`Foto ${idx + 1}`}
                   width={300}
                   height={200}
                   className="rounded-lg object-cover w-full h-auto"
@@ -104,9 +99,9 @@ export default function HomenagemPage() {
 
           {abaAtiva === 'musica' && (
             <div className="bg-white p-6 rounded-lg shadow">
-              <p className="mb-4">"Essa música representa a memória de Marcos Junior."</p>
+              <p className="mb-4">"Essa música representa a memória de {homenagem.nomeHomenageado}."</p>
               <audio controls className="w-full">
-                <source src="/musica.mp3" type="audio/mpeg" />
+                <source src={homenagem.musica || '/musica.mp3'} type="audio/mpeg" />
                 Seu navegador não suporta o player de áudio.
               </audio>
             </div>
@@ -116,4 +111,35 @@ export default function HomenagemPage() {
       <Footer />
     </>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params!
+
+  await mongooseConnect()
+  const homenagemDoc = await Homenagem.findById(id).lean<IHomenagem & { _id: string }>()
+
+  if (!homenagemDoc) {
+    return { notFound: true }
+  }
+
+  const homenagem = {
+    _id: homenagemDoc._id.toString(),
+    nomeHomenageado: homenagemDoc.nomeHomenageado,
+    biografia: homenagemDoc.biografia || '',
+    fotos: homenagemDoc.fotos || [],
+    musica: homenagemDoc.musica || '',
+    dataNascimento: homenagemDoc.dataNascimento
+      ? new Date(homenagemDoc.dataNascimento).toISOString()
+      : null,
+    dataFalecimento: homenagemDoc.dataFalecimento
+      ? new Date(homenagemDoc.dataFalecimento).toISOString()
+      : null,
+  }
+
+  return {
+    props: {
+      homenagem,
+    },
+  }
 }
