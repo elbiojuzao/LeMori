@@ -1,16 +1,17 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import Logo from '@/components/logo'
 
 export default function Success() {
   return (
     <>
       <Head>
-        <title>Cadastro realizado | LeMori</title>
+        <title>Cadastro realizado</title>
       </Head>
 
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4 py-8">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 text-center">
-          <h1 className="text-4xl mb-4">🌿</h1>
+          <div className='p-8'><Logo /></div>
           <h2 className="text-2xl font-bold text-green-600 mb-2">Cadastro realizado com sucesso!</h2>
           <p className="text-gray-600 mb-6">Sua conta foi criada. Agora você pode acessar o sistema.</p>
 
