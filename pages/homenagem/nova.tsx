@@ -3,8 +3,9 @@ import { useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import axios from 'axios'
+import withAuth from '@/lib/withAuth'
 
-export default function NovaHomenagem() {
+function NovaHomenagem() {
   const [nome, setNome] = useState('')
   const [nascimento, setNascimento] = useState('')
   const [falecimento, setFalecimento] = useState('')
@@ -166,3 +167,5 @@ export default function NovaHomenagem() {
     </>
   )
 }
+
+export default withAuth(NovaHomenagem)

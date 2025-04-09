@@ -9,8 +9,9 @@ import {
   StarIcon,
 } from '@heroicons/react/24/solid'
 import { useAuth } from '@/hooks/useAuth'
+import withAuth from '@/lib/withAuth'
 
-export default function Dashboard() {
+function Dashboard() {
   useAuth()
   // Simulação de dados do usuário e homenagens
   const user = {
@@ -114,3 +115,4 @@ export default function Dashboard() {
     </>
   )
 }
+export default withAuth(Dashboard)
