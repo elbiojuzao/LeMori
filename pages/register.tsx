@@ -27,21 +27,42 @@ export default function Register() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+  
     if (form.senha !== form.confirmarSenha) {
       alert('As senhas não coincidem')
       return
     }
+  
     if (!form.termos) {
       alert('Você deve aceitar os termos de adesão')
       return
     }
-
-    // Aqui você pode chamar a API de cadastro
-
-    console.log('Dados do formulário:', form)
-    router.push('/sucesso')
+  
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: form.nome,
+          email: form.email,
+          senha: form.senha,
+        }),
+      })
+  
+      if (res.ok) {
+        router.push('/sucesso')
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Erro ao registrar usuário.')
+      }
+    } catch (err) {
+      console.error('Erro ao registrar:', err)
+      alert('Erro de conexão. Tente novamente.')
+    }
   }
 
   return (
