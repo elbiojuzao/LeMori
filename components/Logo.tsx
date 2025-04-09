@@ -1,9 +1,10 @@
+import Image from 'next/image'
+import Link from 'next/link'
+
 export default function Logo() {
   return (
-      <div className="text-center">
-        <h1 className="text-4xl">🌿</h1>
-        <h1 className="text-4xl font-bold text-blue-400">LeMori</h1>
-        <p className="text-gray-500 italic text-sm">Lembrança e Memória</p>
-      </div>
+    <Link href="/">
+      <Image src="/img/Lm_LeMori.png" alt="LeMori" width={120} height={40} />
+    </Link>
   )
 }
