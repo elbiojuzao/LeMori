@@ -8,9 +8,10 @@ import {
   TrashIcon,
   StarIcon,
 } from '@heroicons/react/24/solid'
-
+import { useAuth } from '@/hooks/useAuth'
 
 export default function Dashboard() {
+  useAuth()
   // Simulação de dados do usuário e homenagens
   const user = {
     nome: 'João da Silva',
