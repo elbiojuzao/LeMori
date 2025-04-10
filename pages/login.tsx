@@ -2,7 +2,6 @@ import Head from 'next/head'
 import Logo from '@/components/Logo'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
-import { login } from '@/lib/auth'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -15,7 +14,22 @@ export default function Login() {
     setErro('')
 
     try {
-      await login(email, senha)
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro no login')
+      }
+
+      // ✅ Salva o token no localStorage
+      localStorage.setItem('token', data.token)
+
+      // ✅ Redireciona para o dashboard
       router.push('/dashboard')
     } catch (err: any) {
       setErro(err.message)

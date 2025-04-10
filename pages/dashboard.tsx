@@ -16,45 +16,52 @@ function Dashboard() {
   const [homenagens, setHomenagens] = useState<any[]>([])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return // Impede execução no SSR
+  
     const fetchData = async () => {
       const token = localStorage.getItem('token')
-      if (!token) return
-
+      if (!token) {
+        console.warn('Token não encontrado no localStorage')
+        return
+      }
+  
       try {
-        // Buscar dados do usuário
         const resUser = await fetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         })
         const userData = await resUser.json()
-        
+  
         if (!userData._id) {
           console.error('ID do usuário ausente')
           return
         }
-
+  
         setUser(userData)
-
-        // Buscar homenagens criadas por esse usuário
+  
         const resHomenagens = await fetch(`/api/homenagens/user/${userData._id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         const homenagensData = await resHomenagens.json()
+  
         setHomenagens(homenagensData)
       } catch (err) {
         console.error('Erro ao buscar dados do dashboard:', err)
       }
     }
-
+  
     fetchData()
   }, [])
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Carregando dashboard...
+      <div className="min-h-screen flex items-center justify-center text-gray-600 flex-col">
+        <p>Carregando dashboard...</p>
+        <p className="text-sm text-red-500 mt-4">
+          Se ficar travado aqui, verifique o token ou a resposta da API `/api/auth/me`.
+        </p>
       </div>
     )
-  }
+  }  
 
   return (
     <>

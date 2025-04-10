@@ -1,32 +1,57 @@
-import React, { useEffect, useState, ComponentType, JSX } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import type { ComponentType, JSX } from 'react'
 
-function withAuth<P extends JSX.IntrinsicAttributes>(WrappedComponent: ComponentType<P>) {
-  const AuthenticatedComponent = (props: P) => {
+export default function withAuth<P extends JSX.IntrinsicAttributes>(
+  WrappedComponent: ComponentType<P>
+) {
+  return function AuthComponent(props: P) {
     const router = useRouter()
-    const [isLoading, setIsLoading] = useState(true)
+    const [loading, setLoading] = useState(true)
+    const [authorized, setAuthorized] = useState(false)
 
     useEffect(() => {
       const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/login')
-      } else {
-        setIsLoading(false)
+
+      const verificarAutenticacao = async () => {
+        if (!token) {
+          router.push('/login')
+          return
+        }
+
+        try {
+          const res = await fetch('/api/auth/me', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+
+          if (res.ok) {
+            setAuthorized(true)
+          } else {
+            localStorage.removeItem('token')
+            router.push('/login')
+          }
+        } catch (err) {
+          console.error('Erro na verificação de autenticação:', err)
+          localStorage.removeItem('token')
+          router.push('/login')
+        } finally {
+          setLoading(false)
+        }
       }
+
+      verificarAutenticacao()
     }, [router])
 
-    if (isLoading) {
+    if (loading) {
       return (
-        <div className="p-4 text-center text-gray-600">
-          Verificando autenticação...
+        <div className="min-h-screen flex items-center justify-center text-gray-500">
+          Verificando acesso...
         </div>
       )
     }
 
-    return <WrappedComponent {...props} />
+    return authorized ? <WrappedComponent {...props} /> : null
   }
-
-  return AuthenticatedComponent
 }
-
-export default withAuth
