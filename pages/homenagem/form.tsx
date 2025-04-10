@@ -67,7 +67,7 @@ function FormHomenagem() {
     e.preventDefault()
     const token = localStorage.getItem('token')
     if (!token) return
-
+  
     try {
       const payload = {
         nomeHomenageado: nome,
@@ -75,24 +75,22 @@ function FormHomenagem() {
         dataFalecimento: falecimento,
         biografia: biografia,
         musica: musica,
-      }      
-
+      }
+  
       if (modoEdicao) {
         await axios.put(`/api/homenagens/${id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         })
         setMensagemSucesso('Homenagem atualizada com sucesso!')
       } else {
-        console.log('Payload enviado:', payload, {
+        await axios.post('/api/homenagens', payload, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         })
         setMensagemSucesso('Homenagem criada com sucesso!')
-      }
-
-      if (!modoEdicao) {
+  
         setNome('')
         setNascimento('')
         setFalecimento('')
@@ -103,7 +101,7 @@ function FormHomenagem() {
     } catch (error) {
       console.error('Erro ao salvar homenagem:', error)
     }
-  }
+  }  
 
   return (
     <>
