@@ -55,11 +55,11 @@ function Dashboard() {
   }, [])
 
   const handleCriarNova = () => {
-    router.push('/homenagem/form')
+    router.push('/homenagens/form')
   }
 
   const handleEditar = (id: string) => {
-    router.push(`/homenagem/form?id=${id}`)
+    router.push(`/homenagens/form?id=${id}`)
   }
 
   if (!user) {

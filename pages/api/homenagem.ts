@@ -1,4 +1,3 @@
-// pages/api/homenagem.ts
 import { NextApiRequest, NextApiResponse } from 'next'
 import Homenagem from '@/models/Homenagem'
 import mongooseConnect from '@/lib/mongoose'
