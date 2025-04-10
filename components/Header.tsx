@@ -23,7 +23,7 @@ export default function Header() {
       <Logo />
       <nav className="space-x-4">
         <Link href="/dashboard" className="text-gray-600 hover:text-blue-500">Início</Link>
-        <Link href="/homenagem/nova" className="text-gray-600 hover:text-blue-500">Nova Homenagem</Link>
+        <Link href="/homenagem/form" className="text-gray-600 hover:text-blue-500">Nova Homenagem</Link>
         {autenticado ? (
           <button onClick={handleLogout} className="text-gray-600 hover:text-blue-500">
             Sair

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, Document, models } from 'mongoose'
 
 export interface IHomenagem extends Document {
   nomeHomenageado: string
@@ -18,5 +18,7 @@ const HomenagemSchema = new Schema<IHomenagem>({
   musica: String,
 })
 
-const Homenagem = mongoose.models.Homenagem || mongoose.model<IHomenagem>('Homenagem', HomenagemSchema)
+const Homenagem =
+  models.Homenagem || mongoose.model<IHomenagem>('Homenagem', HomenagemSchema)
+
 export default Homenagem

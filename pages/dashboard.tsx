@@ -10,47 +10,57 @@ import {
 } from '@heroicons/react/24/solid'
 import { useEffect, useState } from 'react'
 import withAuth from '@/lib/withAuth'
+import { useRouter } from 'next/router'
 
-function Dashboard() {  
+function Dashboard() {
+  const router = useRouter()
   const [user, setUser] = useState<{ nome: string; email: string } | null>(null)
   const [homenagens, setHomenagens] = useState<any[]>([])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return // Impede execução no SSR
-  
+    if (typeof window === 'undefined') return
+
     const fetchData = async () => {
       const token = localStorage.getItem('token')
       if (!token) {
         console.warn('Token não encontrado no localStorage')
         return
       }
-  
+
       try {
         const resUser = await fetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         })
         const userData = await resUser.json()
-  
+
         if (!userData._id) {
           console.error('ID do usuário ausente')
           return
         }
-  
+
         setUser(userData)
-  
+
         const resHomenagens = await fetch(`/api/homenagens/user/${userData._id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         const homenagensData = await resHomenagens.json()
-  
+
         setHomenagens(homenagensData)
       } catch (err) {
         console.error('Erro ao buscar dados do dashboard:', err)
       }
     }
-  
+
     fetchData()
   }, [])
+
+  const handleCriarNova = () => {
+    router.push('/homenagem/form')
+  }
+
+  const handleEditar = (id: string) => {
+    router.push(`/homenagem/form?id=${id}`)
+  }
 
   if (!user) {
     return (
@@ -61,7 +71,7 @@ function Dashboard() {
         </p>
       </div>
     )
-  }  
+  }
 
   return (
     <>
@@ -98,10 +108,8 @@ function Dashboard() {
                           <Menu.Item>
                             {({ active }) => (
                               <button
-                                className={`${
-                                  active ? 'bg-blue-100' : ''
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
-                                onClick={() => alert(`Editar ${homenagem.nomeHomenageado}`)}
+                                className={`$${active ? 'bg-blue-100' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
+                                onClick={() => handleEditar(homenagem._id)}
                               >
                                 <PencilIcon className="h-4 w-4 mr-2" />
                                 Alterar
@@ -111,9 +119,7 @@ function Dashboard() {
                           <Menu.Item>
                             {({ active }) => (
                               <button
-                                className={`${
-                                  active ? 'bg-blue-100' : ''
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
+                                className={`$${active ? 'bg-blue-100' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
                                 onClick={() => alert(`Ver planos de ${homenagem.nomeHomenageado}`)}
                               >
                                 <StarIcon className="h-4 w-4 mr-2" />
@@ -124,9 +130,7 @@ function Dashboard() {
                           <Menu.Item>
                             {({ active }) => (
                               <button
-                                className={`${
-                                  active ? 'bg-red-100' : ''
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm text-red-600`}
+                                className={`$${active ? 'bg-red-100' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-red-600`}
                                 onClick={() => alert(`Excluir ${homenagem.nomeHomenageado}`)}
                               >
                                 <TrashIcon className="h-4 w-4 mr-2" />
@@ -144,8 +148,9 @@ function Dashboard() {
           </ul>
 
           <div className="mt-6 flex gap-4">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-              Criar nova homenagem
+            <button onClick={handleCriarNova}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition" >
+              Criar Nova Homenagem
             </button>
             <button
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
