@@ -83,9 +83,11 @@ function FormHomenagem() {
         })
         setMensagemSucesso('Homenagem atualizada com sucesso!')
       } else {
-        console.log('Payload enviado:', payload)
-        await axios.post('/api/homenagens', payload, {
-          headers: { Authorization: `Bearer ${token}` },
+        console.log('Payload enviado:', payload, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
         })
         setMensagemSucesso('Homenagem criada com sucesso!')
       }
