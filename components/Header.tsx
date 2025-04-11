@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 import { useRouter } from 'next/router'
-import { logout } from '@/lib/auth'
+import { logout } from '@/lib/authClient'
 import { useEffect, useState } from 'react'
 
 export default function Header() {

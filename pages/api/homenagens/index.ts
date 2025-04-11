@@ -1,34 +1,64 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import formidable, { File } from 'formidable'
+import path from 'path'
+import { verifyToken } from '@/lib/auth'
 import dbConnect from '@/lib/dbConnect'
 import Homenagem from '@/models/Homenagem'
-import { verificarToken } from '@/lib/verificarToken'
-import mongoose from 'mongoose'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== 'POST') return res.status(405).end('Método não permitido')
+
+  const token = req.headers.authorization?.split(' ')[1]
+  const decoded = verifyToken(token || '')
+  if (!decoded) return res.status(401).json({ error: 'Não autorizado' })
+
   await dbConnect()
 
-  if (req.method === 'POST') {
-    try {
-      const authHeader = req.headers.authorization
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Token não fornecido ou malformado' })
-      }
+  const form = new formidable.IncomingForm({
+    multiples: true,
+    uploadDir: './public/uploads',
+    keepExtensions: true,
+  })
 
-      const token = authHeader.split(' ')[1]
-      const { id: usuarioId } = verificarToken(token)
+  form.parse(req, async (err, fields, files) => {
+    if (err) return res.status(500).json({ error: 'Erro ao processar formulário' })
+
+    try {
+      const fotoPerfilFile = Array.isArray(files.fotoPerfil) ? files.fotoPerfil[0] : files.fotoPerfil
+      const galeriaFiles = files.fotos as File[] || []
+
+      const fotoPerfilPath = fotoPerfilFile
+        ? `/uploads/${path.basename(fotoPerfilFile.filepath)}`
+        : ''
+
+      const fotosPaths = Array.isArray(galeriaFiles)
+        ? galeriaFiles.map((file) => `/uploads/${path.basename(file.filepath)}`)
+        : []
 
       const novaHomenagem = new Homenagem({
-        ...req.body,
-        criadoPor: new mongoose.Types.ObjectId(usuarioId),
+        nomeHomenageado: fields.nomeHomenageado?.toString(),
+        dataNascimento: fields.dataNascimento?.toString(),
+        dataFalecimento: fields.dataFalecimento?.toString(),
+        biografia: fields.biografia?.toString(),
+        musica: fields.musica?.toString(),
+        fotoPerfil: fotoPerfilPath,
+        fotos: fotosPaths,
+        criadoPor: decoded.userId,
       })
 
       await novaHomenagem.save()
       return res.status(201).json(novaHomenagem)
-    } catch (error: any) {
-      console.error('Erro ao criar homenagem:', error)
-      return res.status(500).json({ error: 'Erro ao criar homenagem', detalhes: error.message })
+    } catch (error) {
+      console.error(error)
+      return res.status(500).json({ error: 'Erro ao criar homenagem' })
     }
-  }
-
-  return res.status(405).json({ error: 'Método não permitido' })
+  })
 }
+
+export default handler

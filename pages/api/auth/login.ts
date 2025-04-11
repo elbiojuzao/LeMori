@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const token = jwt.sign(
-    { id: user._id, nome: user.nome, email: user.email },
+    { userId: user._id.toString(), nome: user.nome, email: user.email },
     JWT_SECRET,
     { expiresIn: '7d' }
   )

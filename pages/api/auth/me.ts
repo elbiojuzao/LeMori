@@ -20,9 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET)
-
+    
     await mongooseConnect()
-    const user = await User.findById(decoded.id).select('-senha')
+    const user = await User.findById(decoded.userId)
 
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' })

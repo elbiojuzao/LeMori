@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import dbConnect from '@/lib/dbConnect'
 import Homenagem from '@/models/Homenagem'
-import { verificarToken } from '@/lib/verificarToken'
+import { verifyToken  } from '@/lib/verificarToken'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await dbConnect()
@@ -12,9 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = req.headers.authorization?.split(' ')[1]
     if (!token) return res.status(401).json({ error: 'Token não fornecido' })
 
-    const { id: usuarioIdToken } = verificarToken(token)
+    const { userId: usuarioIdToken } = verifyToken(token)
 
-    const { id: idParametro } = req.query
+    const idParametro = req.query.id?.toString()
 
     // Verifica se o usuário do token bate com o id do parâmetro
     if (usuarioIdToken !== idParametro) {

@@ -1,27 +1,21 @@
+import jwt from 'jsonwebtoken'
 
-export async function login(email: string, senha: string) {
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, senha }),
-  })
+const SECRET = process.env.JWT_SECRET || 'chave_super_secreta'
 
-  if (!res.ok) {
-    const errorData = await res.json()
-    throw new Error(errorData.message || 'Erro ao fazer login')
-  }
+interface TokenPayload {
+  userId: string
 
-  const data = await res.json()
-
-  // Armazena o token no localStorage (temporariamente; depois podemos usar cookies seguros)
-  localStorage.setItem('token', data.token)
-  localStorage.setItem('user', JSON.stringify(data.user))
-
-  return data
+  email?: string
 }
 
-export function logout() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+export function signToken(payload: TokenPayload): string {
+  return jwt.sign(payload, SECRET, { expiresIn: '7d' })
+}
+
+export function verifyToken(token: string): TokenPayload | null {
+  try {
+    return jwt.verify(token, SECRET) as TokenPayload
+  } catch (error) {
+    return null
+  }
 }

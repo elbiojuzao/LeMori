@@ -16,6 +16,7 @@ function FormHomenagem() {
   const [biografia, setBiografia] = useState('')
   const [galeriaFotos, setGaleriaFotos] = useState<FileList | null>(null)
   const [erroGaleria, setErroGaleria] = useState('')
+  const [fotoPrincipal, setFotoPrincipal] = useState<string>('')
   const [musica, setMusica] = useState('')
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [modoEdicao, setModoEdicao] = useState(false)
@@ -37,6 +38,7 @@ function FormHomenagem() {
           setFalecimento(data.dataFalecimento?.slice(0, 10) || '')
           setBiografia(data.biografia || '')
           setMusica(data.musica || '')
+          setFotoPrincipal(data.fotoPrincipal || '') 
         } catch (err: any) {
           if (err.response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
@@ -63,11 +65,22 @@ function FormHomenagem() {
     }
   }
 
+  const handleFotoPrincipalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFotoPrincipal(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const token = localStorage.getItem('token')
     if (!token) return
-  
+
     try {
       const payload = {
         nomeHomenageado: nome,
@@ -75,8 +88,9 @@ function FormHomenagem() {
         dataFalecimento: falecimento,
         biografia: biografia,
         musica: musica,
+        fotoPrincipal: fotoPrincipal, 
       }
-  
+
       if (modoEdicao) {
         await axios.put(`/api/homenagens/${id}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
@@ -90,18 +104,19 @@ function FormHomenagem() {
           },
         })
         setMensagemSucesso('Homenagem criada com sucesso!')
-  
+
         setNome('')
         setNascimento('')
         setFalecimento('')
         setBiografia('')
         setMusica('')
         setGaleriaFotos(null)
+        setFotoPrincipal('')
       }
     } catch (error) {
       console.error('Erro ao salvar homenagem:', error)
     }
-  }  
+  }
 
   return (
     <>
@@ -155,6 +170,23 @@ function FormHomenagem() {
             </div>
 
             <div>
+              <label className="block mb-1 text-gray-600">Foto principal do homenageado</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFotoPrincipalChange}
+                className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
+              />
+              {fotoPrincipal && (
+                <img
+                  src={fotoPrincipal}
+                  alt="Pré-visualização"
+                  className="mt-2 w-32 h-32 object-cover rounded-full shadow"
+                />
+              )}
+            </div>
+
+            <div>
               <label className="block mb-1 text-gray-600">Mensagem de homenagem</label>
               <textarea
                 value={biografia}
@@ -200,4 +232,5 @@ function FormHomenagem() {
     </>
   )
 }
+
 export default withAuth(FormHomenagem)
