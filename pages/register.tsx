@@ -1,9 +1,33 @@
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
+import { useEffect } from 'react'
+import axios from 'axios'
 
 export default function Register() {
   const router = useRouter()
+
+  useEffect(() => {
+    const verificarAutenticacao = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      try {
+        const res = await axios.get('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (res.status === 200) {
+          router.replace('/dashboard') // redireciona se já estiver logado
+        }
+      } catch (error) {
+        // Se o token for inválido, segue na tela de login
+      }
+    }
+
+    verificarAutenticacao()
+  }, [])
+
   const [form, setForm] = useState({
     nome: '',
     cpf: '',
