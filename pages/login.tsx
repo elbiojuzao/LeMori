@@ -1,13 +1,35 @@
 import Head from 'next/head'
 import Logo from '@/components/Logo'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import axios from 'axios'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    const verificarAutenticacao = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      try {
+        const res = await axios.get('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+
+        if (res.status === 200) {
+          router.replace('/dashboard') // redireciona se já estiver logado
+        }
+      } catch (error) {
+        // Se o token for inválido, segue na tela de login
+      }
+    }
+
+    verificarAutenticacao()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,10 +48,7 @@ export default function Login() {
         throw new Error(data.error || 'Erro no login')
       }
 
-      // ✅ Salva o token no localStorage
       localStorage.setItem('token', data.token)
-
-      // ✅ Redireciona para o dashboard
       router.push('/dashboard')
     } catch (err: any) {
       setErro(err.message)
@@ -44,13 +63,10 @@ export default function Login() {
 
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-          {/* Logo e título */}
           <Logo />
 
-          {/* Erro */}
           {erro && <p className="text-red-500 text-sm mb-4">{erro}</p>}
 
-          {/* Formulário */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
