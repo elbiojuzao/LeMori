@@ -9,6 +9,7 @@ export interface IHomenagem extends Document {
   fotos: string[]
   musica: string
   criadoPor: mongoose.Types.ObjectId
+  excluida: Boolean
 }
 
 const HomenagemSchema: Schema = new Schema(
@@ -17,10 +18,18 @@ const HomenagemSchema: Schema = new Schema(
     dataNascimento: { type: Date, required: true },
     dataFalecimento: { type: Date, required: true },
     biografia: { type: String, required: true },
-    fotoPerfil: { type: String, required: true }, 
+    fotoPerfil: { type: String}, 
     fotos: [{ type: String }],
     musica: { type: String },
-    criadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    criadoPor: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User', 
+      required: true 
+    },
+    excluida: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 )

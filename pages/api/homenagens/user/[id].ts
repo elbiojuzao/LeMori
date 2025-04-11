@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: 'Acesso negado' })
     }
 
-    const homenagens = await Homenagem.find({ criadoPor: usuarioIdToken }).sort({ createdAt: -1 })
+    const homenagens = await Homenagem.find({ criadoPor: usuarioIdToken, excluida: false, }).sort({ createdAt: -1 })
     return res.status(200).json(homenagens)
   } catch (error: any) {
     console.error('Erro ao buscar homenagens:', error)

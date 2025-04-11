@@ -63,6 +63,23 @@ function Dashboard() {
     router.push(`/homenagem/form?id=${id}`)
   }
 
+  const handleExcluir = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta homenagem?')) return
+  
+    try {
+      await axios.delete(`/api/homenagens/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+      // Atualiza a lista após excluir
+      setHomenagens((prev) => prev.filter((h) => h._id !== id))
+    } catch (error) {
+      console.error('Erro ao excluir homenagem:', error)
+      alert('Erro ao excluir homenagem')
+    }
+  }
+  
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600 flex-col">
@@ -141,11 +158,8 @@ function Dashboard() {
                           <Menu.Item>
                             {({ active }) => (
                               <button
-                                className={`${
-                                  active ? 'bg-red-100' : ''
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm text-red-600`}
-                                onClick={() => alert(`Excluir ${homenagem.nomeHomenageado}`)}
-                              >
+                                onClick={() => handleExcluir(homenagem._id)}
+                                className={`${ active ? 'bg-red-100' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-red-600`}>
                                 <TrashIcon className="h-4 w-4 mr-2" />
                                 Excluir
                               </button>
