@@ -45,7 +45,7 @@ function Dashboard() {
           headers: { Authorization: `Bearer ${token}` },
         })
         const homenagensData = resHomenagens.data
-        console.log('🔎 Dados recebidos:', homenagensData)
+
         setHomenagens(homenagensData)
       } catch (err) {
         console.error('Erro ao buscar dados do dashboard:', err)
