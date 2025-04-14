@@ -21,13 +21,16 @@ function FormHomenagem() {
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [modoEdicao, setModoEdicao] = useState(false)
 
+  const [fotoPerfilPreview, setFotoPerfilPreview] = useState<string | null>(null)
+  const [fotosPreview, setFotosPreview] = useState<string[]>([])
+
   useEffect(() => {
     if (id) {
       setModoEdicao(true)
       const fetchData = async () => {
         const token = localStorage.getItem('token')
         if (!token) return
-  
+
         try {
           const res = await axios.get(`/api/homenagens/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -38,7 +41,7 @@ function FormHomenagem() {
           setFalecimento(data.dataFalecimento?.slice(0, 10) || '')
           setBiografia(data.biografia || '')
           setMusica(data.musica || '')
-          setFotoPrincipal(data.fotoPrincipal || '') 
+          setFotoPrincipal(data.fotoPrincipal || '')
         } catch (err: any) {
           if (err.response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
@@ -48,21 +51,42 @@ function FormHomenagem() {
           }
         }
       }
-  
+
       fetchData()
     }
-  }, [id])  
+  }, [id])
+
+  const handleFotoPerfilChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFotoPerfilPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removerFotoPerfil = () => setFotoPerfilPreview(null)
 
   const handleFotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 30) {
-      setErroGaleria('Você pode selecionar no máximo 30 fotos.')
-      e.target.value = ''
-      setGaleriaFotos(null)
-    } else {
-      setErroGaleria('')
-      setGaleriaFotos(files)
-    }
+    const files = Array.from(e.target.files || [])
+    const previews: string[] = []
+
+    files.forEach((file) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        previews.push(reader.result as string)
+        if (previews.length === files.length) {
+          setFotosPreview((prev) => [...prev, ...previews])
+        }
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const removerFotoGaleria = (index: number) => {
+    setFotosPreview((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleFotoPrincipalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +112,7 @@ function FormHomenagem() {
         dataFalecimento: falecimento,
         biografia: biografia,
         musica: musica,
-        fotoPrincipal: fotoPrincipal, 
+        fotoPrincipal: fotoPrincipal,
       }
 
       if (modoEdicao) {
@@ -112,6 +136,8 @@ function FormHomenagem() {
         setMusica('')
         setGaleriaFotos(null)
         setFotoPrincipal('')
+        setFotosPreview([])
+        setFotoPerfilPreview(null)
       }
     } catch (error) {
       console.error('Erro ao salvar homenagem:', error)
@@ -174,15 +200,23 @@ function FormHomenagem() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleFotoPrincipalChange}
+                onChange={handleFotoPerfilChange}
                 className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
               />
-              {fotoPrincipal && (
-                <img
-                  src={fotoPrincipal}
-                  alt="Pré-visualização"
-                  className="mt-2 w-32 h-32 object-cover rounded-full shadow"
-                />
+              {fotoPerfilPreview && (
+                <div
+                  className="relative mt-2 w-32 h-32 rounded-full overflow-hidden group cursor-pointer"
+                  onClick={removerFotoPerfil}
+                >
+                  <img
+                    src={fotoPerfilPreview}
+                    alt="Pré-visualização da foto de perfil"
+                    className="w-full h-full object-cover group-hover:brightness-50"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-xl opacity-0 group-hover:opacity-100">
+                    ✖
+                  </span>
+                </div>
               )}
             </div>
 
@@ -201,11 +235,30 @@ function FormHomenagem() {
               <input
                 type="file"
                 accept="image/*"
+                name="fotos"
                 multiple
                 onChange={handleFotosChange}
                 className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
               />
               {erroGaleria && <p className="text-red-600 text-sm mt-1">{erroGaleria}</p>}
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {fotosPreview.map((src, idx) => (
+                <div
+                  key={idx}
+                  className="relative group w-24 h-24 rounded-md overflow-hidden cursor-pointer"
+                  onClick={() => removerFotoGaleria(idx)}
+                >
+                  <img
+                    src={src}
+                    alt={`Pré-visualização ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:brightness-50"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-2xl opacity-0 group-hover:opacity-100">
+                    ✖
+                  </span>
+                </div>
+              ))}
             </div>
 
             <div>
