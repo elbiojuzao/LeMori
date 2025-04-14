@@ -9,6 +9,7 @@ export interface IHomenagem extends Document {
   fotos: string[]
   musica: string
   criadoPor: mongoose.Types.ObjectId
+  dataCriada:  Date
   excluida: Boolean
 }
 
@@ -26,6 +27,10 @@ const HomenagemSchema: Schema = new Schema(
       ref: 'User', 
       required: true 
     },
+    dataCriada: {
+      type: Date,
+      default: Date.now,
+      immutable: true,},
     excluida: {
       type: Boolean,
       default: false,
