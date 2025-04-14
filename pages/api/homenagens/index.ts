@@ -4,6 +4,7 @@ import path from 'path'
 import { verifyToken } from '@/lib/auth'
 import dbConnect from '@/lib/dbConnect'
 import Homenagem from '@/models/Homenagem'
+import User from '@/models/User'
 
 export const config = {
   api: {
@@ -19,6 +20,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (!decoded) return res.status(401).json({ error: 'Não autorizado' })
 
   await dbConnect()
+
+  const user = await User.findById(decoded.userId)
+  if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
+
+  if (user.homenagemCreditos <= 0) {
+    return res.status(403).json({ error: 'Você não possui créditos disponíveis para criar uma homenagem.' })
+  }
 
   const form = new formidable.IncomingForm({
     multiples: true,
@@ -53,6 +61,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       })
 
       await novaHomenagem.save()
+
+      user.homenagemCreditos -= 1
+      await user.save()
+
       return res.status(201).json(novaHomenagem)
     } catch (error) {
       console.error(error)
