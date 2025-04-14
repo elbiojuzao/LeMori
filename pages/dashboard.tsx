@@ -15,7 +15,7 @@ import axios from 'axios'
 
 function Dashboard() {
   const router = useRouter()
-  const [user, setUser] = useState<{ nome: string; email: string } | null>(null)
+  const [user, setUser] = useState<{ nome: string; email: string; homenagemCreditos?: number } | null>(null)
   const [homenagens, setHomenagens] = useState<any[]>([])
 
   useEffect(() => {
@@ -97,6 +97,11 @@ function Dashboard() {
       <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
           <h1 className="text-2xl font-bold text-blue-600 mb-4">Bem-vindo, {user.nome}</h1>
+          {typeof user.homenagemCreditos !== 'undefined' && (
+            <p className="text-sm text-gray-600 mb-4">
+              Homenagens disponíveis: <strong>{user.homenagemCreditos}</strong>
+            </p>
+          )}
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Suas homenagens</h2>
           <ul className="space-y-2">
             {Array.isArray(homenagens) && homenagens.length > 0 ? (
