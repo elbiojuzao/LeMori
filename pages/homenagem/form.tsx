@@ -200,6 +200,7 @@ function FormHomenagem() {
               <input
                 type="file"
                 accept="image/*"
+                name="fotos" 
                 onChange={handleFotoPerfilChange}
                 className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
               />

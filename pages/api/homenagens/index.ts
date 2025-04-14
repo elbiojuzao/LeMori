@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import formidable, { File } from 'formidable'
+import { IncomingForm, File } from 'formidable'
 import path from 'path'
 import { verifyToken } from '@/lib/auth'
 import dbConnect from '@/lib/dbConnect'
@@ -28,7 +28,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(403).json({ error: 'Você não possui créditos disponíveis para criar uma homenagem.' })
   }
 
-  const form = new formidable.IncomingForm({
+  const form = new IncomingForm({
     multiples: true,
     uploadDir: './public/uploads',
     keepExtensions: true,
@@ -38,23 +38,21 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (err) return res.status(500).json({ error: 'Erro ao processar formulário' })
 
     try {
-      const fotoPerfilFile = Array.isArray(files.fotoPerfil) ? files.fotoPerfil[0] : files.fotoPerfil
+      const fotoPerfilFile = Array.isArray(files.fotoPrincipal) ? files.fotoPrincipal[0] : files.fotoPrincipal
       const galeriaFiles = files.fotos as File[] || []
 
-      const fotoPerfilPath = fotoPerfilFile
-        ? `/uploads/${path.basename(fotoPerfilFile.filepath)}`
-        : ''
+      const fotoPerfilPath = fotoPerfilFile?.filepath ? `/uploads/${path.basename(fotoPerfilFile.filepath)}` : ''
 
       const fotosPaths = Array.isArray(galeriaFiles)
         ? galeriaFiles.map((file) => `/uploads/${path.basename(file.filepath)}`)
         : []
 
       const novaHomenagem = new Homenagem({
-        nomeHomenageado: fields.nomeHomenageado?.toString(),
-        dataNascimento: fields.dataNascimento?.toString(),
-        dataFalecimento: fields.dataFalecimento?.toString(),
-        biografia: fields.biografia?.toString(),
-        musica: fields.musica?.toString(),
+        nomeHomenageado: fields.nomeHomenageado?.toString() || '',
+        dataNascimento: fields.dataNascimento?.toString() || '',
+        dataFalecimento: fields.dataFalecimento?.toString() || '',
+        biografia: fields.biografia?.toString() || '',
+        musica: fields.musica?.toString() || '',
         fotoPerfil: fotoPerfilPath,
         fotos: fotosPaths,
         criadoPor: decoded.userId,
