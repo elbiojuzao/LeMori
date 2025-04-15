@@ -105,77 +105,98 @@ function Dashboard() {
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Suas homenagens</h2>
           <ul className="space-y-2">
             {Array.isArray(homenagens) && homenagens.length > 0 ? (
-              homenagens.map((homenagem) => (
-                <li
-                  key={homenagem._id}
-                  className="relative bg-purple-100 p-3 rounded-md shadow-sm hover:bg-purple-200 transition"
-                >
-                  <div className="flex justify-between items-start gap-3">
-                    <div className="flex items-center gap-4">
-                      {homenagem.fotoPerfil && (
-                        <img
-                          src={homenagem.fotoPerfil}
-                          alt={`Foto de ${homenagem.nomeHomenageado}`}
-                          className="w-16 h-16 object-cover rounded-full border border-gray-300 shadow-sm"
-                        />
-                      )}
-                      <div>
-                        <div className="font-medium text-gray-800">{homenagem.nomeHomenageado}</div>
-                        <div className="text-sm text-gray-600">
-                          Nascido em: {new Date(homenagem.dataNascimento).toLocaleDateString()}
+                homenagens.map((homenagem) => {
+                  const dataCriacao = new Date(homenagem.dataCriada)
+                  const dataExpiracao = new Date(dataCriacao)
+                  dataExpiracao.setFullYear(dataCriacao.getFullYear() + 5) 
+                  const hoje = new Date()
+                  const timeDiff = dataExpiracao.getTime() - hoje.getTime()
+                  const diasRestantes = Math.ceil(timeDiff / (1000 * 3600 * 24))
+                  const passouQuatroAnos = hoje.getTime() > (new Date(homenagem.dataCriada)).setFullYear(dataCriacao.getFullYear() + 4)
+
+                  return (
+                    <li
+                      key={homenagem._id}
+                      className="relative bg-purple-100 p-3 rounded-md shadow-sm hover:bg-purple-200 transition"
+                    >
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-4">
+                          {homenagem.fotoPerfil && (
+                              <img
+                                  src={homenagem.fotoPerfil}
+                                  alt={`Foto de ${homenagem.nomeHomenageado}`}
+                                  className="w-16 h-16 object-cover rounded-full border border-gray-300 shadow-sm"
+                              />
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-800">{homenagem.nomeHomenageado}</div>
+                            <div className="text-sm text-gray-600">
+                              Nascido em: {new Date(homenagem.dataNascimento).toLocaleDateString()}
+                            </div>
+                            {passouQuatroAnos && diasRestantes > 0 && (
+                              <div className="text-sm text-red-500 mt-1">
+                                Esta homenagem irá expirar em {diasRestantes} dias
+                              </div>
+                            )}
+                            {passouQuatroAnos && diasRestantes <= 0 && (
+                              <div className="text-sm text-red-600 mt-1 font-semibold">
+                                Esta homenagem expirou
+                              </div>
+                            )}
+                          </div>
                         </div>
+
+                        <Menu as="div" className="relative inline-block text-left">
+                          <Menu.Button className="p-1 hover:bg-purple-300 rounded-full">
+                              <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+                          </Menu.Button>
+
+                          <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-10">
+                            <div className="p-1">
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    className={`${
+                                      active ? 'bg-blue-100' : ''
+                                    } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
+                                    onClick={() => handleEditar(homenagem._id)}
+                                  >
+                                    <PencilIcon className="h-4 w-4 mr-2" />
+                                    Alterar
+                                  </button>
+                                )}
+                            </Menu.Item>
+                            <Menu.Item>
+                              {({ active }) => (
+                                <button
+                                  className={`${
+                                    active ? 'bg-blue-100' : ''
+                                  } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
+                                  onClick={() => alert(`Ver planos de ${homenagem.nomeHomenageado}`)}
+                                >
+                                  <StarIcon className="h-4 w-4 mr-2" />
+                                  Planos
+                                </button>
+                              )}
+                            </Menu.Item>
+                            <Menu.Item>
+                              {({ active }) => (
+                                <button
+                                  onClick={() => handleExcluir(homenagem._id)}
+                                  className={`${ active ? 'bg-red-100' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-red-600`}
+                                >
+                                  <TrashIcon className="h-4 w-4 mr-2" />
+                                  Excluir
+                                </button>
+                              )}
+                              </Menu.Item>
+                            </div>
+                          </Menu.Items>
+                        </Menu>
                       </div>
-                    </div>
-              
-                    <Menu as="div" className="relative inline-block text-left">
-                      <Menu.Button className="p-1 hover:bg-purple-300 rounded-full">
-                        <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
-                      </Menu.Button>
-              
-                      <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-10">
-                        <div className="p-1">
-                          <Menu.Item>
-                            {({ active }) => (
-                              <button
-                                className={`${
-                                  active ? 'bg-blue-100' : ''
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
-                                onClick={() => handleEditar(homenagem._id)}
-                              >
-                                <PencilIcon className="h-4 w-4 mr-2" />
-                                Alterar
-                              </button>
-                            )}
-                          </Menu.Item>
-                          <Menu.Item>
-                            {({ active }) => (
-                              <button
-                                className={`${
-                                  active ? 'bg-blue-100' : ''
-                                } group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-700`}
-                                onClick={() => alert(`Ver planos de ${homenagem.nomeHomenageado}`)}
-                              >
-                                <StarIcon className="h-4 w-4 mr-2" />
-                                Planos
-                              </button>
-                            )}
-                          </Menu.Item>
-                          <Menu.Item>
-                            {({ active }) => (
-                              <button
-                                onClick={() => handleExcluir(homenagem._id)}
-                                className={`${ active ? 'bg-red-100' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-red-600`}>
-                                <TrashIcon className="h-4 w-4 mr-2" />
-                                Excluir
-                              </button>
-                            )}
-                          </Menu.Item>
-                        </div>
-                      </Menu.Items>
-                    </Menu>
-                  </div>
-                </li>
-              ))
+                    </li>
+                  )
+                })
             ) : (<p className="text-gray-500">Nenhuma homenagem criada ainda.</p>)}
           </ul>
 
