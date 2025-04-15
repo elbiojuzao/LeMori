@@ -44,6 +44,7 @@ function FormHomenagem() {
           setMusica(data.musica || '')
           setFotoPrincipal(data.fotoPrincipal || '')
           setFotoPerfilPreview(data.fotoPrincipal || '')
+          setFotosPreview(data.galeria || [])
         } catch (err: any) {
           if (err.response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
@@ -63,11 +64,44 @@ function FormHomenagem() {
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setFotoPerfilPreview(reader.result as string)
-        setFotoPrincipal(reader.result as string)
+        compressImage(reader.result as string, 800, 800).then((compressed) => {
+          setFotoPerfilPreview(compressed)
+          setFotoPrincipal(compressed)
+        })
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  function compressImage(base64: string, maxWidth: number, maxHeight: number): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width
+            width = maxWidth
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height
+            height = maxHeight
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx?.drawImage(img, 0, 0, width, height)
+        const compressedData = canvas.toDataURL('image/jpeg', 0.7)
+        resolve(compressedData)
+      }
+      img.src = base64
+    })
   }
 
   const removerFotoPerfil = () => {
@@ -80,18 +114,30 @@ function FormHomenagem() {
 
   const handleFotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+
+    if (fotosPreview.length + files.length > 30) {
+      setErroGaleria('Você só pode adicionar até 30 fotos.')
+      return
+    }
+
     const previews: string[] = []
 
     files.forEach((file) => {
       const reader = new FileReader()
       reader.onloadend = () => {
-        previews.push(reader.result as string)
-        if (previews.length === files.length) {
-          setFotosPreview((prev) => [...prev, ...previews])
+        if (reader.result) {
+          compressImage(reader.result as string, 800, 800).then((compressed) => {
+            previews.push(compressed)
+            if (previews.length === files.length) {
+              setFotosPreview((prev) => [...prev, ...previews])
+            }
+          })
         }
       }
       reader.readAsDataURL(file)
     })
+
+    setErroGaleria('')
   }
 
   const removerFotoGaleria = (index: number) => {
@@ -106,38 +152,38 @@ function FormHomenagem() {
       alert('O nome é obrigatório.')
       return false
     }
-  
+
     if (nome.trim().length < 3) {
       alert('O nome deve conter pelo menos 3 caracteres.')
       return false
     }
-  
+
     if (!nascimento) {
       alert('A data de nascimento é obrigatória.')
       return false
     }
-  
+
     if (!falecimento) {
       alert('A data de falecimento é obrigatória.')
       return false
     }
-  
+
     const nascimentoDate = new Date(nascimento)
     const falecimentoDate = new Date(falecimento)
-  
+
     if (nascimentoDate > falecimentoDate) {
       alert('A data de nascimento não pode ser maior que a de falecimento.')
       return false
     }
-  
+
     const diffAnos = (falecimentoDate.getTime() - nascimentoDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
     if (diffAnos > 100) {
       const confirmar = confirm('A diferença entre as datas é maior que 100 anos. Tem certeza que está correto?')
       if (!confirmar) return false
     }
-  
+
     return true
-  }  
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -154,6 +200,7 @@ function FormHomenagem() {
         biografia: biografia,
         musica: musica,
         fotoPrincipal: fotoPrincipal,
+        galeria: fotosPreview,
       }
 
       let response
@@ -256,6 +303,7 @@ function FormHomenagem() {
                       src={fotoPerfilPreview}
                       alt="Pré-visualização da foto de perfil"
                       className="w-full h-full object-cover group-hover:brightness-50"
+                      loading="lazy"
                     />
                     <span className="absolute inset-0 flex items-center justify-center text-white text-xl opacity-0 group-hover:opacity-100">
                       ✖
@@ -296,6 +344,7 @@ function FormHomenagem() {
                       src={src}
                       alt={`Pré-visualização ${idx + 1}`}
                       className="w-full h-full object-cover group-hover:brightness-50"
+                      loading="lazy"
                     />
                     <span className="absolute inset-0 flex items-center justify-center text-white text-2xl opacity-0 group-hover:opacity-100">
                       ✖
