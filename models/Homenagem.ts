@@ -4,13 +4,14 @@ export interface IHomenagem extends Document {
   nomeHomenageado: string
   dataNascimento: Date
   dataFalecimento: Date
-  biografia: string
-  fotoPerfil: string
+  biografia?: string
+  fotoPerfil?: string
   fotos: string[]
-  musica: string
+  musica?: string
   criadoPor: mongoose.Types.ObjectId
-  dataCriada:  Date
-  excluida: Boolean
+  dataCriada: Date
+  excluida: boolean
+  expirada?: boolean 
 }
 
 const HomenagemSchema: Schema = new Schema(
@@ -35,9 +36,29 @@ const HomenagemSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    expirada: {
+      type: Boolean,
+      default: false,
+    },
+    foiNotificadoExpiracao: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 )
+
+HomenagemSchema.virtual('expirada').get(function (this: IHomenagem) {
+  if (!this.dataCriada) return false
+  const agora = new Date()
+  const expiracao = new Date(this.dataCriada)
+  expiracao.setFullYear(expiracao.getFullYear() + 5)
+  return agora > expiracao
+})
 
 export default mongoose.models.Homenagem ||
   mongoose.model<IHomenagem>('Homenagem', HomenagemSchema)
