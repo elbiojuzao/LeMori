@@ -18,7 +18,7 @@ const HomenagemSchema: Schema = new Schema(
     nomeHomenageado: { type: String, required: true },
     dataNascimento: { type: Date, required: true },
     dataFalecimento: { type: Date, required: true },
-    biografia: { type: String, required: true },
+    biografia: { type: String, required: false }, 
     fotoPerfil: { type: String}, 
     fotos: [{ type: String }],
     musica: { type: String },

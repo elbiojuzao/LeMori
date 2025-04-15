@@ -43,6 +43,7 @@ function FormHomenagem() {
           setBiografia(data.biografia || '')
           setMusica(data.musica || '')
           setFotoPrincipal(data.fotoPrincipal || '')
+          setFotoPerfilPreview(data.fotoPrincipal || '')
         } catch (err: any) {
           if (err.response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
@@ -63,12 +64,19 @@ function FormHomenagem() {
       const reader = new FileReader()
       reader.onloadend = () => {
         setFotoPerfilPreview(reader.result as string)
+        setFotoPrincipal(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
   }
 
-  const removerFotoPerfil = () => setFotoPerfilPreview(null)
+  const removerFotoPerfil = () => {
+    const confirmar = confirm('Deseja realmente remover a foto principal?')
+    if (confirmar) {
+      setFotoPerfilPreview(null)
+      setFotoPrincipal('')
+    }
+  }
 
   const handleFotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -87,24 +95,56 @@ function FormHomenagem() {
   }
 
   const removerFotoGaleria = (index: number) => {
-    setFotosPreview((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleFotoPrincipalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFotoPrincipal(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+    const confirmar = confirm('Deseja remover esta imagem da galeria?')
+    if (confirmar) {
+      setFotosPreview((prev) => prev.filter((_, i) => i !== index))
     }
   }
+
+  const validarFormulario = () => {
+    if (!nome.trim()) {
+      alert('O nome é obrigatório.')
+      return false
+    }
+  
+    if (nome.trim().length < 3) {
+      alert('O nome deve conter pelo menos 3 caracteres.')
+      return false
+    }
+  
+    if (!nascimento) {
+      alert('A data de nascimento é obrigatória.')
+      return false
+    }
+  
+    if (!falecimento) {
+      alert('A data de falecimento é obrigatória.')
+      return false
+    }
+  
+    const nascimentoDate = new Date(nascimento)
+    const falecimentoDate = new Date(falecimento)
+  
+    if (nascimentoDate > falecimentoDate) {
+      alert('A data de nascimento não pode ser maior que a de falecimento.')
+      return false
+    }
+  
+    const diffAnos = (falecimentoDate.getTime() - nascimentoDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+    if (diffAnos > 100) {
+      const confirmar = confirm('A diferença entre as datas é maior que 100 anos. Tem certeza que está correto?')
+      if (!confirmar) return false
+    }
+  
+    return true
+  }  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const token = localStorage.getItem('token')
     if (!token) return
+
+    if (!validarFormulario()) return
 
     try {
       const payload = {
@@ -204,7 +244,6 @@ function FormHomenagem() {
                 <input
                   type="file"
                   accept="image/*"
-                  name="fotoPrincipal"
                   onChange={handleFotoPerfilChange}
                   className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
                 />
@@ -236,11 +275,10 @@ function FormHomenagem() {
               </div>
 
               <div>
-                <label className="block mb-1 text-gray-600">Galeria de fotos (Até 30 fotos)</label>
+                <label className="block mb-1 text-gray-600">Galeria de fotos (até 30 fotos)</label>
                 <input
                   type="file"
                   accept="image/*"
-                  name="fotos"
                   multiple
                   onChange={handleFotosChange}
                   className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
