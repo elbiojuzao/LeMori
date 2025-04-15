@@ -36,10 +36,6 @@ const HomenagemSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
-    expirada: {
-      type: Boolean,
-      default: false,
-    },
     foiNotificadoExpiracao: {
       type: Boolean,
       default: false,
