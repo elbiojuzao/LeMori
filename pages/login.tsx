@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
+  const [emailNaoVerificado, setEmailNaoVerificado] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -31,9 +32,19 @@ export default function Login() {
     verificarAutenticacao()
   }, [])
 
+  const handleReenviarEmail = async () => {
+    try {
+      await axios.post('/api/auth/reenviar-confirmacao', { email })
+      alert('E-mail de verificação reenviado com sucesso!')
+    } catch (err) {
+      alert('Erro ao reenviar e-mail de verificação.')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErro('')
+    setEmailNaoVerificado(false)
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -45,7 +56,12 @@ export default function Login() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Erro no login')
+        if (data.unverifiedEmail) {
+          setEmailNaoVerificado(true)
+        } else {
+          throw new Error(data.error || 'Erro no login')
+        }
+        return
       }
 
       localStorage.setItem('token', data.token)
@@ -66,6 +82,19 @@ export default function Login() {
           <Logo />
 
           {erro && <p className="text-red-500 text-sm mb-4">{erro}</p>}
+
+          {emailNaoVerificado && (
+            <p className="text-red-500 text-sm mb-4">
+              Por favor,{' '}
+              <span
+                onClick={handleReenviarEmail}
+                className="text-blue-600 underline cursor-pointer"
+              >
+                confirme o email
+              </span>{' '}
+              antes de fazer o login.
+            </p>
+          )}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
