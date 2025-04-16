@@ -22,9 +22,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!senhaCorreta) {
     return res.status(401).json({ error: 'Senha incorreta' })
   }
+  
+  if (!user.emailVerificado) {
+    return res.status(403).json({ error: 'Por favor, verifique seu e-mail antes de fazer login.' })
+  }
 
   const token = jwt.sign(
-    { userId: user._id.toString(), nome: user.nome, email: user.email },
+    { userId: user._id.toString(), 
+      nome: user.nome, 
+      email: user.email },
     JWT_SECRET,
     { expiresIn: '7d' }
   )
