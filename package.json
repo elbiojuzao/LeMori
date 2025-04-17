@@ -22,11 +22,13 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.487.0",
     "mercadopago": "^2.4.0",
+    "mongoose": "^8.13.2",
     "next": "15.2.4",
     "nodemailer": "^6.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.55.0",
+    "react-hot-toast": "^2.5.2",
     "react-input-mask": "^2.0.4",
     "zod": "^3.24.2"
   },

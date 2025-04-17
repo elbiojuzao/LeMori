@@ -72,6 +72,13 @@ export default function Register() {
         },
         body: JSON.stringify({
           nome: form.nome,
+          cpf: form.cpf,
+          rua: form.rua,
+          numero: form.numero,
+          complemento: form.complemento,
+          bairro: form.bairro,
+          cidade: form.cidade,
+          estado: form.estado,
           email: form.email,
           senha: form.senha,
         }),

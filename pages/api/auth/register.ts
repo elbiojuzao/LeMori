@@ -8,7 +8,11 @@ import { sendEmail } from '@/lib/mailer'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { nome, email, senha } = req.body
+  const {
+    nome, email, senha,
+    cpf, rua, numero, complemento,
+    bairro, cidade, estado
+  } = req.body
 
   await mongooseConnect()
 
@@ -24,6 +28,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     nome,
     email,
     senha: senhaCriptografada,
+    cpf,
+    rua,
+    numero,
+    complemento,
+    bairro,
+    cidade,
+    estado,
     emailVerificado: false,
   })
 
