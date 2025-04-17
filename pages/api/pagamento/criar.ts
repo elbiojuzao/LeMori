@@ -7,25 +7,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Método não permitido' })
   }
 
-  const { valor, nome, email } = req.body
+  const { items, total } = req.body
 
   const preference = new Preference(mp)
 
   try {
     const result = await preference.create({
       body: {
-        items: [
-          {
-            id: 'homenagem_unica',
-            title: 'Criação de Homenagem',
-            quantity: 1,
-            unit_price: Number(valor),
-            currency_id: 'BRL',
-          },
-        ],
+        items: items.map((item: any) => ({
+          id: item._id,
+          title: item.nome,
+          quantity: item.quantidade,
+          unit_price: Number(item.valor),
+          currency_id: 'BRL',
+        })),
         payer: {
-          name: 'Nome',
-          email: 'usuario@email.com',
+          name: req.body.nome,
+          email: req.body.email,
         },
         back_urls: {
           success: `${process.env.NEXT_PUBLIC_SITE_URL}/pagamento/sucesso`,
