@@ -5,6 +5,7 @@ import mongooseConnect from '@/lib/mongoose'
 import Homenagem, { IHomenagem } from '@/models/Homenagem'
 import Footer from '@/components/Footer'
 import { useState } from 'react'
+import { useRouter } from 'next/router'
 
 interface HomenagemProps {
   homenagem: {
@@ -20,11 +21,47 @@ interface HomenagemProps {
 
 export default function HomenagemPage({ homenagem }: HomenagemProps) {
   const [abaAtiva, setAbaAtiva] = useState<'sobre' | 'fotos' | 'musica'>('sobre')
+  const [showShareButtons, setShowShareButtons] = useState(false)
+  const router = useRouter()
+  const { asPath } = router
+  const currentUrl = `${typeof window !== 'undefined' ? window.location.origin : 'SEU_DOMINIO'}${asPath}`
+  const title = `Homenagem a ${homenagem.nomeHomenageado} | LeMori`
+  const description = homenagem.biografia || `Veja a homenagem especial para ${homenagem.nomeHomenageado} no LeMori.`
+  const imageUrl = homenagem.fotos?.[0] || `${typeof window !== 'undefined' ? window.location.origin : 'SEU_DOMINIO'}/img/avatar.png`
+
+  const whatsappMessage = `${title} ${currentUrl}`
+  const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}&quote=${encodeURIComponent(description)}`
+  const instagramMessage = `Confira a homenagem a ${homenagem.nomeHomenageado}: ${currentUrl} (copie e cole no seu story ou bio!)`
+
+  const shareToWhatsapp = () => {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMessage)}`, '_blank')
+  }
+
+  const shareToFacebook = () => {
+    window.open(facebookShareUrl, '_blank')
+  }
+
+  const shareToInstagram = () => {
+    navigator.clipboard.writeText(instagramMessage)
+    alert('Link copiado para a área de transferência. Cole no seu story ou bio do Instagram!')
+  }
+
+  const toggleShareButtons = () => {
+    setShowShareButtons(!showShareButtons)
+  }
 
   return (
     <>
       <Head>
         <title>{homenagem.nomeHomenageado} | LeMori</title>
+        <meta name="description" content={description} />
+
+        {/* Meta Tags Open Graph para Preview */}
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={imageUrl} />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:type" content="website" />
       </Head>
 
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
@@ -54,6 +91,25 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
                   <span>{homenagem.dataFalecimento?.split('T')[0]}</span>
                 </div>
               </div>
+            </div>
+            {/* Botão de Compartilhar Principal */}
+            <div className="relative">
+              <button onClick={toggleShareButtons} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-2 rounded">
+                <Image src="/img/compartilhar.png" alt="Compartilhar" width={24} height={24} className="mr-4" />
+              </button>
+              {showShareButtons && (
+                <div className="absolute top-full mt-2 bg-white shadow-md rounded-md overflow-hidden z-10">
+                  <button onClick={shareToWhatsapp} className="block w-full text-left px-4 py-2 hover:bg-green-100 text-green-500 font-bold">
+                    <Image src="/img/whatsapp.svg" alt="whatsapp" width={24} height={24} className="mr-4" />
+                  </button>
+                  <button onClick={shareToFacebook} className="block w-full text-left px-4 py-2 hover:bg-blue-100 text-blue-500 font-bold">
+                    <Image src="/img/facebook.svg" alt="facebook" width={24} height={24} className="mr-4" />
+                  </button>
+                  <button onClick={shareToInstagram} className="block w-full text-left px-4 py-2 hover:bg-purple-100 text-purple-500 font-bold">
+                    <Image src="/img/Instagram.svg" alt="Instagram" width={24} height={24} className="mr-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </section>
