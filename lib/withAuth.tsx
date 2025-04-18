@@ -15,7 +15,8 @@ export default function withAuth<P extends JSX.IntrinsicAttributes>(
 
       const verificarAutenticacao = async () => {
         if (!token) {
-          router.push('/login')
+          const redirectPath = encodeURIComponent(router.asPath)
+          router.push(`/login?redirect=${redirectPath}`)
           return
         }
 
@@ -30,12 +31,14 @@ export default function withAuth<P extends JSX.IntrinsicAttributes>(
             setAuthorized(true)
           } else {
             localStorage.removeItem('token')
-            router.push('/login')
+            const redirectPath = encodeURIComponent(router.asPath)
+            router.push(`/login?redirect=${redirectPath}`)
           }
         } catch (err) {
           console.error('Erro na verificação de autenticação:', err)
           localStorage.removeItem('token')
-          router.push('/login')
+          const redirectPath = encodeURIComponent(router.asPath)
+          router.push(`/login?redirect=${redirectPath}`)
         } finally {
           setLoading(false)
         }

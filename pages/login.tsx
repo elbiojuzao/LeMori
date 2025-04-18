@@ -3,6 +3,7 @@ import Logo from '@/components/Logo'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
+import { redirectToAfterLogin, replaceToAfterLogin } from '@/lib/redirectTo'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -21,8 +22,9 @@ export default function Login() {
           headers: { Authorization: `Bearer ${token}` }
         })
 
+        const { redirect } = router.query
         if (res.status === 200) {
-          router.replace('/dashboard') // redireciona se já estiver logado
+          replaceToAfterLogin(router)
         }
       } catch (error) {
         // Se o token for inválido, segue na tela de login
@@ -65,7 +67,7 @@ export default function Login() {
       }
 
       localStorage.setItem('token', data.token)
-      router.push('/dashboard')
+      redirectToAfterLogin(router)
     } catch (err: any) {
       setErro(err.message)
     }
