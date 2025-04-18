@@ -1,38 +1,38 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import axios from 'axios';
-import Head from 'next/head';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
+import axios from 'axios'
+import Head from 'next/head'
 
 interface ProfileFormValues {
-  nome: string;
-  cpf: string;
-  email: string;
-  senha: string;
+  nome: string
+  cpf: string
+  email: string
+  senha: string
 }
 
 interface AddressFormValues {
-  _id?: string; // Adicionado o ID para identificar o endereço em edição
-  cep: string;
-  rua: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
+  _id?: string // Adicionado o ID para identificar o endereço em edição
+  cep: string
+  rua: string
+  numero: string
+  complemento: string
+  bairro: string
+  cidade: string
+  estado: string
 }
 
 export default function Perfil() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Meu Perfil');
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('Meu Perfil')
   const [profileForm, setProfileForm] = useState<ProfileFormValues>({
     nome: '',
     cpf: '',
     email: '',
     senha: '',
-  });
-  const [addresses, setAddresses] = useState<AddressFormValues[]>([]);
-  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  })
+  const [addresses, setAddresses] = useState<AddressFormValues[]>([])
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
   const [editAddressForm, setEditAddressForm] = useState<AddressFormValues>({
     cep: '',
     rua: '',
@@ -41,89 +41,89 @@ export default function Perfil() {
     bairro: '',
     cidade: '',
     estado: '',
-  });
+  })
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       if (!token) {
-        router.push('/login');
-        return;
+        router.push('/login')
+        return
       }
       try {
         const res = await axios.get('/api/auth/me', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-        const user = res.data;
+        })
+        const user = res.data
         setProfileForm({
           nome: user.nome || '',
           cpf: user.cpf || '',
           email: user.email || '',
           senha: '',
-        });
-        setLoading(false);
+        })
+        setLoading(false)
       } catch (err) {
-        router.push('/login');
+        router.push('/login')
       }
-    };
+    }
 
-    fetchUser();
-  }, [router]);
+    fetchUser()
+  }, [router])
 
   useEffect(() => {
     const fetchAddresses = async () => {
       if (activeTab === 'Meus Endereços') {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token')
         if (!token) {
-          router.push('/login');
-          return;
+          router.push('/login')
+          return
         }
         try {
           const res = await axios.get('/api/users/addresses', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
-          setAddresses(res.data.addresses);
+          })
+          setAddresses(res.data.addresses)
         } catch (error) {
-          console.error('Erro ao buscar endereços:', error);
-          alert('Erro ao buscar endereços.');
+          console.error('Erro ao buscar endereços:', error)
+          alert('Erro ao buscar endereços.')
         }
       }
-    };
+    }
 
-    fetchAddresses();
-  }, [activeTab, router]);
+    fetchAddresses()
+  }, [activeTab, router])
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    setEditingAddressId(null); // Limpar o estado de edição ao mudar de aba
-    setEditAddressForm({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' }); // Limpar o formulário ao mudar de aba
-  };
+    setActiveTab(tab)
+    setEditingAddressId(null) // Limpar o estado de edição ao mudar de aba
+    setEditAddressForm({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' }) // Limpar o formulário ao mudar de aba
+  }
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileForm(prev => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setProfileForm(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleEditAddress = (address: AddressFormValues) => {
-    setEditingAddressId(address._id || null);
-    setEditAddressForm({ ...address });
-  };
+    setEditingAddressId(address._id || null)
+    setEditAddressForm({ ...address })
+  }
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditAddressForm(prev => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setEditAddressForm(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cep = e.target.value.replace(/\D/g, '');
+    const cep = e.target.value.replace(/\D/g, '')
     if (cep.length === 8) {
       try {
-        const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
-        const { logradouro, complemento, bairro, localidade, uf, erro } = response.data;
+        const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`)
+        const { logradouro, complemento, bairro, localidade, uf, erro } = response.data
         if (!erro) {
           setEditAddressForm(prev => ({
             ...prev,
@@ -133,44 +133,44 @@ export default function Perfil() {
             bairro: bairro || '',
             cidade: localidade || '',
             estado: uf || '',
-          }));
+          }))
         } else {
-          alert('CEP não encontrado.');
+          alert('CEP não encontrado.')
         }
       } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
-        alert('Erro ao buscar CEP.');
+        console.error('Erro ao buscar CEP:', error)
+        alert('Erro ao buscar CEP.')
       }
     } else {
-      setEditAddressForm(prev => ({ ...prev, cep: e.target.value }));
+      setEditAddressForm(prev => ({ ...prev, cep: e.target.value }))
       if (cep.length < 8) {
-        setEditAddressForm(prev => ({ ...prev, rua: '', complemento: '', bairro: '', cidade: '', estado: '' }));
+        setEditAddressForm(prev => ({ ...prev, rua: '', complemento: '', bairro: '', cidade: '', estado: '' }))
       }
     }
-  };
+  }
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
+    e.preventDefault()
+    const token = localStorage.getItem('token')
 
     try {
       await axios.put('/api/users/profile', profileForm, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-      alert('Dados do perfil atualizados com sucesso!');
+      })
+      alert('Dados do perfil atualizados com sucesso!')
     } catch (err) {
-      console.error('Erro ao atualizar perfil:', err);
-      alert('Erro ao atualizar dados do perfil.');
+      console.error('Erro ao atualizar perfil:', err)
+      alert('Erro ao atualizar dados do perfil.')
     }
-  };
+  }
 
   const handleAddressSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-    const url = editingAddressId ? `/api/users/addresses/${editingAddressId}` : '/api/users/addresses';
-    const method = editingAddressId ? 'PUT' : 'POST';
+    e.preventDefault()
+    const token = localStorage.getItem('token')
+    const url = editingAddressId ? `/api/users/addresses/${editingAddressId}` : '/api/users/addresses'
+    const method = editingAddressId ? 'PUT' : 'POST'
 
     try {
       const res = await axios({
@@ -180,29 +180,50 @@ export default function Perfil() {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-      alert(`Endereço ${editingAddressId ? 'atualizado' : 'salvo'} com sucesso!`);
-      setEditingAddressId(null); // Limpar o estado de edição após salvar
-      setEditAddressForm({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' }); // Limpar o formulário
+      })
+      alert(`Endereço ${editingAddressId ? 'atualizado' : 'salvo'} com sucesso!`)
+      setEditingAddressId(null) // Limpar o estado de edição após salvar
+      setEditAddressForm({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' }) // Limpar o formulário
       // Recarregar a lista de endereços
       if (activeTab === 'Meus Endereços') {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token')
         if (token) {
           const res = await axios.get('/api/users/addresses', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
-          setAddresses(res.data.addresses);
+          })
+          setAddresses(res.data.addresses)
         }
       }
     } catch (err) {
-      console.error(`Erro ao ${editingAddressId ? 'atualizar' : 'salvar'} endereço:`, err);
-      alert(`Erro ao ${editingAddressId ? 'atualizar' : 'salvar'} endereço.`);
+      console.error(`Erro ao ${editingAddressId ? 'atualizar' : 'salvar'} endereço:`, err)
+      alert(`Erro ao ${editingAddressId ? 'atualizar' : 'salvar'} endereço.`)
     }
-  };
+  }
 
-  if (loading) return <p className="text-center mt-1 text-gray-400">Carregando dados...</p>;
+  const handleRemoveAddress = async (addressId: string | undefined) => {
+    if (!addressId) return
+
+    if (window.confirm('Tem certeza que deseja remover este endereço?')) {
+      const token = localStorage.getItem('token')
+      try {
+        await axios.delete(`/api/users/addresses/${addressId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        alert('Endereço removido com sucesso!')
+        // Atualizar a lista de endereços removendo o endereço excluído
+        setAddresses(prevAddresses => prevAddresses.filter(addr => addr._id !== addressId))
+      } catch (error) {
+        console.error('Erro ao remover endereço:', error)
+        alert('Erro ao remover endereço.')
+      }
+    }
+  }
+
+  if (loading) return <p className="text-center mt-1 text-gray-400">Carregando dados...</p>
 
   return (
     <>
@@ -268,13 +289,22 @@ export default function Perfil() {
                           <p className="text-gray-700">Rua: {address.rua}, {address.numero} {address.complemento}</p>
                           <p className="text-gray-700">{address.bairro}, {address.cidade} - {address.estado}</p>
                         </div>
-                        <button
-                          type="button"
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition"
-                          onClick={() => handleEditAddress(address)}
-                        >
-                          Editar
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            type="button"
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition"
+                            onClick={() => handleEditAddress(address)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md transition"
+                            onClick={() => handleRemoveAddress(address._id)}
+                          >
+                            Remover
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -325,5 +355,5 @@ export default function Perfil() {
         </div>
       </div>
     </>
-  );
+  )
 }

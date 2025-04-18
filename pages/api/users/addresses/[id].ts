@@ -37,6 +37,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.error('Erro ao atualizar endereço:', error);
         return res.status(500).json({ error: 'Erro ao atualizar endereço' });
       }
+    } else if (req.method === 'DELETE') {
+      try {
+        const deletedAddress = await Address.findOneAndDelete({ _id: addressId, userId });
+
+        if (!deletedAddress) {
+          return res.status(404).json({ error: 'Endereço não encontrado ou não pertence ao usuário' });
+        }
+
+        return res.status(200).json({ message: 'Endereço removido com sucesso', address: deletedAddress });
+      } catch (error) {
+        console.error('Erro ao remover endereço:', error);
+        return res.status(500).json({ error: 'Erro ao remover endereço' });
+      }
     } else {
       return res.status(405).end();
     }

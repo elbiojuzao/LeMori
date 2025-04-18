@@ -4,6 +4,7 @@ import Address from '@/models/Address';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const MAX_ADDRESSES_PER_USER = 3;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await mongooseConnect();
@@ -29,6 +30,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else if (req.method === 'POST') {
       const { cep, rua, numero, complemento, bairro, cidade, estado } = req.body;
       try {
+        // 1. Consultar o número de endereços do usuário
+        const addressCount = await Address.countDocuments({ userId });
+
+        // 2. Verificar se o limite foi atingido
+        if (addressCount >= MAX_ADDRESSES_PER_USER) {
+          return res.status(400).json({ error: `Você atingiu o limite de ${MAX_ADDRESSES_PER_USER} endereços cadastrados.` });
+        }
+
+        // 3. Criar o novo endereço se o limite não foi atingido
         const newAddress = await Address.create({
           cep,
           rua,
