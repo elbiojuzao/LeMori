@@ -1,7 +1,6 @@
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 export default function Register() {
@@ -16,13 +15,8 @@ export default function Register() {
         const res = await axios.get('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` }
         })
-
-        if (res.status === 200) {
-          router.replace('/dashboard') // redireciona se já estiver logado
-        }
-      } catch (error) {
-        // Se o token for inválido, segue na tela de login
-      }
+        if (res.status === 200) router.replace('/dashboard')
+      } catch {}
     }
 
     verificarAutenticacao()
@@ -31,59 +25,56 @@ export default function Register() {
   const [form, setForm] = useState({
     nome: '',
     cpf: '',
-    rua: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    estado: '',
     email: '',
     senha: '',
     confirmarSenha: '',
-    termos: false
+    termos: false,
+  })
+
+  const [errors, setErrors] = useState({
+    nome: false,
+    cpf: false,
+    email: false,
+    senha: false,
+    confirmarSenha: false,
+    termos: false,
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    setErrors(prev => ({ ...prev, [name]: false })) // limpa erro ao digitar
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-  
-    if (form.senha !== form.confirmarSenha) {
-      alert('As senhas não coincidem')
-      return
+
+    const novosErros = {
+      nome: !form.nome.trim(),
+      cpf: !form.cpf.trim(),
+      email: !form.email.trim(),
+      senha: !form.senha,
+      confirmarSenha: form.senha !== form.confirmarSenha,
+      termos: !form.termos,
     }
-  
-    if (!form.termos) {
-      alert('Você deve aceitar os termos de adesão')
-      return
-    }
-  
+
+    setErrors(novosErros)
+
+    const temErros = Object.values(novosErros).some(Boolean)
+    if (temErros) return
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: form.nome,
           cpf: form.cpf,
-          rua: form.rua,
-          numero: form.numero,
-          complemento: form.complemento,
-          bairro: form.bairro,
-          cidade: form.cidade,
-          estado: form.estado,
           email: form.email,
           senha: form.senha,
         }),
       })
-  
+
       if (res.ok) {
         router.push('/sucesso')
       } else {
@@ -91,19 +82,16 @@ export default function Register() {
         alert(data.error || 'Erro ao registrar usuário.')
       }
     } catch (err) {
-      console.error('Erro ao registrar:', err)
       alert('Erro de conexão. Tente novamente.')
     }
   }
 
   return (
     <>
-      <Head>
-        <title>Cadastro | LeMori</title>
-      </Head>
+      <Head><title>Cadastro | LeMori</title></Head>
 
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4">
-        <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-lg">
+        <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-lg">
           <div className="mb-6 text-center">
             <h1 className="text-4xl">🌿</h1>
             <h1 className="text-4xl font-bold text-blue-500">LeMori</h1>
@@ -119,36 +107,6 @@ export default function Register() {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">CPF</label>
               <input type="text" name="cpf" value={form.cpf} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" required />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Rua</label>
-              <input type="text" name="rua" value={form.rua} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" required />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Número</label>
-              <input type="text" name="numero" value={form.numero} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" required />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Complemento</label>
-              <input type="text" name="complemento" value={form.complemento} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Bairro</label>
-              <input type="text" name="bairro" value={form.bairro} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" required />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Cidade</label>
-              <input type="text" name="cidade" value={form.cidade} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" required />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Estado</label>
-              <input type="text" name="estado" value={form.estado} onChange={handleChange} className="text-gray-600 mt-1 w-full p-2 border rounded-md" required />
             </div>
 
             <div>
@@ -170,12 +128,11 @@ export default function Register() {
               <input type="checkbox" name="termos" checked={form.termos} onChange={handleChange} className="mr-2" required />
               <label className="text-sm text-gray-700">Aceito os termos de adesão</label>
             </div>
+            {errors.termos && <p className="text-sm text-red-500">Você precisa aceitar os termos</p>}
 
-            <div className="md:col-span-2">
-              <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition">
-                Cadastrar
-              </button>
-            </div>
+            <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition">
+              Cadastrar
+            </button>
           </form>
         </div>
       </div>

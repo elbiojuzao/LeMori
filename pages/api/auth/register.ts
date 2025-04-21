@@ -10,37 +10,34 @@ const rateLimitMap = new Map()
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const {
-    nome, email, senha,
-    cpf, rua, numero, complemento,
-    bairro, cidade, estado
-  } = req.body
+  const { nome, email, senha, cpf } = req.body
+
+  if (!nome || !email || !senha || !cpf) {
+    return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos.' })
+  }
 
   await mongooseConnect()
 
-  const userExistente = await User.findOne({ email })
-  if (userExistente) {
-    return res.status(400).json({ error: 'Usuário já cadastrado' })
+  const emailExistente = await User.findOne({ email })
+  if (emailExistente) {
+    return res.status(400).json({ error: 'E-mail já cadastrado.' })
+  }
+
+  const cpfExistente = await User.findOne({ cpf })
+  if (cpfExistente) {
+    return res.status(400).json({ error: 'CPF já cadastrado.' })
   }
 
   const senhaCriptografada = await bcrypt.hash(senha, 10)
 
-  // Criar novo usuário (sem confirmação de e-mail ainda)
   const novoUsuario = await User.create({
     nome,
     email,
     senha: senhaCriptografada,
     cpf,
-    rua,
-    numero,
-    complemento,
-    bairro,
-    cidade,
-    estado,
     emailVerificado: false,
   })
 
-  // Gerar token de verificação
   const token = crypto.randomBytes(32).toString('hex')
   const tokenExpira = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 horas
 
@@ -48,20 +45,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   novoUsuario.emailTokenExpira = tokenExpira
   await novoUsuario.save()
 
-  // Montar URL de verificação
   const verificationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verificar-email?token=${token}`
 
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
   const now = Date.now()
-
   const lastSent = rateLimitMap.get(ip) || 0
+
   if (now - lastSent < 60000) {
-    return res.status(429).json({ error: 'Espere 1 minuto antes de tentar de novo' })
+    return res.status(429).json({ error: 'Espere 1 minuto antes de tentar de novo.' })
   }
 
   rateLimitMap.set(ip, now)
-  
-  // Enviar o e-mail
+
   await sendEmail(
     novoUsuario.email,
     'Confirmação de Email - LeMori',
