@@ -4,6 +4,8 @@ import User from '@/models/User'
 import crypto from 'crypto'
 import { sendEmail } from '@/lib/mailer'
 
+const rateLimitMap = new Map()
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
 
@@ -28,6 +30,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await user.save()
 
   const verificationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verificar-email?token=${token}`
+
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const now = Date.now()
+
+  const lastSent = rateLimitMap.get(ip) || 0
+  if (now - lastSent < 60000) {
+    return res.status(429).json({ error: 'Espere 1 minuto antes de tentar de novo' })
+  }
+
+  rateLimitMap.set(ip, now)
 
   await sendEmail(
     user.email,
