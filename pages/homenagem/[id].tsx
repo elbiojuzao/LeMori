@@ -6,6 +6,8 @@ import Homenagem, { IHomenagem } from '@/models/Homenagem'
 import Footer from '@/components/Footer'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import moment from 'moment'
+import 'moment/locale/pt-br'
 
 interface HomenagemProps {
   homenagem: {
@@ -50,10 +52,17 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
     setShowShareButtons(!showShareButtons)
   }
 
+  const formatarData = (data: string | null | undefined) => {
+    if (data) {
+      return moment(data).locale('pt-br').format('DD/MM/YYYY')
+    }
+    return ''
+  }
+
   return (
     <>
       <Head>
-        <title>{homenagem.nomeHomenageado} | LeMori</title>
+        <title>{`${homenagem.nomeHomenageado} | LeMori`}</title>
         <meta name="description" content={description} />
 
         {/* Meta Tags Open Graph para Preview */}
@@ -88,24 +97,24 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
                 <h2 className="text-3xl font-bold">{homenagem.nomeHomenageado}</h2>
                 <div className="flex items-center text-gray-600 mt-1">
                   <span className="mr-2">†</span>
-                  <span>{homenagem.dataFalecimento?.split('T')[0]}</span>
+                  <span>{formatarData(homenagem.dataFalecimento)}</span>
                 </div>
               </div>
             </div>
             {/* Botão de Compartilhar Principal */}
             <div className="relative">
-              <button onClick={toggleShareButtons} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-2 rounded">
-                <Image src="/img/compartilhar.png" alt="Compartilhar" width={24} height={24} className="mr-4" />
+              <button onClick={toggleShareButtons} className="rounded-full bg-gray-300 hover:bg-gray-400 font-bold py-1 px-1 flex">
+                <Image src="/img/compartilhar.png" alt="Compartilhar" width={24} height={24}/>
               </button>
               {showShareButtons && (
-                <div className="absolute top-full mt-2 bg-white shadow-md rounded-md overflow-hidden z-10">
-                  <button onClick={shareToWhatsapp} className="block w-full text-left px-4 py-2 hover:bg-green-100 text-green-500 font-bold">
+                <div className="absolute mt-4 bg-white shadow-md rounded-md overflow-hidden">
+                  <button onClick={shareToWhatsapp} className="block w-full text-left px-2 py-2 hover:bg-green-200">
                     <Image src="/img/whatsapp.svg" alt="whatsapp" width={24} height={24} className="mr-4" />
                   </button>
-                  <button onClick={shareToFacebook} className="block w-full text-left px-4 py-2 hover:bg-blue-100 text-blue-500 font-bold">
+                  <button onClick={shareToFacebook} className="block w-full text-left px-2 py-2 hover:bg-blue-200">
                     <Image src="/img/facebook.svg" alt="facebook" width={24} height={24} className="mr-4" />
                   </button>
-                  <button onClick={shareToInstagram} className="block w-full text-left px-4 py-2 hover:bg-purple-100 text-purple-500 font-bold">
+                  <button onClick={shareToInstagram} className="block w-full text-left px-2 py-2 hover:bg-purple-200">
                     <Image src="/img/Instagram.svg" alt="Instagram" width={24} height={24} className="mr-4" />
                   </button>
                 </div>
