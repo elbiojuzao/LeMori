@@ -27,16 +27,16 @@ export default function VerificarEmail() {
 
   return (
     <>
-    <Header/>
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="bg-white rounded-2xl shadow p-6 max-w-md text-center">
-        <h1 className={`text-2xl font-bold mb-4 ${erro ? 'text-red-600' : 'text-green-600'}`}>
-          {erro ? 'Erro' : 'Sucesso'}
-        </h1>
-        <p>{mensagem}</p>
+      <Header />
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#ececdd]">
+        <div className="bg-[#ffffff] rounded-2xl shadow p-6 max-w-md text-center">
+          <h1 className={`text-2xl font-bold mb-4 ${erro ? 'text-red-600' : 'text-green-600'}`}>
+            {erro ? 'Erro' : 'Sucesso'}
+          </h1>
+          <p className="text-[#333]">{mensagem}</p>
+        </div>
       </div>
-    </div>
-    <Footer/>
+      <Footer />
     </>
   )
 }

@@ -9,7 +9,7 @@ export default function Success() {
         <title>Cadastro realizado</title>
       </Head>
 
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4 py-8">
+      <div className="flex min-h-screen items-center justify-center bg-[#ececdd] px-4 py-8">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 text-center">
           <div className='p-8'><Logo /></div>
           <h2 className="text-2xl font-bold text-green-600 mb-2">Cadastro realizado com sucesso!</h2>

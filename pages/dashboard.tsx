@@ -94,7 +94,7 @@ function Dashboard() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-100 p-6">
+      <div className="min-h-screen bg-[#ececdd] p-6">
         <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
           <h1 className="text-2xl font-bold text-blue-600 mb-4">Bem-vindo, {user.nome}</h1>
           {typeof user.homenagemCreditos !== 'undefined' && (

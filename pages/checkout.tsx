@@ -52,7 +52,7 @@ export default function Checkout() {
         <title>Checkout</title>
       </Head>
       <Header />
-      <div className="min-h-screen bg-gray-100 p-4">
+      <div className="min-h-screen bg-[#ececdd] p-4">
         <h1 className="text-blue-600 text-2xl font-bold mb-6">Checkout</h1>
 
         {carrinho.length > 0 ? (

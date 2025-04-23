@@ -64,7 +64,7 @@ export default function SelecaoProdutos() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-100 p-4 pb-32">
+      <div className="min-h-screen bg-[#ececdd] p-4 pb-32">
         <h1 className="text-blue-600 text-2xl font-bold mb-6">Selecione os produtos</h1>
 
         <div className="grid gap-4">

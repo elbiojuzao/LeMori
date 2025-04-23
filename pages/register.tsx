@@ -90,7 +90,7 @@ export default function Register() {
     <>
       <Head><title>Cadastro | LeMori</title></Head>
 
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#ececdd] px-4">
         <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-lg">
           <div className="mb-6 text-center">
             <h1 className="text-4xl">🌿</h1>

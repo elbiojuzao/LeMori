@@ -79,9 +79,9 @@ export default function Login() {
         <title>Login | LeMori</title>
       </Head>
 
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-100 to-purple-300 px-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#ececdd] px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-          <Logo />
+          <Logo className='w-full max-w-md rounded-2xl p-8 h-100'/>
 
           {erro && <p className="text-red-500 text-sm mb-4">{erro}</p>}
 

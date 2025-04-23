@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import Head from 'next/head'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 interface ProfileFormValues {
   nome: string
@@ -227,11 +229,8 @@ export default function Perfil() {
 
   return (
     <>
-      <Head>
-        <title>Perfil | LeMori</title>
-      </Head>
-
-      <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
+      <Header />
+      <div className="flex min-h-screen items-center justify-center bg-[#ececdd] px-4">
         <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg">
           <div className="flex justify-around mb-6">
             <button
@@ -354,6 +353,7 @@ export default function Perfil() {
           )}
         </div>
       </div>
+      <Footer />
     </>
   )
 }
