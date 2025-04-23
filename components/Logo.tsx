@@ -1,10 +1,9 @@
-import Image from 'next/image'
-import Link from 'next/link'
-
-export default function Logo() {
+export default function Logo({ className = '' }: { className?: string }) {
   return (
-    <Link href="/">
-      <Image src="/img/Lm_LeMori.png" alt="LeMori" width={120} height={40} />
-    </Link>
+    <img
+      src="img/logo_lumenis.png"
+      alt="Logo Lumenis"
+      className={`h-10 ${className}`}
+    />
   )
 }

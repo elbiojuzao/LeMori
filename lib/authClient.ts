@@ -21,6 +21,11 @@ export async function login(email: string, senha: string) {
   return data
 }
 
+export function isAuthenticated(): boolean {
+  if (typeof window === 'undefined') return false
+  return !!localStorage.getItem('token')
+}
+
 export function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
