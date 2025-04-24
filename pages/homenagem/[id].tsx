@@ -74,9 +74,9 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
     <>
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
         {/* Header */}
-        <header className="mb-6 text-center">
-          <Logo className="b-6 w-full  h-50"/>
-        </header>
+        <div className='flex justify-center'>
+          <Logo className="b-6 h-50"/>
+        </div>
 
         {/* Info principal */}
         <section className="px-6 py-4 bg-gray-100">
