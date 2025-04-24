@@ -349,18 +349,23 @@ function FormHomenagem() {
                   </div>
                 ))}
               </div>
-
-              <div>
-                <label className="block mb-1 text-gray-600">Link de música (YouTube, Spotify, etc)</label>
+              <div className="mb-4">
+                <label htmlFor="musica" className="block text-gray-600 font-medium mb-1">
+                  Link da Música
+                </label>
                 <input
                   type="url"
+                  id="musica"
+                  name="musica"
                   value={musica}
                   onChange={(e) => setMusica(e.target.value)}
-                  className="w-full p-2 border rounded-md text-gray-600"
-                  placeholder="https://..."
+                  className="w-full p-2 border rounded-md text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="https://youtu.be/seu-link-ou-spotify"
                 />
+                <p className="text-sm text-gray-600 mt-1">
+                  A música deve ter no máximo <span className="font-semibold text-red-500">6 minutos</span>.
+                </p>
               </div>
-
               <button
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold w-full"
