@@ -1,0 +1,10 @@
+:root {
+  --color-text-primary: #333; /* Color 1 */
+  --color-background-primario: #d4ddd6; /* Color 2 */
+  --color-background-secundario: #e4ddd6; /* Color 3 */
+  --color-background-terciario: #e4e3cd; /* Color 4 */
+  --color-background-quartenario: #ececdd; /* Color 5 */
+  --color-white: #fff;
+  --color-gray-300: #d1d5db; /* Cor da borda dos inputs */
+}
+

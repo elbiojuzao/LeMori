@@ -1,113 +1,77 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Head from 'next/head'
+import Logo from '@/components/Logo'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      <Head>
+        <title>Lumenis - Sistema de Homenagens</title>
+      </Head>
+      <header className="bg-[#e4ddd6] py-6">
+        <div className="container mx-auto flex justify-between items-center px-4">
+          <Logo className=' rounded-2xl h-2 h-20'/>
+          <nav>
+            <ul className="flex gap-6 text-[#333]">
+              <li><a href="#como-funciona">Como Funciona</a></li>
+              <li><a href="#depoimentos">Depoimentos</a></li>
+              <li><a href="#contato">Contato</a></li>
+            </ul>
+          </nav>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
+      </header>
+
+      <section className="bg-[#d4ddd6] text-center py-20 px-4 text-[#333]">
+        <h1 className="text-4xl font-bold mb-6 text-[#333]">Celebre Memórias com Homenagens Significativas</h1>
+        <p className="text-lg mb-8 text-[#333]">Um espaço para expressar seu carinho e honrar aqueles que são importantes para você.</p>
+        <a href="/register" className="inline-block bg-[#e4e3cd] text-[#333] py-3 px-6 rounded font-bold">
+          Crie uma Homenagem
         </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      </section>
+
+      <section id="como-funciona" className="bg-[#ececdd] text-center py-16 px-4">
+        <h2 className="text-2xl font-bold mb-12 text-[#333]">Como Funciona</h2>
+        <div className="flex flex-col md:flex-row justify-around gap-8 text-[#333]">
+          {[
+            { title: 'Escolha um Modelo', desc: 'Explore nossa variedade de modelos de homenagem.', icon: '🖼️' },
+            { title: 'Personalize', desc: 'Adicione suas fotos, textos e lembranças.', icon: '✍️' },
+            { title: 'Compartilhe', desc: 'Envie para amigos e familiares.', icon: '📤' },
+          ].map((step, i) => (
+            <div key={i} className="w-full md:w-1/3">
+              <div className="text-4xl mb-4">{step.icon}</div>
+              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+              <p>{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="depoimentos" className="bg-[#e4e3cd] text-center py-16 px-4 text-[#333]">
+        <h2 className="text-2xl font-bold mb-8">Compartilhando Memórias</h2>
+        <div className="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
+          {[
+            { text: '"Um espaço lindo para homenagear quem amamos."', author: 'Maria Silva' },
+            { text: '"Facilidade e sensibilidade em um só lugar."', author: 'João Pereira' },
+          ].map((depo, i) => (
+            <div key={i} className="bg-white rounded shadow p-6">
+              <p>{depo.text}</p>
+              <p className="mt-4 text-sm italic text-gray-600">– {depo.author}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="contato" className="bg-[#d4ddd6] text-center py-16 px-4 text-[#333]">
+        <h2 className="text-2xl font-bold mb-6">Vamos Criar Juntos uma Linda Homenagem</h2>
+        <form className="flex flex-col gap-4 max-w-md mx-auto mt-6">
+          <input className="border border-gray-300 rounded px-4 py-2" type="text" placeholder="Seu Nome" />
+          <input className="border border-gray-300 rounded px-4 py-2" type="email" placeholder="Seu Email" />
+          <textarea className="border border-gray-300 rounded px-4 py-2" rows={4} placeholder="Sua Mensagem" />
+          <button type="submit" className="bg-[#e4e3cd] text-[#333] py-3 rounded font-bold">Enviar Mensagem</button>
+        </form>
+      </section>
+
+      <Footer />
+    </>
+  )
 }
