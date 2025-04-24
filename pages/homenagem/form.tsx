@@ -237,9 +237,6 @@ function FormHomenagem() {
   return (
     <>
       <Header />
-      <Head>
-        <title>{modoEdicao ? 'Editar' : 'Nova'} Homenagem | LeMori</title>
-      </Head>
 
       <div className="min-h-screen bg-[#ececdd] p-6 flex items-center justify-center">
         <div className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-md">

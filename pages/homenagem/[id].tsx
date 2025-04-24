@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { GetServerSideProps } from 'next'
 import mongooseConnect from '@/lib/mongoose'
 import Homenagem, { IHomenagem } from '@/models/Homenagem'
+import Logo from '@/components/Logo'
 import Footer from '@/components/Footer'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
@@ -61,24 +62,10 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
 
   return (
     <>
-      <Head>
-        <title>{`${homenagem.nomeHomenageado} | LeMori`}</title>
-        <meta name="description" content={description} />
-
-        {/* Meta Tags Open Graph para Preview */}
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={imageUrl} />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:type" content="website" />
-      </Head>
-
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
         {/* Header */}
         <header className="mb-6 text-center">
-          <h1 className="text-4xl">🌿</h1>
-          <h1 className="text-4xl font-bold text-blue-500">LeMori</h1>
-          <p className="text-gray-500 italic text-sm">Lembrança e Memória</p>
+          <Logo className="b-6 w-full  h-50"/>
         </header>
 
         {/* Info principal */}
