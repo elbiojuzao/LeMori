@@ -45,6 +45,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ message: 'Homenagem excluída com sucesso (lógico)' })
     }
 
+    if (req.method === 'PUT') {
+      const dadosAtualizados = req.body
+      Object.assign(homenagem, dadosAtualizados)
+      await homenagem.save()
+      console.log('Homenagem atualizada com sucesso:', id)
+      return res.status(200).json(homenagem)
+    }
+
     return res.status(405).json({ error: 'Método não permitido' })
   } catch (error: any) {
     console.error('Erro ao processar requisição:', error)
