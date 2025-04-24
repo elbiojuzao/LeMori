@@ -1,15 +1,15 @@
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/router'
 
 interface LogoProps {
-  className?: string;
+  className?: string
 }
 
 export default function Logo({ className = '' }: LogoProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleLogoClick = () => {
-    router.push('/');
-  };
+    router.push('/')
+  }
 
   return (
     <button
@@ -23,5 +23,5 @@ export default function Logo({ className = '' }: LogoProps) {
         className={`h-10 ${className}`}
       />
     </button>
-  );
+  )
 }
