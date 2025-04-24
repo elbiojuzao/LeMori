@@ -60,6 +60,16 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
     return ''
   }
 
+  function getSpotifyTrackId(url: string) {
+    const match = url.match(/track\/([a-zA-Z0-9]+)/);
+    return match ? match[1] : '';
+  }
+  
+  function getYouTubeVideoId(url: string) {
+    const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : '';
+  }
+
   return (
     <>
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
@@ -152,10 +162,33 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
           {abaAtiva === 'musica' && (
             <div className="bg-white p-6 rounded-lg shadow">
               <p className="mb-4">"Essa música representa a memória de {homenagem.nomeHomenageado}."</p>
-              <audio controls className="w-full">
-                <source src={homenagem.musica || '/musica.mp3'} type="audio/mpeg" />
-                Seu navegador não suporta o player de áudio.
-              </audio>
+              {homenagem.musica?.includes('spotify.com') ? (
+                <iframe
+                  src={`https://open.spotify.com/embed/track/${getSpotifyTrackId(homenagem.musica)}`}
+                  width="100%"
+                  height="80"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  className="rounded-lg"
+                ></iframe>
+              ) : homenagem.musica?.includes('youtube.com') ? (
+                <iframe
+                  width="100%"
+                  height="315"
+                  src={`https://www.youtube.com/embed/${getYouTubeVideoId(homenagem.musica)}`}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="rounded-lg"
+                ></iframe>
+              ) : (
+                <audio controls className="w-full">
+                  <source src={homenagem.musica || '/musica.mp3'} type="audio/mpeg" />
+                  Seu navegador não suporta o player de áudio.
+                </audio>
+              )}
             </div>
           )}
         </div>
