@@ -24,7 +24,7 @@ export default function Home() {
       <section className="bg-[#d4ddd6] text-center py-20 px-4 text-[#333]">
         <h1 className="text-4xl font-bold mb-6 text-[#333]">Celebre Memórias com Homenagens Significativas</h1>
         <p className="text-lg mb-8 text-[#333]">Um espaço para expressar seu carinho e honrar aqueles que são importantes para você.</p>
-        <a href="/register" className="inline-block bg-[#e4e3cd] text-[#333] py-3 px-6 rounded font-bold">
+        <a href="homenagem/form" className="inline-block bg-[#e4e3cd] text-[#333] py-3 px-6 rounded font-bold">
           Crie uma Homenagem
         </a>
       </section>
