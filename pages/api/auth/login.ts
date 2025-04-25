@@ -14,9 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await mongooseConnect()
 
   const user = await User.findOne({ email })
-  if (!user) {
-    return res.status(401).json({ error: 'Usuário não encontrado' })
-  }
+  if (!user) return res.status(401).json({ error: 'Credenciais inválidas' })
 
   const senhaCorreta = await bcrypt.compare(senha, user.senha)
   if (!senhaCorreta) {

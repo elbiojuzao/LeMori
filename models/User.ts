@@ -4,7 +4,7 @@ export interface IUser extends Document {
   nome: string
   cpf: String
   email: string
-  senha: string
+  senha: { type: String, select: false } // Evita retornar senha acidentalmente
   homenagemCreditos: Number
   emailVerificado: Boolean
   emailToken?: string
