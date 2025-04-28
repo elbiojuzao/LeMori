@@ -6,6 +6,6 @@ const CupomSchema = new mongoose.Schema({
   valor: { type: Number, required: true }, // 10 = R$10 ou 10%
   expiracao: { type: Date, required: true },
   ativo: { type: Boolean, default: true }
-})
+}, { timestamps: true })
 
 export default mongoose.models.Cupom || mongoose.model("Cupom", CupomSchema)

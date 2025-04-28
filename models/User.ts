@@ -23,7 +23,7 @@ const UserSchema = new Schema<IUser>({
   },
   emailToken: String,
   emailTokenExpira: Date,
-})
+}, { timestamps: true })
 
 const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
 export default User
