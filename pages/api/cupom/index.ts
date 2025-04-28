@@ -12,10 +12,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "POST") {
     try {
-      const novoCupom = await Cupom.create(req.body)
-      return res.status(201).json(novoCupom)
+      const { codigo, tipo, valor, expiracao } = req.body;
+  
+      if (!codigo || !tipo || !valor || !expiracao) {
+        return res.status(400).json({ erro: "Preencha todos os campos obrigatórios: código, desconto e validade." });
+      }
+  
+      const cupomExistente = await Cupom.findOne({ codigo });
+      if (cupomExistente) {
+        return res.status(400).json({ erro: "Já existe um cupom com este código." });
+      }
+  
+      const novoCupom = await Cupom.create({ codigo, tipo, valor, expiracao });
+      return res.status(201).json(novoCupom);
     } catch (err) {
-      return res.status(400).json({ erro: "Os dados fornecidos são inválidos. Verifique as informações e tente novamente." })
+      console.error(err);
+      return res.status(500).json({ erro: "Erro interno ao criar o cupom. Tente novamente mais tarde." });
     }
   }
 

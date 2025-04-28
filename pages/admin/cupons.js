@@ -65,10 +65,10 @@ export default function AdminCupons() {
             </thead>
             <tbody>
               {cupons.map(cupom => (
-                <tr key={cupom._id}>
+                <tr key={cupom._id} className="text-center text-gray-400">
                   <td className="py-2 px-4 border-b">{cupom.codigo}</td>
-                  <td className="py-2 px-4 border-b">{cupom.desconto}%</td>
-                  <td className="py-2 px-4 border-b">{new Date(cupom.validade).toLocaleDateString()}</td>
+                  <td className="py-2 px-4 border-b">{cupom.tipo ="porcentagem"? 'R$ '+cupom.valor : cupom.valor+' %'}</td>
+                  <td className="py-2 px-4 border-b">{new Date(cupom.expiracao).toLocaleDateString()}</td>
                   <td className="py-2 px-4 border-b">{cupom.ativo ? 'Sim' : 'Não'}</td>
                   <td className="py-2 px-4 border-b">
                     <button
@@ -97,18 +97,22 @@ export default function AdminCupons() {
 // COMPONENTE DE FORMULÁRIO
 function CupomForm({ cupom, onCancel, onSave }) {
   const [codigo, setCodigo] = useState(cupom.codigo || '')
-  const [desconto, setDesconto] = useState(cupom.desconto || '')
-  const [validade, setValidade] = useState(cupom.validade ? cupom.validade.slice(0,10) : '')
+  const [tipo, setTipo] = useState(cupom.tipo || 'porcentagem')
+  const [valor, setValor] = useState(cupom.valor || '')
+  const [expiracao, setExpiracao] = useState(cupom.expiracao ? cupom.expiracao.slice(0,10) : '')
   const [ativo, setAtivo] = useState(cupom.ativo ?? true)
 
   async function handleSubmit(e) {
     e.preventDefault()
     try {
+      const dados = { codigo, tipo, valor, expiracao, ativo }
+
       if (cupom._id) {
-        await axios.put(`/api/cupom/${cupom._id}`, { codigo, desconto, validade, ativo })
+        await axios.put(`/api/cupom/${cupom._id}`, dados)
       } else {
-        await axios.post('/api/cupom', { codigo, desconto, validade, ativo })
+        await axios.post('/api/cupom', dados)
       }
+
       onSave()
     } catch (err) {
       console.error('Erro ao salvar cupom:', err)
@@ -127,26 +131,55 @@ function CupomForm({ cupom, onCancel, onSave }) {
           required
         />
       </div>
+
       <div className="mb-4">
-        <label className="block text-gray-700 mb-2">Desconto (%)</label>
+        <label className="block text-gray-700 mb-2">Tipo de Desconto</label>
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => setTipo('valor')}
+            className={`px-4 py-2 rounded-lg border ${
+              tipo === 'valor' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'
+            }`}
+          >
+            Valor (R$)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipo('porcentagem')}
+            className={`px-4 py-2 rounded-lg border ${
+              tipo === 'porcentagem' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'
+            }`}
+          >
+            Porcentagem (%)
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-2">
+          {tipo === 'porcentagem' ? 'Desconto (%)' : 'Desconto (R$)'}
+        </label>
         <input
           type="number"
           className="w-full border-gray-300 rounded-lg text-gray-500"
-          value={desconto}
-          onChange={(e) => setDesconto(e.target.value)}
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
           required
         />
       </div>
+
       <div className="mb-4">
-        <label className="block text-gray-700 mb-2">Validade</label>
+        <label className="block text-gray-700 mb-2">Data de Expiração</label>
         <input
           type="date"
           className="w-full border-gray-300 rounded-lg text-gray-500"
-          value={validade}
-          onChange={(e) => setValidade(e.target.value)}
+          value={expiracao}
+          onChange={(e) => setExpiracao(e.target.value)}
           required
         />
       </div>
+
       <div className="mb-6">
         <label className="flex items-center gap-2 text-gray-700">
           <input
