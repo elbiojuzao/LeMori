@@ -58,6 +58,7 @@ export default function AdminCupons() {
               <tr>
                 <th className="py-2 px-4 border-b">Código</th>
                 <th className="py-2 px-4 border-b">Desconto</th>
+                <th className="py-2 px-4 border-b">Comissão</th>
                 <th className="py-2 px-4 border-b">Validade</th>
                 <th className="py-2 px-4 border-b">Ativo</th>
                 <th className="py-2 px-4 border-b">Ações</th>
@@ -68,6 +69,7 @@ export default function AdminCupons() {
                 <tr key={cupom._id} className="text-center text-gray-400">
                   <td className="py-2 px-4 border-b">{cupom.codigo}</td>
                   <td className="py-2 px-4 border-b">{cupom.tipo ="porcentagem"? 'R$ '+cupom.valor : cupom.valor+' %'}</td>
+                  <td className="py-2 px-4 border-b">{cupom.tipo ="porcentagem"? 'R$ '+cupom.comissao : cupom.comissao+' %'}</td>
                   <td className="py-2 px-4 border-b">{new Date(cupom.expiracao).toLocaleDateString()}</td>
                   <td className="py-2 px-4 border-b">{cupom.ativo ? 'Sim' : 'Não'}</td>
                   <td className="py-2 px-4 border-b">
@@ -99,13 +101,14 @@ function CupomForm({ cupom, onCancel, onSave }) {
   const [codigo, setCodigo] = useState(cupom.codigo || '')
   const [tipo, setTipo] = useState(cupom.tipo || 'porcentagem')
   const [valor, setValor] = useState(cupom.valor || '')
+  const [comissao, setComissao] = useState(cupom.comissao || '')
   const [expiracao, setExpiracao] = useState(cupom.expiracao ? cupom.expiracao.slice(0,10) : '')
   const [ativo, setAtivo] = useState(cupom.ativo ?? true)
 
   async function handleSubmit(e) {
     e.preventDefault()
     try {
-      const dados = { codigo, tipo, valor, expiracao, ativo }
+      const dados = { codigo, tipo, valor, comissao, expiracao, ativo }
 
       if (cupom._id) {
         await axios.put(`/api/cupom/${cupom._id}`, dados)
@@ -156,6 +159,18 @@ function CupomForm({ cupom, onCancel, onSave }) {
         </div>
       </div>
 
+
+      <div className="mb-4 block text-gray-700 mb-2"> 
+        Comissão (R$) 
+        <input
+          type="number"
+          className="w-full border-gray-300 rounded-lg text-gray-500"
+          value={comissao}
+          onChange={(e) => setComissao(e.target.value)}
+          required
+        />
+      </div>
+      
       <div className="mb-4">
         <label className="block text-gray-700 mb-2">
           {tipo === 'porcentagem' ? 'Desconto (%)' : 'Desconto (R$)'}
