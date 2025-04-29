@@ -110,7 +110,7 @@ export default function TelaUsuarios() {
             <div className="space-y-2 text-sm text-gray-700">
               <p><strong>Nome:</strong> {usuarioSelecionado.nome}</p>
               <p><strong>E-mail:</strong> {usuarioSelecionado.email}</p>
-              <p><strong>CPF:</strong> {usuarioSelecionado.cpf ? '***.***.***-**' + usuarioSelecionado.cpf.slice(-2) : 'Usuário não cadastrou CPF'}</p>
+              <p><strong>CPF:</strong> {usuarioSelecionado.cpf ? '***.***.***-' + usuarioSelecionado.cpf.slice(-2) : 'Usuário não cadastrou CPF'}</p>
               <p><strong>Data de nascimento:</strong> {usuarioSelecionado.dataNascimento ? new Date(usuarioSelecionado.dataNascimento).toLocaleDateString() : '-'}</p>
               <p><strong>Endereço:</strong> {usuarioSelecionado.endereco || '-'}</p>
               <p><strong>Data de cadastro:</strong> {new Date(usuarioSelecionado.createdAt).toLocaleString()}</p>
