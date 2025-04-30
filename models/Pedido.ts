@@ -1,51 +1,46 @@
-import mongoose from 'mongoose'
+import mongoose, { Schema, Document } from 'mongoose'
 
-const EnderecoSchema = new mongoose.Schema({
-  cep: { type: String, required: true },
-  rua: { type: String, required: true },
-  numero: { type: String, required: true },
-  complemento: { type: String },
-  bairro: { type: String, required: true },
-  cidade: { type: String, required: true },
-  estado: { type: String, required: true },
-}, { _id: false })
+export interface PedidoDocument extends Document {
+  userId: mongoose.Schema.Types.ObjectId
+  dataCompra: Date
+  statusPagamento: string
+  statusPedido: string
+  valorTotal: number
+  endereco: {
+    cep: string
+    rua: string
+    numero: string
+    complemento?: string
+    bairro: string
+    cidade: string
+    estado: string
+  }
+  itensFisico: boolean
+  formaPagamento: string
+  idTransacao: string
+  observacoes?: string
+}
 
-const PedidoSchema = new mongoose.Schema({
-  usuario: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  dataCompra: { type: Date, default: Date.now },
-  statusPagamento: {
-    type: String,
-    enum: [
-      'pendente',
-      'aprovado',
-      'em_processamento',
-      'rejeitado',
-      'cancelado',
-      'estornado'
-    ],
-    default: 'pendente',
+const PedidoSchema = new Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  dataCompra: { type: Date, required: true },
+  statusPagamento: { type: String, required: true },
+  statusPedido: { type: String, required: true },
+  valorTotal: { type: Number, required: true },
+  endereco: {
+    cep: { type: String, required: true },
+    rua: { type: String, required: true },
+    numero: { type: String, required: true },
+    complemento: { type: String },
+    bairro: { type: String, required: true },
+    cidade: { type: String, required: true },
+    estado: { type: String, required: true },
   },
-  statusPedido: {
-    type: String,
-    enum: [
-      'em_producao',
-      'pronto_para_envio',
-      'enviado',
-      'entregue',
-      'cancelado'
-    ],
-    default: 'em_producao',
-  },
-  valorTotal: {
-    type: mongoose.Schema.Types.Decimal128,
-    required: true,
-    get: (v: any) => parseFloat(v.toString()),
-    set: (v: number) => v.toFixed(2),
-  },
-  enderecoEntrega: {type: EnderecoSchema,required: true},
-  contemItensFisicos: {type: Boolean,default: false}
+  itensFisico: { type: Boolean, required: true },
+  formaPagamento: { type: String, required: true },
+  idTransacao: { type: String, required: true },
+  observacoes: { type: String },
 }, { timestamps: true })
 
-PedidoSchema.set('toJSON', { getters: true })
-
-export default mongoose.models.Pedido || mongoose.model('Pedido', PedidoSchema)
+const Pedido = mongoose.models.Pedido || mongoose.model<PedidoDocument>('Pedido', PedidoSchema)
+export default Pedido
