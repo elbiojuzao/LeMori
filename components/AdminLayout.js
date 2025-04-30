@@ -32,6 +32,11 @@ export default function AdminLayout({ children }) {
                 Cupons
               </Link>
             </li>
+            <li>
+              <Link href="/admin/pedidos" className="block py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
+                Pedidos
+              </Link>
+            </li>
             {/* Adicione mais links conforme necessário */}
           </ul>
         </nav>
