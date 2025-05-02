@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import dbConnect from '@/lib/dbConnect'
 import Homenagem from '@/models/Homenagem'
-import User from '@/models/User'
 import { sendEmail } from '@/lib/mailer'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -38,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({ expiradas: expiradas.length })
   } catch (error) {
-    console.error('Erro ao processar expiração de homenagens:', error)
     res.status(500).json({ error: 'Erro interno' })
   }
 }
