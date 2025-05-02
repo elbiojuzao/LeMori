@@ -5,6 +5,8 @@ import { verifyToken } from '@/lib/auth'
 import dbConnect from '@/lib/dbConnect'
 import Homenagem from '@/models/Homenagem'
 import User from '@/models/User'
+import Pedido from '@/models/Pedido'
+import ItemPedido from '@/models/ItemPedido'
 
 export const config = {
   api: {
@@ -56,9 +58,28 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         fotoPerfil: fotoPerfilPath,
         fotos: fotosPaths,
         criadoPor: decoded.userId,
+        dataExpiracao: new Date(Date.now() + 1825 * 24 * 60 * 60 * 1000),
       })
 
-      await novaHomenagem.save()
+      const homenagemSalva = await novaHomenagem.save()
+
+      // Buscar um pedido pago do usuário com item de homenagem sem homenagemId
+      const pedidoComHomenagemPendente = await Pedido.findOne({
+        userId: user._id,
+        statusPagamento: 'pago',
+      }).populate({
+        path: 'itensPedido',
+        model: 'ItemPedido',
+        match: { tipoItem: 'homenagem', homenagemId: { $exists: false } },
+      })
+
+      if (pedidoComHomenagemPendente && pedidoComHomenagemPendente.itensPedido.length > 0) {
+        // Pegar o primeiro item de pedido pendente e atualizar seu homenagemId
+        const itemPedidoParaAtualizar = pedidoComHomenagemPendente.itensPedido[0]
+        await ItemPedido.findByIdAndUpdate(itemPedidoParaAtualizar._id, { homenagemId: homenagemSalva._id })
+        novaHomenagem.pedidoIds.push(pedidoComHomenagemPendente._id)
+        await novaHomenagem.save()
+      }
 
       user.homenagemCreditos -= 1
       await user.save()
