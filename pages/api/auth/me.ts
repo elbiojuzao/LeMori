@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userId = decoded.userId
 
     if (req.method === 'GET') {
-      const user = await User.findById(userId).select('nome cpf email homenagemCreditos')
+      const user = await User.findById(userId).select('nome cpf email homenagemCreditos isAdmin')
       if (!user) {
         return res.status(404).json({ error: 'Usuário não encontrado' })
       }

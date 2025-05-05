@@ -1,6 +1,59 @@
 import Link from 'next/link';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 
 export default function AdminLayout({ children }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [authorized, setAuthorized] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      router.push('/login')
+      return
+    }
+
+    const verificarAdmin = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (res.ok) {
+          const user = await res.json()
+          if (user.isAdmin) {
+            setAuthorized(true)
+          } else {
+            router.push('/403')
+          }
+        } else {
+          router.push('/login')
+        }
+      } catch (err) {
+        console.error('Erro ao verificar admin:', err)
+        router.push('/login')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    verificarAdmin()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Verificando acesso de administrador...
+      </div>
+    )
+  }
+
+  if (!authorized) return null
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Barra Lateral */}
@@ -37,7 +90,6 @@ export default function AdminLayout({ children }) {
                 Pedidos
               </Link>
             </li>
-            {/* Adicione mais links conforme necessário */}
           </ul>
         </nav>
         <div className="mt-8">
