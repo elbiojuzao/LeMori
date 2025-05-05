@@ -4,7 +4,6 @@ import dbConnect from '@/lib/dbConnect'
 import User from '@/models/User'
 import Pedido from '@/models/Pedido'
 import ItemPedido from '@/models/ItemPedido'
-import Homenagem from '@/models/Homenagem'
 
 const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN! })
 
@@ -17,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (type === 'payment') {
       const payment = await new Payment(client).get({ id: data.id })
 
-      if (payment.status !== 'approved') return res.status(200).send('Pagamento não aprovado, ignorado')
+      if (payment.status !== 'approved') return res.status(200).send(`Pagamento não aprovado. Status: ${payment.status}`)
 
       const pedidoId = payment.external_reference
 
@@ -36,12 +35,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const user = await User.findById(pedido.userId)
         if (!user) return res.status(400).send('Usuário do pedido não encontrado')
 
-          user.homenagensDisponiveis = (user.homenagensDisponiveis || 0) + qtdHomenagens
-          await user.save()
-      }
-    }
+        user.homenagensDisponiveis = (user.homenagensDisponiveis || 0) + qtdHomenagens
+        await user.save()
 
-    res.status(200).send('OK')
+        // Criar um ItemPedido para cada unidade de homenagem comprada
+        for (let i = 0; i < qtdHomenagens; i++) {
+          const itemHomenagem = itens.find(item => item.tipo === 'homenagem')
+          if (itemHomenagem) {
+            await ItemPedido.create({
+              pedidoId: pedido._id,
+              produtoId: itemHomenagem.produtoId,
+              nomeProduto: itemHomenagem.nomeProduto,
+              quantidade: 1, // Uma unidade por vez
+              precoUnitario: itemHomenagem.precoUnitario,
+              tipoItem: 'homenagem',
+            })
+          }
+        }
+      }
+
+      res.status(200).send('Pagamento processado com sucesso')
+    } else {
+      return res.status(400).send('Tipo de evento não suportado')
+    }
   } catch (error) {
     console.error('Erro no webhook:', error)
     res.status(500).send('Erro no webhook')

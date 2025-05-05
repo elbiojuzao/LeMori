@@ -14,9 +14,9 @@ const ItemPedidoSchema = new Schema({
   tipoItem: { type: String, enum: ['homenagem', 'plaquinha', 'chaveiro'], required: true },
   produtoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Produto', required: true },
   nomeProduto: { type: String, required: true },
-  quantidade: { type: Number, required: true },
+  quantidade: { type: Number, default: 1 },
   precoUnitario: { type: Number, required: true },
-  homenagemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Homenagem' },
+  homenagemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Homenagem', default: null },
   pedidoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Pedido', required: true },
 }, { timestamps: true })
 
