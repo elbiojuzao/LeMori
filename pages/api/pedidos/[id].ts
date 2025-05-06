@@ -5,6 +5,11 @@ import Pedido from '@/models/Pedido'
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const { id } = req.query
 
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token não fornecido' })
+  }
+
   if (req.method === 'GET') {
     try {
       await dbConnect()
