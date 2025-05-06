@@ -48,8 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(405).end()
-  } catch (err) {
-    console.error('Erro no token ou operação:', err)
+  } catch (err: any) {
+    if (err.name === 'TokenExpiredError')  return res.status(401).json({ error: 'Token expirado' })
+
     return res.status(401).json({ error: 'Token inválido ou erro na operação' })
   }
 }
