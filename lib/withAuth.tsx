@@ -30,9 +30,15 @@ export default function withAuth<P extends JSX.IntrinsicAttributes>(
           if (res.ok) {
             setAuthorized(true)
           } else {
+            const data = await res.json()
             localStorage.removeItem('token')
+
             const redirectPath = encodeURIComponent(router.asPath)
-            router.push(`/login?redirect=${redirectPath}`)
+            if (data?.error === 'Token expirado') {
+              router.push(`/login?expired=true&redirect=${redirectPath}`)
+            } else {
+              router.push(`/login?redirect=${redirectPath}`)
+            }
           }
         } catch (err) {
           console.error('Erro na verificação de autenticação:', err)
