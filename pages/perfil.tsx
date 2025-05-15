@@ -369,7 +369,7 @@ export default function Perfil() {
                   Gerencie seus endereços de entrega
                 </p>
                 <button
-                  onClick={() => router.push('/enderecos')}
+                  onClick={() => router.push('/endereco')}
                   className="w-full px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
                 >
                   Gerenciar endereços
