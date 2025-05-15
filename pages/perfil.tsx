@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
-import Head from 'next/head'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { User, Mail, Check } from 'lucide-react'
 
 interface ProfileFormValues {
   nome: string
@@ -13,7 +13,7 @@ interface ProfileFormValues {
 }
 
 interface AddressFormValues {
-  _id?: string // Adicionado o ID para identificar o endereço em edição
+  _id?: string
   cep: string
   rua: string
   numero: string
@@ -26,7 +26,8 @@ interface AddressFormValues {
 export default function Perfil() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('Meu Perfil')
+  const [isEditing, setIsEditing] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [profileForm, setProfileForm] = useState<ProfileFormValues>({
     nome: '',
     cpf: '',
@@ -34,121 +35,39 @@ export default function Perfil() {
     senha: '',
   })
   const [addresses, setAddresses] = useState<AddressFormValues[]>([])
-  const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
-  const [editAddressForm, setEditAddressForm] = useState<AddressFormValues>({
-    cep: '',
-    rua: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    estado: '',
-  })
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/login')
-        return
-      }
-      try {
-        const res = await axios.get('/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        const user = res.data
-        setProfileForm({
-          nome: user.nome || '',
-          cpf: user.cpf || '',
-          email: user.email || '',
-          senha: '',
-        })
-        setLoading(false)
-      } catch (err) {
-        router.push('/login')
-      }
+  const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      router.push('/login')
+      return
     }
-
-    fetchUser()
+    try {
+      const res = await axios.get('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const user = res.data
+      setProfileForm({
+        nome: user.nome || '',
+        cpf: user.cpf || '',
+        email: user.email || '',
+        senha: '',
+      })
+      setLoading(false)
+    } catch (err) {
+      router.push('/login')
+    }
   }, [router])
 
   useEffect(() => {
-    const fetchAddresses = async () => {
-      if (activeTab === 'Meus Endereços') {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          router.push('/login')
-          return
-        }
-        try {
-          const res = await axios.get('/api/users/addresses', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          setAddresses(res.data.addresses)
-        } catch (error) {
-          console.error('Erro ao buscar endereços:', error)
-          alert('Erro ao buscar endereços.')
-        }
-      }
-    }
-
-    fetchAddresses()
-  }, [activeTab, router])
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    setEditingAddressId(null) // Limpar o estado de edição ao mudar de aba
-    setEditAddressForm({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' }) // Limpar o formulário ao mudar de aba
-  }
+    fetchUser()
+  }, [router, fetchUser])
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setProfileForm(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleEditAddress = (address: AddressFormValues) => {
-    setEditingAddressId(address._id || null)
-    setEditAddressForm({ ...address })
-  }
-
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setEditAddressForm(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cep = e.target.value.replace(/\D/g, '')
-    if (cep.length === 8) {
-      try {
-        const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`)
-        const { logradouro, complemento, bairro, localidade, uf, erro } = response.data
-        if (!erro) {
-          setEditAddressForm(prev => ({
-            ...prev,
-            cep,
-            rua: logradouro || '',
-            complemento: complemento || '',
-            bairro: bairro || '',
-            cidade: localidade || '',
-            estado: uf || '',
-          }))
-        } else {
-          alert('CEP não encontrado.')
-        }
-      } catch (error) {
-        console.error('Erro ao buscar CEP:', error)
-        alert('Erro ao buscar CEP.')
-      }
-    } else {
-      setEditAddressForm(prev => ({ ...prev, cep: e.target.value }))
-      if (cep.length < 8) {
-        setEditAddressForm(prev => ({ ...prev, rua: '', complemento: '', bairro: '', cidade: '', estado: '' }))
-      }
-    }
   }
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -161,67 +80,15 @@ export default function Perfil() {
           Authorization: `Bearer ${token}`,
         },
       })
-      alert('Dados do perfil atualizados com sucesso!')
+      setIsEditing(false)
+      setShowSuccessMessage(true)
+      
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 3000)
     } catch (err) {
       console.error('Erro ao atualizar perfil:', err)
       alert('Erro ao atualizar dados do perfil.')
-    }
-  }
-
-  const handleAddressSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const token = localStorage.getItem('token')
-    const url = editingAddressId ? `/api/users/addresses/${editingAddressId}` : '/api/users/addresses'
-    const method = editingAddressId ? 'PUT' : 'POST'
-
-    try {
-      const res = await axios({
-        method,
-        url,
-        data: editAddressForm,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      alert(`Endereço ${editingAddressId ? 'atualizado' : 'salvo'} com sucesso!`)
-      setEditingAddressId(null) // Limpar o estado de edição após salvar
-      setEditAddressForm({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' }) // Limpar o formulário
-      // Recarregar a lista de endereços
-      if (activeTab === 'Meus Endereços') {
-        const token = localStorage.getItem('token')
-        if (token) {
-          const res = await axios.get('/api/users/addresses', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          setAddresses(res.data.addresses)
-        }
-      }
-    } catch (err) {
-      console.error(`Erro ao ${editingAddressId ? 'atualizar' : 'salvar'} endereço:`, err)
-      alert(`Erro ao ${editingAddressId ? 'atualizar' : 'salvar'} endereço.`)
-    }
-  }
-
-  const handleRemoveAddress = async (addressId: string | undefined) => {
-    if (!addressId) return
-
-    if (window.confirm('Tem certeza que deseja remover este endereço?')) {
-      const token = localStorage.getItem('token')
-      try {
-        await axios.delete(`/api/users/addresses/${addressId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        alert('Endereço removido com sucesso!')
-        // Atualizar a lista de endereços removendo o endereço excluído
-        setAddresses(prevAddresses => prevAddresses.filter(addr => addr._id !== addressId))
-      } catch (error) {
-        console.error('Erro ao remover endereço:', error)
-        alert('Erro ao remover endereço.')
-      }
     }
   }
 
@@ -230,127 +97,167 @@ export default function Perfil() {
   return (
     <>
       <Header />
-      <div className="flex min-h-screen items-center justify-center bg-[#ececdd] px-4">
-        <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg">
-          <div className="flex justify-around mb-6">
-            <button
-              type="button"
-              className={`py-2 px-4 rounded-md ${activeTab === 'Meu Perfil' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-              onClick={() => handleTabChange('Meu Perfil')}
-            >
-              Meu Perfil
-            </button>
-            <button
-              type="button"
-              className={`py-2 px-4 rounded-md ${activeTab === 'Meus Endereços' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-              onClick={() => handleTabChange('Meus Endereços')}
-            >
-              Meus Endereços
-            </button>
-          </div>
-
-          {activeTab === 'Meu Perfil' && (
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleProfileSubmit}>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-600">Nome</label>
-                <input type="text" name="nome" value={profileForm.nome} onChange={handleProfileChange} className="mt-1 text-gray-700 p-2 border rounded-md w-full" />
+      <div className="bg-gray-50 py-10 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-8">Minha conta</h1>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Profile Information */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div className="flex justify-between items-start mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900">Perfil</h2>
+                  {!isEditing && (
+                    <button 
+                      onClick={() => setIsEditing(true)}
+                      className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                    >
+                      Editar
+                    </button>
+                  )}
+                </div>
+                
+                {showSuccessMessage && (
+                  <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-center">
+                    <Check className="h-5 w-5 mr-2 flex-shrink-0" />
+                    <span>Perfil atualizado com sucesso!</span>
+                  </div>
+                )}
+                
+                {isEditing ? (
+                  <form onSubmit={handleProfileSubmit}>
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                          Nome completo
+                        </label>
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <User size={18} className="text-gray-400" />
+                          </div>
+                          <input
+                            id="nome"
+                            name="nome"
+                            type="text"
+                            value={profileForm.nome}
+                            onChange={handleProfileChange}
+                            className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                          Email
+                        </label>
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Mail size={18} className="text-gray-400" />
+                          </div>
+                          <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={profileForm.email}
+                            onChange={handleProfileChange}
+                            className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">
+                          CPF
+                        </label>
+                        <div className="relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <User size={18} className="text-gray-400" />
+                          </div>
+                          <input
+                            id="cpf"
+                            name="cpf"
+                            type="text"
+                            value={profileForm.cpf}
+                            onChange={handleProfileChange}
+                            className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end space-x-3">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setIsEditing(false)
+                            // Reset form to current values
+                            const token = localStorage.getItem('token')
+                            if (token) {
+                              fetchUser()
+                            }
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          Cancelar
+                        </button>
+                        <button 
+                          type="submit"
+                          className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
+                        >
+                          Salvar alterações
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm font-medium text-gray-500 mb-1">Nome completo</div>
+                      <div className="text-gray-900">{profileForm.nome}</div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm font-medium text-gray-500 mb-1">Email</div>
+                      <div className="text-gray-900">{profileForm.email}</div>
+                    </div>
+                    
+                    <div>
+                      <div className="text-sm font-medium text-gray-500 mb-1">CPF</div>
+                      <div className="text-gray-900">{profileForm.cpf}</div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-600">CPF</label>
-                <input type="text" name="cpf" value={profileForm.cpf} disabled className="mt-1 text-gray-700 p-2 border rounded-md w-full bg-gray-100" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-600">Email</label>
-                <input type="email" name="email" value={profileForm.email} disabled className="mt-1 text-gray-700 p-2 border rounded-md w-full bg-gray-100" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-600">Senha</label>
-                <input type="password" name="senha" value={profileForm.senha} onChange={handleProfileChange} className="mt-1 text-gray-700 p-2 border rounded-md w-full" />
-              </div>
-              <div className="md:col-span-2">
-                <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition">
-                  Salvar Perfil
+            </div>
+            
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Endereços</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Gerencie seus endereços de entrega
+                </p>
+                <button
+                  onClick={() => router.push('/enderecos')}
+                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
+                >
+                  Gerenciar endereços
                 </button>
               </div>
-            </form>
-          )}
-
-          {activeTab === 'Meus Endereços' && (
-            <div>
-              {addresses.length > 0 ? (
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Meus Endereços:</h3>
-                  <ul>
-                    {addresses.map(address => (
-                      <li key={address._id} className="border p-4 rounded-md shadow-sm mb-2 flex justify-between items-center">
-                        <div>
-                          <p className="text-gray-700">CEP: {address.cep}</p>
-                          <p className="text-gray-700">Rua: {address.rua}, {address.numero} {address.complemento}</p>
-                          <p className="text-gray-700">{address.bairro}, {address.cidade} - {address.estado}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            type="button"
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md transition"
-                            onClick={() => handleEditAddress(address)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md transition"
-                            onClick={() => handleRemoveAddress(address._id)}
-                          >
-                            Remover
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <p className="text-gray-700 mb-4">Nenhum endereço cadastrado.</p>
-              )}
-
-              <h3 className="text-lg font-semibold text-blue-500 mb-2">{editingAddressId ? 'Editar Endereço' : 'Novo Endereço'}</h3>
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleAddressSubmit}>
-                {/* Campos do Meus Endereços */}
-                <div>
-                  <label className="text-sm font-medium text-gray-600">CEP</label>
-                  <input type="text" name="cep" value={editAddressForm.cep} onChange={handleCepChange} className="mt-1 text-gray-700 p-2 border rounded-md w-full" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Rua</label>
-                  <input type="text" name="rua" value={editAddressForm.rua} readOnly className="mt-1 text-gray-700 p-2 border rounded-md w-full bg-gray-100" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Número</label>
-                  <input type="text" name="numero" value={editAddressForm.numero} onChange={handleAddressChange} className="mt-1 text-gray-700 p-2 border rounded-md w-full" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Complemento</label>
-                  <input type="text" name="complemento" value={editAddressForm.complemento} onChange={handleAddressChange} className="mt-1 text-gray-700 p-2 border rounded-md w-full" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Bairro</label>
-                  <input type="text" name="bairro" value={editAddressForm.bairro} readOnly className="mt-1 text-gray-700 p-2 border rounded-md w-full bg-gray-100" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Cidade</label>
-                  <input type="text" name="cidade" value={editAddressForm.cidade} readOnly className="mt-1 text-gray-700 p-2 border rounded-md w-full bg-gray-100" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-600">Estado</label>
-                  <input type="text" name="estado" value={editAddressForm.estado} readOnly className="mt-1 text-gray-700 p-2 border rounded-md w-full bg-gray-100" />
-                </div>
-                <div className="md:col-span-2">
-                  <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition">
-                    {editingAddressId ? 'Salvar Alterações do Endereço' : 'Salvar Novo Endereço'}
-                  </button>
-                </div>
-              </form>
+              
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Visualize seu histórico de pedidos
+                </p>
+                <button
+                  onClick={() => router.push('/pedidos')}
+                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
+                >
+                  Ver pedidos
+                </button>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
       <Footer />
