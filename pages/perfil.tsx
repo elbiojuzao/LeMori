@@ -1,9 +1,18 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
+import Head from 'next/head'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { User, Mail, Check } from 'lucide-react'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { Menu } from '@headlessui/react'
+import {
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/solid'
 
 interface ProfileFormValues {
   nome: string
@@ -23,11 +32,21 @@ interface AddressFormValues {
   estado: string
 }
 
+interface Homenagem {
+  _id: string
+  nomeHomenageado: string
+  dataCriada: string
+  dataNascimento: string
+  fotoPerfil?: string
+  createdAt?: string
+}
+
 export default function Perfil() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [homenagens, setHomenagens] = useState<Homenagem[]>([])
   const [profileForm, setProfileForm] = useState<ProfileFormValues>({
     nome: '',
     cpf: '',
@@ -55,6 +74,13 @@ export default function Perfil() {
         email: user.email || '',
         senha: '',
       })
+
+      // Buscar homenagens do usuário
+      const resHomenagens = await axios.get(`/api/homenagens/user/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setHomenagens(resHomenagens.data)
+      
       setLoading(false)
     } catch (err) {
       router.push('/login')
@@ -89,6 +115,37 @@ export default function Perfil() {
     } catch (err) {
       console.error('Erro ao atualizar perfil:', err)
       alert('Erro ao atualizar dados do perfil.')
+    }
+  }
+
+  const formatarData = (data: string | undefined) => {
+    if (!data) return "Data não disponível";
+    try {
+      return format(new Date(data), "dd/MM/yyyy");
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data não disponível";
+    }
+  };
+
+  const handleEditar = (id: string) => {
+    router.push(`/homenagem/form?id=${id}`)
+  }
+
+  const handleExcluir = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta homenagem?')) return
+  
+    try {
+      await axios.delete(`/api/homenagens/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+      // Atualiza a lista após excluir
+      setHomenagens((prev) => prev.filter((h) => h._id !== id))
+    } catch (error) {
+      console.error('Erro ao excluir homenagem:', error)
+      alert('Erro ao excluir homenagem')
     }
   }
 
@@ -141,7 +198,7 @@ export default function Perfil() {
                             type="text"
                             value={profileForm.nome}
                             onChange={handleProfileChange}
-                            className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                            className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                           />
                         </div>
                       </div>
@@ -160,7 +217,7 @@ export default function Perfil() {
                             type="email"
                             value={profileForm.email}
                             onChange={handleProfileChange}
-                            className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                            className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                           />
                         </div>
                       </div>
@@ -179,7 +236,7 @@ export default function Perfil() {
                             type="text"
                             value={profileForm.cpf}
                             onChange={handleProfileChange}
-                            className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                            className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                           />
                         </div>
                       </div>
@@ -226,6 +283,81 @@ export default function Perfil() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Card de Nomes */}
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Pessoas Homenageadas</h2>
+                <ul className="divide-y divide-gray-200">
+                  {homenagens.length > 0 ? (
+                    homenagens.map((homenagem) => (
+                      <li key={homenagem._id} className="py-3 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                            {homenagem.fotoPerfil ? (
+                              <img
+                                src={homenagem.fotoPerfil}
+                                alt={`Foto de ${homenagem.nomeHomenageado}`}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm text-purple-600 font-medium">
+                                {homenagem.nomeHomenageado.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{homenagem.nomeHomenageado}</p>
+                            <p className="text-xs text-gray-500">
+                              Homenageada em {formatarData(homenagem.dataCriada || homenagem.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Menu as="div" className="relative">
+                          <Menu.Button className="p-1 hover:bg-purple-100 rounded-full transition-colors">
+                            <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+                          </Menu.Button>
+
+                          <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                            <div className="py-1">
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleEditar(homenagem._id)}
+                                    className={`${
+                                      active ? 'bg-purple-50 text-purple-700' : 'text-gray-700'
+                                    } flex w-full items-center px-4 py-2 text-sm`}
+                                  >
+                                    <PencilIcon className="h-4 w-4 mr-3" />
+                                    Editar Homenagem
+                                  </button>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleExcluir(homenagem._id)}
+                                    className={`${
+                                      active ? 'bg-red-50 text-red-700' : 'text-red-600'
+                                    } flex w-full items-center px-4 py-2 text-sm`}
+                                  >
+                                    <TrashIcon className="h-4 w-4 mr-3" />
+                                    Excluir Homenagem
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            </div>
+                          </Menu.Items>
+                        </Menu>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="py-3 text-gray-500 text-sm">
+                      Nenhuma homenagem criada ainda.
+                    </li>
+                  )}
+                </ul>
               </div>
             </div>
             

@@ -10,13 +10,14 @@
     "create-test-user": "ts-node scripts/createTestUser.ts"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.1",
+    "@headlessui/react": "^2.2.3",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
     "@mercadopago/sdk-react": "^1.0.2",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "browser-image-compression": "^2.0.2",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "formidable": "^3.5.2",
     "jsonwebtoken": "^9.0.2",
