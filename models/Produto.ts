@@ -1,9 +1,12 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 
-export interface IProduto extends Document {
+export interface IProduto {
+  _id?: string
   nome: string
   descricao: string
   valor: number
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 const ProdutoSchema = new Schema<IProduto>({
