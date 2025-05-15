@@ -1,16 +1,17 @@
-import Head from 'next/head'
-import Logo from '@/components/Logo'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import { redirectToAfterLogin, replaceToAfterLogin } from '@/lib/redirectTo'
+import Link from 'next/link';
+import { User, Mail, Lock, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState('')
+  const [error, setErro] = useState('')
   const [emailNaoVerificado, setEmailNaoVerificado] = useState(false)
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const verificarAutenticacao = async () => {
@@ -74,75 +75,107 @@ export default function Login() {
   }
 
   return (
-    <>
-      <Head>
-        <title>Login | LeMori</title>
-      </Head>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+          Entre com sua conta
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Ou{' '}
+          <Link href="/register" className="font-medium text-purple-600 hover:text-purple-500">
+            criar nova conta
+          </Link>
+        </p>
+      </div>
 
-      <div className="flex min-h-screen items-center justify-center bg-[#ececdd] px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-          <Logo className='w-full max-w-md rounded-2xl p-8 h-100'/>
-
-          {erro && <p className="text-red-500 text-sm mb-4">{erro}</p>}
-
-          {emailNaoVerificado && (
-            <p className="text-red-500 text-sm mb-4">
-              Por favor,{' '}
-              <span
-                onClick={handleReenviarEmail}
-                className="text-blue-600 underline cursor-pointer"
-              >
-                confirme o email
-              </span>{' '}
-              antes de fazer o login.
-            </p>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start">
+              <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
           )}
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="text-gray-600 mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="seuemail@exemplo.com"
-                required
-              />
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="SeuEmail@exemplo.com"
+                />
+              </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700">Senha</label>
-              <input
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                className="text-gray-600 mt-1 w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="••••••••"
-                required
-              />
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Senha
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  className="block text-gray-400 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
-            <div className="text-right">
-              <a href="/#" className="text-sm text-blue-500 hover:underline">
-                Esqueci minha senha
-              </a>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Lembrar de mim
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
+                  Esqueci minha senha
+                </a>
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition"
-            >
-              Entrar
-            </button>
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                  isLoading ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500'
+                }`}
+              >
+                {isLoading ? 'Entrando...' : 'Entrar'}
+              </button>
+            </div>
           </form>
-          <p className="mt-4 text-center text-sm text-gray-600">
-            Ainda não tem uma conta?{' '}
-            <a href="/register" className="text-purple-600 hover:underline">
-              Cadastre-se
-            </a>
-          </p>
         </div>
       </div>
-    </>
+    </div>
   )
 }
