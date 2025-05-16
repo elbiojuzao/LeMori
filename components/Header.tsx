@@ -39,8 +39,8 @@ const Header = () => {
               <Link href="/" className={`text-gray-600 hover:text-purple-600 px-3 py-2 rounded-md font-medium transition duration-150 ${router.pathname === '/dashboard' ? 'text-purple-600' : ''}`}>
                 Início
               </Link>
-              <Link href="/homenagem/form" className={`text-gray-600 hover:text-purple-600 px-3 py-2 rounded-md font-medium transition duration-150 ${router.pathname === '/homenagem/form' ? 'text-purple-600' : ''}`}>
-                Nova Homenagem
+              <Link href="/shop" className={`text-gray-600 hover:text-purple-600 px-3 py-2 rounded-md font-medium transition duration-150 ${router.pathname === '/shop' ? 'text-purple-600' : ''}`}>
+                Loja
               </Link>
               {!loading && autenticado && (
                 <Link href="/perfil" className={`text-gray-600 hover:text-purple-600 px-3 py-2 rounded-md font-medium transition duration-150 ${router.pathname === '/perfil' ? 'text-purple-600' : ''}`}>
@@ -109,13 +109,13 @@ const Header = () => {
             </div>
           </Link>
           <Link 
-            href="/homenagem/form" 
-            className={`block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 ${router.pathname === '/homenagem/form' ? 'text-purple-600' : ''}`}
+            href="/shop" 
+            className={`block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-purple-600 hover:bg-gray-50 ${router.pathname === '/shop' ? 'text-purple-600' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             <div className="flex items-center">
-              <Package size={18} className="mr-2" />
-              Nova Homenagem
+              <ShoppingCart size={18} className="mr-2" />
+              Loja
             </div>
           </Link>
         </div>
