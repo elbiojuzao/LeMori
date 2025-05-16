@@ -11,6 +11,7 @@ interface Produto {
   nome: string
   descricao: string
   valor: number
+  destaque: boolean
   createdAt: string
   updatedAt: string
 }
@@ -195,6 +196,51 @@ const Produtos: React.FC = () => {
     }
   };
 
+  const handleToggleDestaque = async (produtoId: string, destaqueAtual: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Log para debug
+      console.log('Alterando destaque do produto:', produtoId, 'de', destaqueAtual, 'para', !destaqueAtual);
+      
+      const response = await fetch(`/api/admin/produtos/${produtoId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ destaque: !destaqueAtual })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao atualizar destaque do produto');
+      }
+
+      const produtoAtualizado = await response.json();
+      console.log('Resposta da API:', produtoAtualizado);
+
+      // Atualiza o estado local imediatamente
+      setProdutos(produtos.map(produto => 
+        produto._id === produtoId 
+          ? { ...produto, destaque: !destaqueAtual }
+          : produto
+      ));
+
+      toast.success('Destaque atualizado com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao atualizar destaque:', error);
+      toast.error(error.message || 'Erro ao atualizar destaque do produto');
+      
+      // Reverte o estado local em caso de erro
+      setProdutos(produtos.map(produto => 
+        produto._id === produtoId 
+          ? { ...produto, destaque: destaqueAtual }
+          : produto
+      ));
+    }
+  };
+
   const filteredProdutos = produtos.filter(produto => 
     produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     produto.descricao.toLowerCase().includes(searchTerm.toLowerCase())
@@ -340,6 +386,9 @@ const Produtos: React.FC = () => {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Data de Criação
                       </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Destaque
+                      </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ações
                       </th>
@@ -363,6 +412,21 @@ const Produtos: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {format(new Date(produto.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => handleToggleDestaque(produto._id, produto.destaque)}
+                            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${
+                              produto.destaque ? 'bg-purple-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span className="sr-only">Toggle destaque</span>
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
+                                produto.destaque ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">

@@ -5,6 +5,7 @@ export interface IProduto {
   nome: string
   descricao: string
   valor: number
+  destaque: boolean
   createdAt: string
   updatedAt: string
 }
@@ -53,6 +54,10 @@ const ProdutoSchema = new Schema({
   ativo: {
     type: Boolean,
     default: true
+  },
+  destaque: {
+    type: Boolean,
+    default: false
   },
   estoque: {
     type: Number,

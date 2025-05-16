@@ -30,25 +30,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'PUT') {
       try {
+        // Se estiver atualizando apenas o destaque
+        if (req.body.destaque !== undefined && Object.keys(req.body).length === 1) {
+          const novoValor = Boolean(req.body.destaque);
+          
+          const produtoAtualizado = await Produto.findByIdAndUpdate(
+            id,
+            { destaque: novoValor },
+            { new: true }
+          );
+
+          if (!produtoAtualizado) {
+            return res.status(404).json({ message: 'Produto não encontrado' });
+          }
+
+          return res.status(200).json(produtoAtualizado);
+        }
+
+        // Para outras atualizações
+        const updateData = {
+          ...(req.body.nome !== undefined && { nome: req.body.nome }),
+          ...(req.body.descricao !== undefined && { descricao: req.body.descricao }),
+          ...(req.body.valor !== undefined && { valor: req.body.valor }),
+          ...(req.body.destaque !== undefined && { destaque: req.body.destaque })
+        };
+
         const produtoAtualizado = await Produto.findByIdAndUpdate(
           id,
-          {
-            nome: req.body.nome,
-            descricao: req.body.descricao,
-            valor: req.body.valor
-          },
+          { $set: updateData },
           { 
             new: true,
             runValidators: true
           }
-        )
-        return res.status(200).json(produtoAtualizado)
-      } catch (error: any) {
-        if (error.name === 'ValidationError') {
-          const errors = Object.values(error.errors).map((err: any) => err.message)
-          return res.status(400).json({ message: 'Erro de validação', errors })
+        );
+        
+        if (!produtoAtualizado) {
+          return res.status(400).json({ message: 'Não foi possível atualizar o produto' });
         }
-        throw error
+
+        return res.status(200).json(produtoAtualizado);
+      } catch (error: any) {
+        console.error('Erro ao atualizar produto:', error);
+        if (error.name === 'ValidationError') {
+          const errors = Object.values(error.errors).map((err: any) => err.message);
+          return res.status(400).json({ message: 'Erro de validação', errors });
+        }
+        return res.status(500).json({ 
+          message: 'Erro ao atualizar produto',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
       }
     }
 
