@@ -170,12 +170,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Calculate totals
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce(
-    (sum, item) => sum + (item.product.price * item.quantity), 
+  const subtotal = Number(items.reduce(
+    (sum, item) => sum + (Number(item.product.price) * item.quantity), 
     0
-  );
+  ).toFixed(2));
   const shipping = items.length > 0 ? SHIPPING_COST : 0;
-  const total = Math.max(0, subtotal + shipping - discount);
+  const total = Number((subtotal + shipping - discount).toFixed(2));
 
   const value = {
     items,

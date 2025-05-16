@@ -36,12 +36,20 @@ export default function Shop() {
   }, []);
 
   const handleAddToCart = (produto: IProduto) => {
+    if (!produto._id) return;
+    
+    const priceValue = Number((produto.valor).toFixed(2));
+    
     addItem({
       id: produto._id,
       name: produto.nome,
-      price: produto.valor,
+      price: priceValue,
+      description: produto.descricao,
+      fullDescription: produto.descricao,
       imageSrc: produto.imagemUrl || '/placeholder-image.jpg',
-      description: produto.descricao
+      category: 'homenagens',
+      stock: 1,
+      active: true
     }, 1);
   };
 
