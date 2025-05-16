@@ -9,16 +9,16 @@ import { ptBR } from 'date-fns/locale';
 
 interface Homenagem {
   _id: string
-  nome: string
-  historia: string
-  fotos: string[]
-  userId: string
-  userName: string
+  nomeHomenageado?: string
+  biografia?: string
+  fotos?: string[]
+  criadoPor: string
+  userName?: string
   dataNascimento?: string
   dataFalecimento?: string
-  createdAt: string
+  createdAt?: string
   ativo: boolean
-  slug: string
+  slug?: string
 }
 
 const WebPages: React.FC = () => {
@@ -38,6 +38,7 @@ const WebPages: React.FC = () => {
         throw new Error('Token não encontrado. Por favor, faça login novamente.');
       }
 
+      console.log('Fazendo requisição para carregar homenagens...');
       const response = await fetch('/api/admin/homenagens', {
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -50,15 +51,17 @@ const WebPages: React.FC = () => {
       }
 
       if (response.status === 403) {
-        throw new Error('Você não tem permissão para acessar esta área.');
+        throw new Error('Você não tem permissão de administrador para acessar esta área.');
       }
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Erro na resposta:', errorData);
         throw new Error(errorData.message || 'Erro ao carregar homenagens');
       }
       
       const data = await response.json();
+      console.log('Homenagens carregadas:', data.length);
       setHomenagens(data);
       setLoading(false);
     } catch (error: any) {
@@ -67,8 +70,7 @@ const WebPages: React.FC = () => {
       setLoading(false);
       toast.error(error.message);
       
-      // Se for erro de autenticação, redireciona para login
-      if (error.message.includes('login')) {
+      if (error.message.includes('login') || error.message.includes('permissão')) {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }
@@ -76,11 +78,14 @@ const WebPages: React.FC = () => {
   };
   
   // Filter homenagens based on search term
-  const filteredHomenagens = homenagens.filter(homenagem => 
-    homenagem.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    homenagem.historia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    homenagem.userName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredHomenagens = homenagens.filter(homenagem => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      (homenagem.nomeHomenageado?.toLowerCase().includes(searchTermLower) ?? false) ||
+      (homenagem.biografia?.toLowerCase().includes(searchTermLower) ?? false) ||
+      (homenagem.userName?.toLowerCase().includes(searchTermLower) ?? false)
+    );
+  });
   
   // Toggle homenagem visibility
   const handleToggleVisibility = async (homenagemId: string, currentStatus: boolean) => {
@@ -172,46 +177,50 @@ const WebPages: React.FC = () => {
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-md overflow-hidden">
                                 <img 
-                                  src={homenagem.fotos[0] || '/placeholder.jpg'} 
-                                  alt={homenagem.nome} 
+                                  src={(homenagem.fotos && homenagem.fotos.length > 0 ? homenagem.fotos[0] : '/placeholder.jpg')} 
+                                  alt={homenagem.nomeHomenageado || 'Homenagem sem nome'} 
                                   className="h-10 w-10 object-cover"
                                 />
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{homenagem.nome}</div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {homenagem.nomeHomenageado || 'Homenagem sem nome'}
+                                </div>
                                 <div className="text-sm text-gray-500 truncate max-w-xs">
-                                  {homenagem.historia.substring(0, 60)}...
+                                  {homenagem.biografia ? `${homenagem.biografia.substring(0, 60)}...` : 'Sem biografia'}
                                 </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <Link href={`/admin/usuarios/${homenagem.userId}`} className="text-purple-600 hover:text-purple-900">
-                              {homenagem.userName}
+                            <Link href={`/admin/usuarios/${homenagem.criadoPor}`} className="text-purple-600 hover:text-purple-900">
+                              {homenagem.userName || 'Usuário não identificado'}
                             </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <Calendar size={14} className="mr-1 text-gray-400" />
-                              {format(new Date(homenagem.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                            </div>
+                            {homenagem.createdAt ? 
+                              format(new Date(homenagem.createdAt), 'dd/MM/yyyy', { locale: ptBR }) : 
+                              'Data não disponível'
+                            }
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button 
+                            <button
                               onClick={() => handleToggleVisibility(homenagem._id, homenagem.ativo)}
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                homenagem.ativo ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                              className={`inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded ${
+                                homenagem.ativo
+                                  ? 'text-green-700 bg-green-100 hover:bg-green-200'
+                                  : 'text-red-700 bg-red-100 hover:bg-red-200'
                               }`}
                             >
                               {homenagem.ativo ? (
                                 <>
-                                  <Eye size={12} className="mr-1" />
-                                  Ativa
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Visível
                                 </>
                               ) : (
                                 <>
-                                  <EyeOff size={12} className="mr-1" />
-                                  Inativa
+                                  <EyeOff className="h-4 w-4 mr-1" />
+                                  Oculta
                                 </>
                               )}
                             </button>

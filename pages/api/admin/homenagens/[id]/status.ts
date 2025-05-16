@@ -16,6 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const decodedToken = await verifyToken(token)
+    console.log('Token decodificado:', decodedToken)
+
     if (!decodedToken || !decodedToken.isAdmin) {
       return res.status(403).json({ message: 'Não autorizado' })
     }
@@ -29,10 +31,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { db } = await connectToDatabase()
     
-    const result = await db.collection('homenagens').updateOne(
+    console.log(`Atualizando homenagem ${id} para status ativo=${ativo}`)
+    
+    const result = await db.collection('homenagem').updateOne(
       { _id: new ObjectId(id as string) },
       { $set: { ativo } }
     )
+
+    console.log('Resultado da atualização:', result)
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: 'Homenagem não encontrada' })

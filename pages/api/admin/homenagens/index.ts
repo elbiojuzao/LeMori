@@ -15,26 +15,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ message: 'Token não fornecido' })
     }
 
-    let decodedToken
-    try {
-      decodedToken = await verifyToken(token)
-    } catch (error) {
-      return res.status(401).json({ message: 'Token inválido ou expirado' })
-    }
-
-    if (!decodedToken) {
-      return res.status(401).json({ message: 'Token inválido' })
+    const decodedToken = await verifyToken(token)
+    console.log('Token decodificado:', decodedToken)
+    
+    if (!decodedToken || !decodedToken.isAdmin) {
+      return res.status(403).json({ message: 'Não autorizado - Acesso restrito a administradores' })
     }
 
     const { db } = await connectToDatabase()
     
+    // Lista todas as coleções para debug
+    const collections = await db.listCollections().toArray()
+    console.log('Coleções disponíveis:', collections.map(c => c.name))
+    
     // Busca todas as homenagens com informações do usuário
-    const homenagens = await db.collection('homenagens')
+    const homenagens = await db.collection('homenagem') // Nome correto da coleção em minúsculo e singular
       .aggregate([
         {
           $lookup: {
-            from: 'users',
-            localField: 'userId',
+            from: 'users', // Verifica se o nome da coleção de usuários também está correto
+            localField: 'criadoPor',
             foreignField: '_id',
             as: 'user'
           }
@@ -42,17 +42,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         {
           $unwind: {
             path: '$user',
-            preserveNullAndEmptyArrays: true // Mantém homenagens mesmo se o usuário não existir mais
+            preserveNullAndEmptyArrays: true
           }
         },
         {
           $project: {
             _id: 1,
-            nome: 1,
-            historia: 1,
-            fotos: 1,
-            userId: 1,
-            userName: { $ifNull: ['$user.name', 'Usuário removido'] },
+            nomeHomenageado: 1,
+            biografia: 1,
+            fotos: { $ifNull: ['$fotos', []] },
+            criadoPor: 1,
+            userName: { $ifNull: ['$user.nome', 'Usuário removido'] },
             dataNascimento: 1,
             dataFalecimento: 1,
             createdAt: 1,
@@ -61,10 +61,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         },
         {
-          $sort: { createdAt: -1 } // Ordena por data de criação, mais recentes primeiro
+          $sort: { createdAt: -1 }
         }
       ]).toArray()
 
+    console.log('Total de homenagens encontradas:', homenagens.length)
+    if (homenagens.length > 0) {
+      console.log('Exemplo de homenagem:', JSON.stringify(homenagens[0], null, 2))
+    }
+    
     return res.status(200).json(homenagens)
   } catch (error: any) {
     console.error('Erro ao listar homenagens:', error)

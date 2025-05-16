@@ -1,33 +1,33 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface HomenagemDocument extends Document {
-  nome: string
-  descricao: string
+  nomeHomenageado: string
+  biografia: string
   dataNascimento: Date
   dataFalecimento: Date
-  imagemPrincipal?: string
-  galeria?: string[]
-  musicaLink?: string
-  videoLink?: string
+  fotos: string[]
+  musica?: string
   criadoPor: mongoose.Schema.Types.ObjectId
   pedidoIds: mongoose.Schema.Types.ObjectId[]
   dataExpiracao: Date
-  criadoEm: Date
+  createdAt: Date
+  ativo: boolean
+  slug: string
 }
 
 const HomenagemSchema = new Schema<HomenagemDocument>({
-  nome: { type: String, required: true },
-  descricao: { type: String, required: true },
+  nomeHomenageado: { type: String, required: true },
+  biografia: { type: String, required: true },
   dataNascimento: { type: Date, required: true },
   dataFalecimento: { type: Date, required: true },
-  imagemPrincipal: { type: String },
-  galeria: [{ type: String }],
-  musicaLink: { type: String },
-  videoLink: { type: String },
+  fotos: [{ type: String }],
+  musica: { type: String },
   criadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   pedidoIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pedido' }],
   dataExpiracao: { type: Date, required: true },
-  criadoEm: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now },
+  ativo: { type: Boolean, default: false },
+  slug: { type: String, required: true, unique: true }
 })
 
 const Homenagem = mongoose.models.Homenagem || mongoose.model<HomenagemDocument>('Homenagem', HomenagemSchema)
