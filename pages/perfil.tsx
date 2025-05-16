@@ -4,7 +4,7 @@ import axios from 'axios'
 import Head from 'next/head'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { User, Mail, Check } from 'lucide-react'
+import { User, Mail, Check, ShoppingBag, Clock, Package } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Menu } from '@headlessui/react'
@@ -41,12 +41,27 @@ interface Homenagem {
   createdAt?: string
 }
 
+interface Pedido {
+  _id: string
+  createdAt: string
+  status: string
+  items: Array<{
+    quantity: number
+    product: {
+      name: string
+      price: number
+    }
+  }>
+  total: number
+}
+
 export default function Perfil() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [homenagens, setHomenagens] = useState<Homenagem[]>([])
+  const [ultimosPedidos, setUltimosPedidos] = useState<Pedido[]>([])
   const [profileForm, setProfileForm] = useState<ProfileFormValues>({
     nome: '',
     cpf: '',
@@ -87,9 +102,25 @@ export default function Perfil() {
     }
   }, [router])
 
+  const fetchPedidos = useCallback(async () => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    try {
+      const response = await axios.get('/api/pedidos/user', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      // Pegar os 3 últimos pedidos
+      setUltimosPedidos(response.data.slice(0, 3))
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchUser()
-  }, [router, fetchUser])
+    fetchPedidos()
+  }, [router, fetchUser, fetchPedidos])
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -377,15 +408,49 @@ export default function Perfil() {
               </div>
               
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Visualize seu histórico de pedidos
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos Recentes</h3>
+                {ultimosPedidos.length > 0 ? (
+                  <div className="space-y-4 mb-4">
+                    {ultimosPedidos.map(pedido => {
+                      const totalItens = pedido.items.reduce((sum, item) => sum + item.quantity, 0)
+                      return (
+                        <div key={pedido._id} className="border-b border-gray-200 pb-4 last:border-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <ShoppingBag className="h-5 w-5 text-purple-600" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {totalItens} {totalItens === 1 ? 'item' : 'itens'}
+                              </span>
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {format(new Date(pedido.createdAt), "dd/MM/yyyy")}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Package className="h-5 w-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">
+                                Status: {pedido.status}
+                              </span>
+                            </div>
+                            <span className="text-sm font-medium text-purple-600">
+                              R$ {pedido.total.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 mb-4">
+                    Nenhum pedido realizado ainda.
+                  </p>
+                )}
                 <button
                   onClick={() => router.push('/pedidos')}
                   className="w-full px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
                 >
-                  Ver pedidos
+                  Ver histórico de compras
                 </button>
               </div>
             </div>
