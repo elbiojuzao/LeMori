@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { IProduto } from '@/models/Produto';
+import { useCart } from '../context/CartContext';
 import axios from 'axios';
 
 export default function Shop() {
@@ -13,6 +14,7 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { addItem } = useCart();
 
   useEffect(() => {
     async function loadProdutos() {
@@ -32,6 +34,16 @@ export default function Shop() {
     }
     loadProdutos();
   }, []);
+
+  const handleAddToCart = (produto: IProduto) => {
+    addItem({
+      id: produto._id,
+      name: produto.nome,
+      price: produto.valor,
+      imageSrc: produto.imagemUrl || '/placeholder-image.jpg',
+      description: produto.descricao
+    }, 1);
+  };
 
   const produtosFiltrados = produtos.filter(produto => {
     const matchesSearch = produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -99,6 +111,24 @@ export default function Shop() {
                   key={produto._id || `produto-${produto.nome}`} 
                   className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:shadow-xl hover:-translate-y-1"
                 >
+                  {produto.imagemUrl && (
+                    <div className="relative h-64 group">
+                      <img 
+                        src={produto.imagemUrl} 
+                        alt={produto.nome}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => handleAddToCart(produto)}
+                        className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      >
+                        <div className="text-white flex items-center space-x-2">
+                          <ShoppingCart size={24} />
+                          <span>Adicionar ao carrinho</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-purple-600 transition duration-150">
                       {produto.nome}
@@ -108,21 +138,32 @@ export default function Shop() {
                       <span className="text-purple-600 font-bold text-xl">
                         R$ {produto.valor.toFixed(2)}
                       </span>
-                      {produto._id ? (
-                        <Link 
-                          href={`/produtos/${produto._id}`}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-150 flex items-center"
-                        >
-                          Ver detalhes
-                        </Link>
-                      ) : (
-                        <button 
-                          className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
-                          disabled
-                        >
-                          Indisponível
-                        </button>
-                      )}
+                      <div className="flex space-x-2">
+                        {produto._id ? (
+                          <>
+                            <Link 
+                              href={`/produtos/${produto._id}`}
+                              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-150"
+                            >
+                              Ver detalhes
+                            </Link>
+                            <button
+                              onClick={() => handleAddToCart(produto)}
+                              className="bg-purple-100 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-200 transition duration-150 flex items-center"
+                              title="Adicionar ao carrinho"
+                            >
+                              <ShoppingCart size={20} />
+                            </button>
+                          </>
+                        ) : (
+                          <button 
+                            className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
+                            disabled
+                          >
+                            Indisponível
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

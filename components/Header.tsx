@@ -4,12 +4,25 @@ import { useRouter } from 'next/router'
 import { ShoppingCart, User, Menu, X, LogOut, Package, Home } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { logout, isAuthenticated } from '@/lib/authClient'
+import { useCart } from '../context/CartContext'
+
+interface CartItem {
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    imageSrc: string;
+  };
+  quantity: number;
+}
 
 const Header = () => {
   const router = useRouter()
   const [autenticado, setAutenticado] = useState(false)
   const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const { items, totalItems, total, removeItem } = useCart()
   
   useEffect(() => {
     setAutenticado(isAuthenticated())
@@ -24,6 +37,10 @@ const Header = () => {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  const toggleCart = () => {
+    setCartOpen(!cartOpen)
   }
   
   return (
@@ -52,6 +69,75 @@ const Header = () => {
           
           {/* User actions */}
           <div className="flex items-center">
+            {/* Cart */}
+            <div className="ml-4 relative">
+              <button 
+                onClick={toggleCart}
+                className="flex items-center text-gray-600 hover:text-purple-600 focus:outline-none"
+              >
+                <div className="relative">
+                  <ShoppingCart size={24} />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {totalItems}
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {/* Cart Dropdown */}
+              {cartOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50">
+                  <div className="p-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Carrinho de Compras</h3>
+                    {items.length > 0 ? (
+                      <>
+                        <div className="space-y-4 max-h-96 overflow-auto">
+                          {items.map((item) => (
+                            <div key={item.product.id} className="flex items-center space-x-4">
+                              <img 
+                                src={item.product.imageSrc} 
+                                alt={item.product.name} 
+                                className="h-16 w-16 object-cover rounded"
+                              />
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium text-gray-900">{item.product.name}</h4>
+                                <p className="text-sm text-gray-600">
+                                  {item.quantity} x R${item.product.price.toFixed(2)}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => removeItem(item.product.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="flex justify-between text-base font-medium text-gray-900">
+                            <p>Total</p>
+                            <p>R${total.toFixed(2)}</p>
+                          </div>
+                          <div className="mt-4">
+                            <Link
+                              href="/checkout"
+                              className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-150 text-center block"
+                            >
+                              Finalizar Compra
+                            </Link>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">Seu carrinho está vazio</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {!loading && autenticado ? (
               <div className="ml-4 relative hidden md:block">
                 <div className="group relative">
