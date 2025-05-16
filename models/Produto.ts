@@ -6,6 +6,7 @@ export interface IProduto {
   descricao: string
   valor: number
   imagemUrl?: string
+  destaque?: boolean
   createdAt?: Date
   updatedAt?: Date
 }
@@ -15,6 +16,9 @@ const ProdutoSchema = new Schema<IProduto>({
   descricao: { type: String, required: true },
   valor: { type: Number, required: true },
   imagemUrl: { type: String },
+  destaque: { type: Boolean, default: false },
+}, {
+  timestamps: true
 })
 
 const Produto = mongoose.models.Produto || mongoose.model<IProduto>('Produto', ProdutoSchema)

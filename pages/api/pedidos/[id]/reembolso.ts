@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     pedido.status = 'reembolso_solicitado'
     await pedido.save()
 
-    // Aqui você pode adicionar lógica adicional como:
+    // lógica adicional como:
     // - Enviar email para o cliente
     // - Notificar a equipe de suporte
     // - Registrar a solicitação em um sistema de tickets
