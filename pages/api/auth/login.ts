@@ -72,7 +72,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { 
         userId: user._id.toString(), 
         nome: user.nome, 
-        email: user.email 
+        email: user.email,
+        isAdmin: user.isAdmin 
       },
       JWT_SECRET,
       { expiresIn: '7d' }

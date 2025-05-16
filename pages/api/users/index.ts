@@ -1,16 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import mongooseConnect from '@/lib/mongoose'
 import User from '@/models/User'
+import { verifyToken } from '@/lib/auth'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await mongooseConnect()
-
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token não fornecido' })
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Método não permitido' })
   }
 
-  if (req.method === 'GET') {
+  try {
+    await mongooseConnect()
+
+    // Verifica o token e se é admin
+    const token = req.headers.authorization?.split(' ')[1]
+    if (!token) {
+      return res.status(401).json({ error: 'Token não fornecido' })
+    }
+
+    const decodedToken = await verifyToken(token)
+    if (!decodedToken || !decodedToken.isAdmin) {
+      return res.status(403).json({ error: 'Acesso não autorizado' })
+    }
+
     const {
       nome,
       dataCriacaoInicio,
@@ -23,43 +34,88 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const filtros: any = {}
 
     if (nome) {
-      filtros.nome = { $regex: nome, $options: 'i' }
+      filtros.$or = [
+        { nome: { $regex: nome, $options: 'i' } },
+        { email: { $regex: nome, $options: 'i' } },
+        { cpf: { $regex: nome, $options: 'i' } }
+      ]
     }
 
     if (dataCriacaoInicio || dataCriacaoFim) {
       filtros.createdAt = {}
-      if (dataCriacaoInicio) filtros.createdAt.$gte = new Date(dataCriacaoInicio as string)
-      if (dataCriacaoFim) filtros.createdAt.$lte = new Date(dataCriacaoFim as string)
+      
+      // Se tem data inicial, inclui registros com data >= inicial OU registros sem data
+      if (dataCriacaoInicio) {
+        const dataInicio = new Date(dataCriacaoInicio as string)
+        if (!isNaN(dataInicio.getTime())) {
+          filtros.$or = [
+            { createdAt: { $gte: dataInicio } },
+            { createdAt: null }
+          ]
+        }
+      }
+      
+      // Se tem data final, inclui registros com data <= final OU registros sem data
+      if (dataCriacaoFim) {
+        const fim = new Date(dataCriacaoFim as string)
+        if (!isNaN(fim.getTime())) {
+          fim.setHours(23, 59, 59, 999)
+          filtros.$or = filtros.$or || []
+          filtros.$or.push(
+            { createdAt: { $lte: fim } },
+            { createdAt: null }
+          )
+        }
+      }
     }
 
     if (dataNascimentoInicio || dataNascimentoFim) {
       filtros.dataNascimento = {}
-      if (dataNascimentoInicio) filtros.dataNascimento.$gte = new Date(dataNascimentoInicio as string)
-      if (dataNascimentoFim) filtros.dataNascimento.$lte = new Date(dataNascimentoFim as string)
-    }
-
-    try {
-      const usuarios = await User.find(filtros)
-        .select('nome email cpf dataNascimento createdAt homenagens')
-        .lean()
-
-      const usuariosComContagem = usuarios.map(user => ({
-        ...user,
-        quantidadeHomenagens: user.homenagens?.length || 0
-      }))
-
-      if (minHomenagens) {
-        return res.status(200).json(
-          usuariosComContagem.filter(u => u.quantidadeHomenagens >= parseInt(minHomenagens as string))
-        )
+      
+      // Se tem data inicial, inclui registros com data >= inicial OU registros sem data
+      if (dataNascimentoInicio) {
+        const dataInicio = new Date(dataNascimentoInicio as string)
+        if (!isNaN(dataInicio.getTime())) {
+          filtros.$or = filtros.$or || []
+          filtros.$or.push(
+            { dataNascimento: { $gte: dataInicio } },
+            { dataNascimento: null }
+          )
+        }
       }
-
-      return res.status(200).json(usuariosComContagem)
-    } catch (err) {
-      console.error('Erro ao buscar usuários:', err)
-      return res.status(500).json({ error: 'Erro ao buscar usuários' })
+      
+      // Se tem data final, inclui registros com data <= final OU registros sem data
+      if (dataNascimentoFim) {
+        const fim = new Date(dataNascimentoFim as string)
+        if (!isNaN(fim.getTime())) {
+          fim.setHours(23, 59, 59, 999)
+          filtros.$or = filtros.$or || []
+          filtros.$or.push(
+            { dataNascimento: { $lte: fim } },
+            { dataNascimento: null }
+          )
+        }
+      }
     }
-  }
 
-  return res.status(405).end()
+    const usuarios = await User.find(filtros)
+      .select('nome email cpf dataNascimento createdAt quantidadeHomenagens statusConta isAdmin')
+      .sort({ createdAt: -1, _id: -1 }) // Adiciona _id como critério secundário de ordenação
+      .lean()
+
+    if (minHomenagens) {
+      const minHomenagensNum = parseInt(minHomenagens as string)
+      return res.status(200).json(
+        usuarios.filter(u => u.quantidadeHomenagens >= minHomenagensNum)
+      )
+    }
+
+    return res.status(200).json(usuarios)
+  } catch (error: any) {
+    console.error('Erro ao buscar usuários:', error)
+    return res.status(500).json({ 
+      error: 'Erro ao buscar usuários',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    })
+  }
 }

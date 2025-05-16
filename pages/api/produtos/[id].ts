@@ -55,23 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       break
 
-    case 'DELETE':
-      try {
-        const produto = await ProdutoModel.findByIdAndDelete(id)
-        
-        if (!produto) {
-          return res.status(404).json({ error: 'Produto não encontrado' })
-        }
-
-        res.status(200).json({ message: 'Produto removido com sucesso' })
-      } catch (error) {
-        console.error('Erro ao remover produto:', error)
-        res.status(500).json({ error: 'Erro ao remover produto' })
-      }
-      break
-
     default:
-      res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
+      res.setHeader('Allow', ['GET', 'PUT'])
       res.status(405).json({ error: `Método ${req.method} não permitido` })
   }
 } 

@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       _id: produto._id,
       nome: produto.nome,
       descricao: produto.descricao,
-      preco: produto.valor, // Converte valor para preco
+      valor: Number(produto.valor) || 0,
       imagemUrl: produto.imagemUrl
     }))
 

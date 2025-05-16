@@ -3,20 +3,14 @@ import axios from 'axios';
 import { ShoppingCart } from 'lucide-react';
 import Header from '@/components/Header';
 import { useRouter } from 'next/router';
+import { IProduto } from '@/models/Produto';
 
-interface Produto {
-  _id: string;
-  nome: string;
-  descricao: string;
-  valor: number;
-}
-
-interface CarrinhoItem extends Produto {
+interface CarrinhoItem extends IProduto {
   quantidade: number;
 }
 
 export default function SelecaoProdutos() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtos, setProdutos] = useState<IProduto[]>([]);
   const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]);
   const router = useRouter();
 
@@ -32,7 +26,7 @@ export default function SelecaoProdutos() {
     });
   }, []);
 
-  const atualizarCarrinho = (produto: Produto, novaQtd: number) => {
+  const atualizarCarrinho = (produto: IProduto, novaQtd: number) => {
     if (novaQtd < 0) return;
 
     setCarrinho(prev => {
@@ -101,26 +95,22 @@ export default function SelecaoProdutos() {
         </div>
 
         {/* Barra fixa no final */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 border-t flex items-center justify-between z-50">
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-600">Total da compra:</span>
-            <strong className="text-xl text-green-600">R$ {total.toFixed(2)}</strong>
+        {carrinho.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4">
+            <div className="container mx-auto flex justify-between items-center">
+              <div>
+                <p className="text-gray-600">Total do pedido:</p>
+                <p className="text-blue-600 text-2xl font-bold">R$ {total.toFixed(2)}</p>
+              </div>
+              <button
+                onClick={handleFinalizarCompra}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+              >
+                Finalizar compra
+              </button>
+            </div>
           </div>
-
-          <div className="text-gray-600 flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Cupom"
-              className="text-gray-600 border rounded px-3 py-1"
-            />
-            <button
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-              onClick={handleFinalizarCompra}
-            >
-              Finalizar compra
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </>
   );

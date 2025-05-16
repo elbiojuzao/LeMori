@@ -6,17 +6,8 @@ import { ShoppingCart, ChevronLeft, Plus, Minus, Check, Star, Truck, Shield } fr
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '../context/CartContext';
+import { IProduto } from '@/models/Produto';
 import axios from 'axios';
-
-interface IProduto {
-  _id: string;
-  nome: string;
-  descricao: string;
-  valor: number;
-  imagemUrl?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 
 export default function ProductPage() {
   const router = useRouter()

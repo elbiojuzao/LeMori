@@ -113,7 +113,7 @@ export default function Checkout() {
       }
 
       const data = await response.json();
-      
+
       if (data.init_point) {
         window.location.href = data.init_point;
       } else {
@@ -357,14 +357,14 @@ export default function Checkout() {
                             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           />
                         </div>
-                        <button
+            <button
                           type="button"
                           onClick={handleApplyCoupon}
                           className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-                        >
+            >
                           Aplicar
-                        </button>
-                      </div>
+            </button>
+          </div>
                       {couponError && (
                         <p className="mt-2 text-sm text-red-600">{couponError}</p>
                       )}
