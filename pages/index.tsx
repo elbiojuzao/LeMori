@@ -90,7 +90,7 @@ export default function Home() {
                     <p className="text-gray-600 mb-4">{product.description}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-purple-600 font-bold text-xl">R${product.price.toFixed(2)}</span>
-                      <Link href={`/product/${product.id}`} className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-150">
+                      <Link href={`/produto?id=${product.id}`} className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-150">
                         Ver detalhes
                       </Link>
                     </div>

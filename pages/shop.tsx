@@ -150,7 +150,7 @@ export default function Shop() {
                         {produto._id ? (
                           <>
                             <Link 
-                              href={`/produtos/${produto._id}`}
+                              href={`/produto?id=${produto._id}`}
                               className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-150"
                             >
                               Ver detalhes
