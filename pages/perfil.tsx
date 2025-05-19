@@ -336,15 +336,20 @@ export default function Perfil() {
                               </Menu.Item>
                               <Menu.Item>
                                 {({ active }) => (
-                                  <Link
-                                    href={`/homenagem/form?id=${homenagem._id}`}
+                                  <button
+                                    onClick={() => {
+                                      router.push({
+                                        pathname: '/homenagem/form',
+                                        query: { id: homenagem._id }
+                                      })
+                                    }}
                                     className={`flex items-center px-4 py-2 text-sm ${
                                       active ? 'bg-purple-50 text-purple-600' : 'text-gray-700'
                                     }`}
                                   >
                                     <Edit className="h-4 w-4 mr-3" />
                                     Editar
-                                  </Link>
+                                  </button>
                                 )}
                               </Menu.Item>
                               <Menu.Item>

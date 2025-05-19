@@ -11,7 +11,7 @@ import Footer from '@/components/Footer'
 
 function FormHomenagem() {
   const router = useRouter()
-  const { id } = router.query
+  const [homenagemId, setHomenagemId] = useState<string | null>(null)
 
   const [nome, setNome] = useState('')
   const [nascimento, setNascimento] = useState('')
@@ -28,13 +28,19 @@ function FormHomenagem() {
   const [fotosCarregando, setFotosCarregando] = useState<number>(0)
 
   useEffect(() => {
-    if (id) {
+    if (router.query.id) {
+      setHomenagemId(router.query.id as string)
+    }
+  }, [router.query])
+
+  useEffect(() => {
+    if (homenagemId) {
       const fetchData = async () => {
         const token = localStorage.getItem('token')
         if (!token) return
 
         try {
-          const res = await axios.get(`/api/homenagens/${id}`, {
+          const res = await axios.get(`/api/homenagens/${homenagemId}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           const data = res.data
@@ -43,9 +49,9 @@ function FormHomenagem() {
           setFalecimento(data.dataFalecimento?.slice(0, 10) || '')
           setBiografia(data.biografia || '')
           setMusica(data.musica || '')
-          setFotoPrincipal(data.fotoPrincipal || '')
-          setFotoPerfilPreview(data.fotoPrincipal || '')
-          setFotosPreview(data.galeria || [])
+          setFotoPrincipal(data.fotos?.[0] || '')
+          setFotoPerfilPreview(data.fotos?.[0] || '')
+          setFotosPreview(data.fotos || [])
         } catch (err: any) {
           if (err.response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
@@ -58,7 +64,7 @@ function FormHomenagem() {
 
       fetchData()
     }
-  }, [id])
+  }, [homenagemId])
 
   const handleFotoPerfilChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -253,8 +259,8 @@ function FormHomenagem() {
       }
 
       let response
-      if (id) {
-        response = await axios.put(`/api/homenagens/${id}`, formData, {
+      if (homenagemId) {
+        response = await axios.put(`/api/homenagens/${homenagemId}`, formData, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
