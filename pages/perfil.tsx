@@ -3,10 +3,11 @@ import { useRouter } from 'next/router'
 import axios from 'axios'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { User, Mail, Check, ShoppingBag, Package } from 'lucide-react'
+import { User, Mail, Check, ShoppingBag, Package, MoreVertical, Edit, Trash2, CreditCard } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
+import { Menu } from '@headlessui/react'
 
 interface ProfileFormValues {
   nome: string
@@ -46,6 +47,7 @@ export default function Perfil() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [homenagens, setHomenagens] = useState<Homenagem[]>([])
   const [ultimosPedidos, setUltimosPedidos] = useState<Pedido[]>([])
+  const [user, setUser] = useState<any>(null)
   const [profileForm, setProfileForm] = useState<ProfileFormValues>({
     nome: '',
     cpf: '',
@@ -65,16 +67,17 @@ export default function Perfil() {
           Authorization: `Bearer ${token}`,
         },
       })
-      const user = res.data
+      const userData = res.data
+      setUser(userData)
       setProfileForm({
-        nome: user.nome || '',
-        cpf: user.cpf || '',
-        email: user.email || '',
+        nome: userData.nome || '',
+        cpf: userData.cpf || '',
+        email: userData.email || '',
         senha: '',
       })
 
       // Buscar homenagens do usuário
-      const resHomenagens = await axios.get(`/api/homenagens/user/${user._id}`, {
+      const resHomenagens = await axios.get(`/api/homenagens/user/${userData._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setHomenagens(resHomenagens.data)
@@ -306,12 +309,77 @@ export default function Perfil() {
                             </p>
                           </div>
                         </div>
-                        <Link
-                          href={`/homenagem/${homenagem._id}`}
-                          className="text-purple-600 hover:text-purple-800 text-sm font-medium"
-                        >
-                          Ver homenagem
-                        </Link>
+                        <div className="flex items-center gap-4">
+                          <Link
+                            href={`/homenagem/${homenagem._id}`}
+                            className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                          >
+                            Ver homenagem
+                          </Link>
+                          <Menu as="div" className="relative">
+                            <Menu.Button className="p-1 hover:bg-gray-100 rounded-full">
+                              <MoreVertical className="h-5 w-5 text-gray-500" />
+                            </Menu.Button>
+                            <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10 border border-gray-100">
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <Link
+                                    href="/planos"
+                                    className={`flex items-center px-4 py-2 text-sm ${
+                                      active ? 'bg-purple-50 text-purple-600' : 'text-gray-700'
+                                    }`}
+                                  >
+                                    <CreditCard className="h-4 w-4 mr-3" />
+                                    Comprar plano
+                                  </Link>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <Link
+                                    href={`/homenagem/form?id=${homenagem._id}`}
+                                    className={`flex items-center px-4 py-2 text-sm ${
+                                      active ? 'bg-purple-50 text-purple-600' : 'text-gray-700'
+                                    }`}
+                                  >
+                                    <Edit className="h-4 w-4 mr-3" />
+                                    Editar
+                                  </Link>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={async () => {
+                                      if (confirm('Tem certeza que deseja excluir esta homenagem?')) {
+                                        try {
+                                          const token = localStorage.getItem('token')
+                                          await axios.delete(`/api/homenagens/${homenagem._id}`, {
+                                            headers: { Authorization: `Bearer ${token}` }
+                                          })
+                                          // Atualiza a lista de homenagens
+                                          const resHomenagens = await axios.get(`/api/homenagens/user/${user?._id}`, {
+                                            headers: { Authorization: `Bearer ${token}` }
+                                          })
+                                          setHomenagens(resHomenagens.data)
+                                        } catch (error) {
+                                          console.error('Erro ao excluir homenagem:', error)
+                                          alert('Erro ao excluir homenagem')
+                                        }
+                                      }
+                                    }}
+                                    className={`flex items-center w-full px-4 py-2 text-sm ${
+                                      active ? 'bg-red-50 text-red-600' : 'text-gray-700'
+                                    }`}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-3" />
+                                    Excluir
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            </Menu.Items>
+                          </Menu>
+                        </div>
                       </li>
                     ))
                   ) : (
