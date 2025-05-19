@@ -1,27 +1,39 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '@/lib/dbConnect'
-import Homenagem from '@/models/Homenagem'
-import { verifyToken  } from '@/lib/verificarToken'
+import { connectToDatabase } from '@/lib/mongodb'
+import { verifyToken } from '@/lib/auth'
+import { ObjectId } from 'mongodb'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await dbConnect()
-
   if (req.method !== 'GET') return res.status(405).json({ error: 'Método não permitido' })
 
   try {
     const token = req.headers.authorization?.split(' ')[1]
     if (!token) return res.status(401).json({ error: 'Token não fornecido' })
 
-    const { userId: usuarioIdToken } = verifyToken(token)
+    const decoded = await verifyToken(token)
+    if (!decoded) return res.status(401).json({ error: 'Token inválido' })
 
     const idParametro = req.query.id?.toString()
 
     // Verifica se o usuário do token bate com o id do parâmetro
-    if (usuarioIdToken !== idParametro) {
+    if (decoded.userId !== idParametro) {
       return res.status(403).json({ error: 'Acesso negado' })
     }
 
-    const homenagens = await Homenagem.find({ criadoPor: usuarioIdToken, excluida: false, }).sort({ createdAt: -1 })
+    const { db } = await connectToDatabase()
+    
+    console.log('Buscando homenagens para o usuário:', idParametro)
+    
+    const homenagens = await db.collection('homenagem')
+      .find({ 
+        criadoPor: new ObjectId(idParametro),
+        excluida: { $ne: true }
+      })
+      .sort({ createdAt: -1 })
+      .toArray()
+
+    console.log('Homenagens encontradas:', homenagens.length)
+
     return res.status(200).json(homenagens)
   } catch (error: any) {
     console.error('Erro ao buscar homenagens:', error)

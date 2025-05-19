@@ -1,18 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
-import Head from 'next/head'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { User, Mail, Check, ShoppingBag, Clock, Package } from 'lucide-react'
+import { User, Mail, Check, ShoppingBag, Package } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Menu } from '@headlessui/react'
-import {
-  EllipsisVerticalIcon,
-  PencilIcon,
-  TrashIcon,
-} from '@heroicons/react/24/solid'
+import Link from 'next/link'
 
 interface ProfileFormValues {
   nome: string
@@ -21,24 +15,14 @@ interface ProfileFormValues {
   senha: string
 }
 
-interface AddressFormValues {
-  _id?: string
-  cep: string
-  rua: string
-  numero: string
-  complemento: string
-  bairro: string
-  cidade: string
-  estado: string
-}
-
 interface Homenagem {
   _id: string
   nomeHomenageado: string
-  dataCriada: string
   dataNascimento: string
+  dataFalecimento: string
   fotoPerfil?: string
-  createdAt?: string
+  createdAt: string
+  slug: string
 }
 
 interface Pedido {
@@ -68,7 +52,6 @@ export default function Perfil() {
     email: '',
     senha: '',
   })
-  const [addresses, setAddresses] = useState<AddressFormValues[]>([])
 
   const fetchUser = useCallback(async () => {
     const token = localStorage.getItem('token')
@@ -150,33 +133,12 @@ export default function Perfil() {
   }
 
   const formatarData = (data: string | undefined) => {
-    if (!data) return "Data não disponível";
+    if (!data) return "Data não disponível"
     try {
-      return format(new Date(data), "dd/MM/yyyy");
+      return format(new Date(data), "dd/MM/yyyy")
     } catch (error) {
-      console.error("Erro ao formatar data:", error);
-      return "Data não disponível";
-    }
-  };
-
-  const handleEditar = (id: string) => {
-    router.push(`/homenagem/form?id=${id}`)
-  }
-
-  const handleExcluir = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta homenagem?')) return
-  
-    try {
-      await axios.delete(`/api/homenagens/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-      // Atualiza a lista após excluir
-      setHomenagens((prev) => prev.filter((h) => h._id !== id))
-    } catch (error) {
-      console.error('Erro ao excluir homenagem:', error)
-      alert('Erro ao excluir homenagem')
+      console.error("Erro ao formatar data:", error)
+      return "Data não disponível"
     }
   }
 
@@ -340,52 +302,21 @@ export default function Perfil() {
                           <div>
                             <p className="text-sm font-medium text-gray-900">{homenagem.nomeHomenageado}</p>
                             <p className="text-xs text-gray-500">
-                              Homenageada em {formatarData(homenagem.dataCriada || homenagem.createdAt)}
+                              Homenageada em {formatarData(homenagem.createdAt)}
                             </p>
                           </div>
                         </div>
-
-                        <Menu as="div" className="relative">
-                          <Menu.Button className="p-1 hover:bg-purple-100 rounded-full transition-colors">
-                            <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
-                          </Menu.Button>
-
-                          <Menu.Items className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                            <div className="py-1">
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <button
-                                    onClick={() => handleEditar(homenagem._id)}
-                                    className={`${
-                                      active ? 'bg-purple-50 text-purple-700' : 'text-gray-700'
-                                    } flex w-full items-center px-4 py-2 text-sm`}
-                                  >
-                                    <PencilIcon className="h-4 w-4 mr-3" />
-                                    Editar Homenagem
-                                  </button>
-                                )}
-                              </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <button
-                                    onClick={() => handleExcluir(homenagem._id)}
-                                    className={`${
-                                      active ? 'bg-red-50 text-red-700' : 'text-red-600'
-                                    } flex w-full items-center px-4 py-2 text-sm`}
-                                  >
-                                    <TrashIcon className="h-4 w-4 mr-3" />
-                                    Excluir Homenagem
-                                  </button>
-                                )}
-                              </Menu.Item>
-                            </div>
-                          </Menu.Items>
-                        </Menu>
+                        <Link
+                          href={`/homenagem/${homenagem._id}`}
+                          className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                        >
+                          Ver homenagem
+                        </Link>
                       </li>
                     ))
                   ) : (
-                    <li className="py-3 text-gray-500 text-sm">
-                      Nenhuma homenagem criada ainda.
+                    <li className="py-3 text-gray-500 text-center">
+                      Nenhuma homenagem encontrada
                     </li>
                   )}
                 </ul>
