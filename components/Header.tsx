@@ -145,7 +145,7 @@ const Header = () => {
                     <User size={24} />
                   </button>
                   <div className="absolute right-0 w-48 mt-1 py-2 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-2 before:-translate-y-full">
-                    <Link href="/perfil" className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">
+                    <Link href="/perfil" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${router.pathname === '/perfil' ? 'text-purple-600' : ''}">
                       Perfil
                     </Link>
                     <button 

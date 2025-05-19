@@ -20,7 +20,7 @@ export default function EsqueciSenha() {
         const res = await axios.get('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         })
-        if (res.status === 200) router.replace('/dashboard')
+        if (res.status === 200) router.replace('/perfil')
       } catch {}
     }
 

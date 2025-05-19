@@ -59,14 +59,14 @@ export default function AdminLayout({ children }) {
       {/* Barra Lateral */}
       <aside className="bg-gray-800 text-white w-64 py-6 px-3 flex flex-col">
         <div className="mb-8">
-          <Link href="/admin/dashboard" className="text-xl font-bold hover:text-primary transition duration-200">
+          <Link href="/admin" className="text-xl font-bold hover:text-primary transition duration-200">
             Painel de Administração
           </Link>
         </div>
         <nav className="flex-grow">
           <ul>
             <li className="mb-2">
-              <Link href="/admin/dashboard" className="block py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
+              <Link href="/admin" className="block py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
                 Dashboard
               </Link>
             </li>
