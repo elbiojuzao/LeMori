@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import { IProduto } from '@/models/Produto';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
+import Head from 'next/head'
 
 export default function Shop() {
   const [produtos, setProdutos] = useState<IProduto[]>([]);
@@ -61,6 +62,10 @@ export default function Shop() {
   if (loading) {
     return (
       <>
+        <Head>
+          <title>Loja | Lemori</title>
+          <meta name="description" content="Encontre os melhores planos para criar sua homenagem em memória" />
+        </Head>
         <Header />
         <div className="min-h-screen bg-gray-100 p-8">
           <div className="animate-pulse flex justify-center items-center h-64">
@@ -75,6 +80,10 @@ export default function Shop() {
   if (error) {
     return (
       <>
+        <Head>
+          <title>Loja | Lemori</title>
+          <meta name="description" content="Encontre os melhores planos para criar sua homenagem em memória" />
+        </Head>
         <Header />
         <div className="min-h-screen bg-gray-100 p-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -89,6 +98,10 @@ export default function Shop() {
 
   return (
     <>
+      <Head>
+        <title>Loja | Lemori</title>
+        <meta name="description" content="Encontre os melhores planos para criar sua homenagem em memória" />
+      </Head>
       <Header />
       <main className="min-h-screen bg-gray-100 p-8">
         <div className="max-w-7xl mx-auto">

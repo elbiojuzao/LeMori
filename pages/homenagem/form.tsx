@@ -8,6 +8,7 @@ import moment from 'moment'
 import 'moment/locale/pt-br'
 import Logo from '@/components/Logo'
 import Footer from '@/components/Footer'
+import Head from 'next/head'
 
 function FormHomenagem() {
   const router = useRouter()
@@ -294,6 +295,10 @@ function FormHomenagem() {
 
   return (
     <>
+      <Head>
+        <title>{homenagemId ? 'Editar Homenagem' : 'Nova Homenagem'} | Lemori</title>
+        <meta name="description" content={homenagemId ? 'Edite sua homenagem existente' : 'Crie uma nova homenagem em memória'} />
+      </Head>
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
         <div className='flex justify-center'>
           <Logo className="b-6 h-50"/>

@@ -4,6 +4,7 @@ import { ShoppingCart, PenSquare } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import axios from 'axios';
+import Head from 'next/head'
 
 interface Produto {
   _id: string
@@ -36,6 +37,10 @@ export default function Home() {
 
   return (
     <>
+      <Head>
+        <title>Lemori - Homenagens em Memória</title>
+        <meta name="description" content="Crie uma homenagem especial em memória de alguém querido. Compartilhe histórias, fotos e músicas que marcaram uma vida." />
+      </Head>
       <Header />
       <div>
         {/* Hero Section */}

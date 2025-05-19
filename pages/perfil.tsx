@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
+import Head from 'next/head'
 
 interface ProfileFormValues {
   nome: string
@@ -149,6 +150,10 @@ export default function Perfil() {
 
   return (
     <>
+      <Head>
+        <title>Meu Perfil | Lemori</title>
+        <meta name="description" content="Gerencie suas homenagens e informações pessoais" />
+      </Head>
       <Header />
       <div className="bg-gray-50 py-10 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

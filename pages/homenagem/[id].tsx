@@ -86,6 +86,10 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
 
   return (
     <>
+      <Head>
+        <title>Em memória de {homenagem.nomeHomenageado} | Lemori</title>
+        <meta name="description" content={`Homenagem em memória de ${homenagem.nomeHomenageado}. ${homenagem.biografia?.substring(0, 150)}...`} />
+      </Head>
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
         {/* Header */}
         <div className='flex justify-center'>
