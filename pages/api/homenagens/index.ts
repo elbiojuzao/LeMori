@@ -1,12 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { IncomingForm, File } from 'formidable'
 import path from 'path'
+import fs from 'fs'
 import { verifyToken } from '@/lib/auth'
 import dbConnect from '@/lib/dbConnect'
 import Homenagem from '@/models/Homenagem'
 import User from '@/models/User'
 import Pedido from '@/models/Pedido'
 import ItemPedido from '@/models/ItemPedido'
+import slugify from 'slugify'
 
 export const config = {
   api: {
@@ -14,11 +16,20 @@ export const config = {
   },
 }
 
+// Função para garantir que o diretório de uploads existe
+const ensureUploadDir = () => {
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true })
+  }
+  return uploadDir
+}
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') return res.status(405).end('Método não permitido')
 
   const token = req.headers.authorization?.split(' ')[1]
-  const decoded = verifyToken(token || '')
+  const decoded = await verifyToken(token || '')
   if (!decoded) return res.status(401).json({ error: 'Não autorizado' })
 
   await dbConnect()
@@ -30,9 +41,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(403).json({ error: 'Você não possui créditos disponíveis para criar uma homenagem.' })
   }
 
+  const uploadDir = ensureUploadDir()
+
   const form = new IncomingForm({
     multiples: true,
-    uploadDir: './public/uploads',
+    uploadDir,
     keepExtensions: true,
   })
 
@@ -40,6 +53,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (err) return res.status(500).json({ error: 'Erro ao processar formulário' })
 
     try {
+      // Validação dos campos obrigatórios
+      const nomeHomenageado = fields.nomeHomenageado?.toString()
+      const dataNascimento = fields.dataNascimento?.toString()
+      const dataFalecimento = fields.dataFalecimento?.toString()
+      const biografia = fields.biografia?.toString()
+
+      if (!nomeHomenageado) return res.status(400).json({ error: 'Nome do homenageado é obrigatório' })
+      if (!dataNascimento) return res.status(400).json({ error: 'Data de nascimento é obrigatória' })
+      if (!dataFalecimento) return res.status(400).json({ error: 'Data de falecimento é obrigatória' })
+      if (!biografia) return res.status(400).json({ error: 'Biografia é obrigatória' })
+
       const fotoPerfilFile = Array.isArray(files.fotoPrincipal) ? files.fotoPrincipal[0] : files.fotoPrincipal
       const galeriaFiles = files.fotos as File[] || []
 
@@ -49,16 +73,28 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         ? galeriaFiles.map((file) => `/uploads/${path.basename(file.filepath)}`)
         : []
 
+      // Gera um slug único para a homenagem
+      const baseSlug = slugify(nomeHomenageado, { lower: true, strict: true })
+      let slug = baseSlug
+      let counter = 1
+      
+      while (await Homenagem.findOne({ slug })) {
+        slug = `${baseSlug}-${counter}`
+        counter++
+      }
+
       const novaHomenagem = new Homenagem({
-        nomeHomenageado: fields.nomeHomenageado?.toString() || '',
-        dataNascimento: fields.dataNascimento?.toString() || '',
-        dataFalecimento: fields.dataFalecimento?.toString() || '',
-        biografia: fields.biografia?.toString() || '',
+        nomeHomenageado,
+        dataNascimento,
+        dataFalecimento,
+        biografia,
         musica: fields.musica?.toString() || '',
         fotoPerfil: fotoPerfilPath,
         fotos: fotosPaths,
         criadoPor: decoded.userId,
         dataExpiracao: new Date(Date.now() + 1825 * 24 * 60 * 60 * 1000),
+        slug,
+        ativo: true
       })
 
       // Buscar um pedido pago do usuário com item de homenagem sem homenagemId
@@ -84,9 +120,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       user.homenagemCreditos -= 1
       await user.save()
 
-      return res.status(201).json(novaHomenagem)
+      return res.status(201).json(homenagemSalva)
     } catch (error) {
-      console.error(error)
+      console.error('Erro ao criar homenagem:', error)
       return res.status(500).json({ error: 'Erro ao criar homenagem' })
     }
   })

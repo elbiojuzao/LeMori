@@ -1,10 +1,13 @@
-import Head from 'next/head'
 import { useEffect, useState } from 'react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import NextImage from 'next/image'
 import axios from 'axios'
 import withAuth from '@/lib/withAuth'
 import { useRouter } from 'next/router'
+import { Save, Edit2, Plus } from 'lucide-react'
+import moment from 'moment'
+import 'moment/locale/pt-br'
+import Logo from '@/components/Logo'
+import Footer from '@/components/Footer'
 
 function FormHomenagem() {
   const router = useRouter()
@@ -14,20 +17,18 @@ function FormHomenagem() {
   const [nascimento, setNascimento] = useState('')
   const [falecimento, setFalecimento] = useState('')
   const [biografia, setBiografia] = useState('')
-  const [galeriaFotos, setGaleriaFotos] = useState<FileList | null>(null)
-  const [erroGaleria, setErroGaleria] = useState('')
   const [fotoPrincipal, setFotoPrincipal] = useState<string>('')
   const [musica, setMusica] = useState('')
-  const [mensagemSucesso, setMensagemSucesso] = useState('')
-  const [modoEdicao, setModoEdicao] = useState(false)
-  const [homenagemCriadaId, setHomenagemCriadaId] = useState<string | null>(null)
-
+  const [isSaving, setIsSaving] = useState(false)
+  const [editandoCampo, setEditandoCampo] = useState<string | null>(null)
+  const [abaAtiva, setAbaAtiva] = useState<'sobre' | 'fotos' | 'musica'>('sobre')
   const [fotoPerfilPreview, setFotoPerfilPreview] = useState<string | null>(null)
   const [fotosPreview, setFotosPreview] = useState<string[]>([])
+  const [carregandoFotos, setCarregandoFotos] = useState(false)
+  const [fotosCarregando, setFotosCarregando] = useState<number>(0)
 
   useEffect(() => {
     if (id) {
-      setModoEdicao(true)
       const fetchData = async () => {
         const token = localStorage.getItem('token')
         if (!token) return
@@ -48,7 +49,7 @@ function FormHomenagem() {
         } catch (err: any) {
           if (err.response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
-            router.push('/dashboard')
+            router.push('/perfil')
           } else {
             console.error('Erro ao carregar homenagem:', err)
           }
@@ -104,22 +105,16 @@ function FormHomenagem() {
     })
   }
 
-  const removerFotoPerfil = () => {
-    const confirmar = confirm('Deseja realmente remover a foto principal?')
-    if (confirmar) {
-      setFotoPerfilPreview(null)
-      setFotoPrincipal('')
-    }
-  }
-
   const handleFotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
 
     if (fotosPreview.length + files.length > 30) {
-      setErroGaleria('Você só pode adicionar até 30 fotos.')
+      alert('Você só pode adicionar até 30 fotos.')
       return
     }
 
+    setCarregandoFotos(true)
+    setFotosCarregando(files.length)
     const previews: string[] = []
 
     files.forEach((file) => {
@@ -128,16 +123,16 @@ function FormHomenagem() {
         if (reader.result) {
           compressImage(reader.result as string, 800, 800).then((compressed) => {
             previews.push(compressed)
+            setFotosCarregando(prev => prev - 1)
             if (previews.length === files.length) {
               setFotosPreview((prev) => [...prev, ...previews])
+              setCarregandoFotos(false)
             }
           })
         }
       }
       reader.readAsDataURL(file)
     })
-
-    setErroGaleria('')
   }
 
   const removerFotoGaleria = (index: number) => {
@@ -170,6 +165,17 @@ function FormHomenagem() {
 
     const nascimentoDate = new Date(nascimento)
     const falecimentoDate = new Date(falecimento)
+    const dataAtual = new Date()
+
+    if (nascimentoDate > dataAtual) {
+      alert('A data de nascimento não pode ser maior que a data atual.')
+      return false
+    }
+
+    if (falecimentoDate > dataAtual) {
+      alert('A data de falecimento não pode ser maior que a data atual.')
+      return false
+    }
 
     if (nascimentoDate > falecimentoDate) {
       alert('A data de nascimento não pode ser maior que a de falecimento.')
@@ -193,205 +199,345 @@ function FormHomenagem() {
     if (!validarFormulario()) return
 
     try {
-      const payload = {
-        nomeHomenageado: nome,
-        dataNascimento: nascimento,
-        dataFalecimento: falecimento,
-        biografia: biografia,
-        musica: musica,
-        fotoPrincipal: fotoPrincipal,
-        galeria: fotosPreview,
+      setIsSaving(true)
+      const formData = new FormData()
+      
+      formData.append('nomeHomenageado', nome)
+      formData.append('dataNascimento', nascimento)
+      formData.append('dataFalecimento', falecimento)
+      formData.append('biografia', biografia)
+      formData.append('musica', musica)
+
+      if (fotoPrincipal) {
+        const base64Data = fotoPrincipal.split(',')[1]
+        const byteCharacters = atob(base64Data)
+        const byteArrays = []
+        
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512)
+          const byteNumbers = new Array(slice.length)
+          
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i)
+          }
+          
+          const byteArray = new Uint8Array(byteNumbers)
+          byteArrays.push(byteArray)
+        }
+        
+        const blob = new Blob(byteArrays, { type: 'image/jpeg' })
+        formData.append('fotoPrincipal', blob, 'fotoPrincipal.jpg')
+      }
+
+      if (fotosPreview.length > 0) {
+        for (let i = 0; i < fotosPreview.length; i++) {
+          const base64Data = fotosPreview[i].split(',')[1]
+          const byteCharacters = atob(base64Data)
+          const byteArrays = []
+          
+          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512)
+            const byteNumbers = new Array(slice.length)
+            
+            for (let j = 0; j < slice.length; j++) {
+              byteNumbers[j] = slice.charCodeAt(j)
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers)
+            byteArrays.push(byteArray)
+          }
+          
+          const blob = new Blob(byteArrays, { type: 'image/jpeg' })
+          formData.append('fotos', blob, `foto${i}.jpg`)
+        }
       }
 
       let response
-      if (modoEdicao) {
-        await axios.put(`/api/homenagens/${id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        setMensagemSucesso('Homenagem atualizada com sucesso!')
-      } else {
-        response = await axios.post('/api/homenagens', payload, {
-          headers: {
-            'Content-Type': 'application/json',
+      if (id) {
+        response = await axios.put(`/api/homenagens/${id}`, formData, {
+          headers: { 
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
           },
         })
-        setMensagemSucesso('Homenagem criada com sucesso!')
-        setHomenagemCriadaId(response.data._id)
-
-        setNome('')
-        setNascimento('')
-        setFalecimento('')
-        setBiografia('')
-        setMusica('')
-        setGaleriaFotos(null)
-        setFotoPrincipal('')
-        setFotosPreview([])
-        setFotoPerfilPreview(null)
+        alert('Homenagem atualizada com sucesso!')
+      } else {
+        response = await axios.post('/api/homenagens', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        })
+        alert('Homenagem criada com sucesso!')
+        router.push(`/homenagem/${response.data._id}`)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar homenagem:', error)
+      alert(error.response?.data?.error || 'Erro ao salvar homenagem')
+    } finally {
+      setIsSaving(false)
     }
+  }
+
+  const formatarData = (data: string | null | undefined) => {
+    if (data) {
+      return moment(data).locale('pt-br').format('DD/MM/YYYY')
+    }
+    return ''
   }
 
   return (
     <>
-      <Header />
+      <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
+        <div className='flex justify-center'>
+          <Logo className="b-6 h-50"/>
+        </div>
 
-      <div className="min-h-screen bg-[#ececdd] p-6 flex items-center justify-center">
-        <div className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-md">
-          <h1 className="text-2xl font-bold text-blue-600 mb-6">
-            {modoEdicao ? 'Editar homenagem' : 'Criar nova homenagem'}
-          </h1>
-
-          {mensagemSucesso && !homenagemCriadaId && (
-            <div className="bg-green-100 border border-green-400 text-green-700 p-2 rounded mb-4">
-              {mensagemSucesso}
-            </div>
-          )}
-
-          {!homenagemCriadaId ? (
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div>
-                <label className="block mb-1 text-gray-600">Nome da pessoa homenageada</label>
-                <input
-                  type="text"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  className="w-full p-2 border rounded-md text-gray-600"
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <div className="w-1/2">
-                  <label className="block mb-1 text-gray-600">Data de nascimento</label>
-                  <input
-                    type="date"
-                    value={nascimento}
-                    onChange={(e) => setNascimento(e.target.value)}
-                    className="w-full p-2 border rounded-md text-gray-600"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <label className="block mb-1 text-gray-600">Data de falecimento</label>
-                  <input
-                    type="date"
-                    value={falecimento}
-                    onChange={(e) => setFalecimento(e.target.value)}
-                    className="w-full p-2 border rounded-md text-gray-600"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-1 text-gray-600">Foto principal do homenageado</label>
+        <section className="px-6 py-4 bg-gray-100">
+          <div className="max-w-3xl mx-auto flex justify-between items-start">
+            <div className="flex gap-4 items-center">
+              <div className="relative">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFotoPerfilChange}
-                  className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
+                  className="hidden"
+                  id="fotoPrincipal"
                 />
-                {fotoPerfilPreview && (
-                  <div
-                    className="relative mt-2 w-32 h-32 rounded-full overflow-hidden group cursor-pointer"
-                    onClick={removerFotoPerfil}
-                  >
-                    <img
-                      src={fotoPerfilPreview}
-                      alt="Pré-visualização da foto de perfil"
-                      className="w-full h-full object-cover group-hover:brightness-50"
-                      loading="lazy"
-                    />
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-xl opacity-0 group-hover:opacity-100">
-                      ✖
-                    </span>
+                <label
+                  htmlFor="fotoPrincipal"
+                  className="cursor-pointer group"
+                >
+                  <NextImage
+                    src={fotoPerfilPreview || '/img/avatar.png'}
+                    alt="Avatar"
+                    width={100}
+                    height={100}
+                    className="rounded-full border-4 border-white shadow group-hover:opacity-75 transition-opacity"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Edit2 size={24} className="text-white bg-black bg-opacity-50 rounded-full p-2" />
                   </div>
-                )}
+                </label>
               </div>
-
               <div>
-                <label className="block mb-1 text-gray-600">Mensagem de homenagem</label>
+                <p className="text-sm text-gray-500">Em lembrança a</p>
+                {editandoCampo === 'nome' ? (
+                  <input
+                    type="text"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    onBlur={() => setEditandoCampo(null)}
+                    autoFocus
+                    className="text-3xl font-bold border-b-2 border-purple-500 focus:outline-none bg-transparent"
+                    placeholder="Nome do homenageado"
+                  />
+                ) : (
+                  <h2 
+                    onClick={() => setEditandoCampo('nome')}
+                    className="text-3xl font-bold cursor-pointer hover:text-purple-600 flex items-center group"
+                  >
+                    {nome || 'Nome do homenageado'}
+                    <Edit2 size={20} className="ml-2 text-gray-400 group-hover:text-purple-600" />
+                  </h2>
+                )}
+                <div className="flex flex-col text-gray-600 mt-1">
+                  {editandoCampo === 'nascimento' ? (
+                    <input
+                      type="date"
+                      value={nascimento}
+                      onChange={(e) => setNascimento(e.target.value)}
+                      onBlur={() => setEditandoCampo(null)}
+                      autoFocus
+                      max={new Date().toISOString().split('T')[0]}
+                      className="border-b-2 border-purple-500 focus:outline-none bg-transparent text-gray-500 text-sm w-36"
+                    />
+                  ) : (
+                    <span 
+                      onClick={() => setEditandoCampo('nascimento')}
+                      className="cursor-pointer text-gray-400 hover:text-purple-600 flex items-center group mb-1"
+                    >
+                      {formatarData(nascimento) || 'Data de nascimento'}
+                      <Edit2 size={16} className="ml-2 group-hover:text-purple-600" />
+                    </span>
+                  )}
+                  {editandoCampo === 'falecimento' ? (
+                    <input
+                      type="date"
+                      value={falecimento}
+                      onChange={(e) => setFalecimento(e.target.value)}
+                      onBlur={() => setEditandoCampo(null)}
+                      autoFocus
+                      max={new Date().toISOString().split('T')[0]}
+                      className="border-b-2 text-gray-400 border-purple-500 focus:outline-none bg-transparent text-gray-500 text-sm w-36"
+                    />
+                  ) : (
+                    <span 
+                      onClick={() => setEditandoCampo('falecimento')}
+                      className="cursor-pointer text-gray-400 hover:text-purple-600 flex items-center group"
+                    >
+                      <span className="mr-2">†</span>
+                      {formatarData(falecimento) || 'Data de falecimento'}
+                      <Edit2 size={16} className="ml-2 text-gray-400 group-hover:text-purple-600" />
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="flex justify-center space-x-2 mt-4">
+          {['sobre', 'fotos', 'musica'].map((aba) => (
+            <button
+              key={aba}
+              className={`px-4 py-2 rounded-md ${
+                abaAtiva === aba ? 'bg-indigo-600 text-white' : 'bg-gray-200'
+              }`}
+              onClick={() => setAbaAtiva(aba as any)}
+            >
+              {aba.charAt(0).toUpperCase() + aba.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        <div className="max-w-3xl mx-auto mt-6 px-4">
+          {abaAtiva === 'sobre' && (
+            <div className="bg-white p-6 rounded-lg shadow">
+              {editandoCampo === 'biografia' ? (
                 <textarea
                   value={biografia}
                   onChange={(e) => setBiografia(e.target.value)}
-                  className="w-full p-2 border rounded-md text-gray-600"
-                  rows={4}
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block mb-1 text-gray-600">Galeria de fotos (até 30 fotos)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFotosChange}
-                  className="w-full p-2 border rounded-md text-gray-600 file:text-gray-600 file:border-0 file:bg-transparent"
+                  onBlur={() => setEditandoCampo(null)}
+                  autoFocus
+                  rows={6}
+                  placeholder="Escreva a biografia do homenageado..."
+                  className="w-full px-2 py-1 border-2 border-purple-500 rounded-md focus:outline-none"
                 />
-                {erroGaleria && <p className="text-red-600 text-sm mt-1">{erroGaleria}</p>}
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {fotosPreview.map((src, idx) => (
-                  <div
-                    key={idx}
-                    className="relative group w-24 h-24 rounded-md overflow-hidden cursor-pointer"
-                    onClick={() => removerFotoGaleria(idx)}
-                  >
-                    <img
-                      src={src}
-                      alt={`Pré-visualização ${idx + 1}`}
-                      className="w-full h-full object-cover group-hover:brightness-50"
-                      loading="lazy"
-                    />
-                    <span className="absolute inset-0 flex items-center justify-center text-white text-2xl opacity-0 group-hover:opacity-100">
-                      ✖
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mb-4">
-                <label htmlFor="musica" className="block text-gray-600 font-medium mb-1">
-                  Link da Música
-                </label>
-                <input
-                  type="url"
-                  id="musica"
-                  name="musica"
-                  value={musica}
-                  onChange={(e) => setMusica(e.target.value)}
-                  className="w-full p-2 border rounded-md text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="https://youtu.be/seu-link-ou-spotify"
-                />
-                <p className="text-sm text-gray-600 mt-1">
-                  A música deve ter no máximo <span className="font-semibold text-red-500">6 minutos</span>.
-                </p>
-              </div>
-              <button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold w-full"
-              >
-                {modoEdicao ? 'Salvar alterações' : 'Criar homenagem'}
-              </button>
-            </form>
-          ) : (
-            <div className="flex flex-col space-y-4">
-              <div className="bg-green-100 border border-green-400 text-green-700 p-2 rounded mb-4">
-                {mensagemSucesso}
-              </div>
-              <button
-                onClick={() => router.push(`/homenagem/${homenagemCriadaId}`)}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-semibold"
-              >
-                Ver Homenagem
-              </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md font-semibold"
-              >
-                Início
-              </button>
+              ) : (
+                <div 
+                  onClick={() => setEditandoCampo('biografia')}
+                  className="cursor-pointer hover:text-purple-600 group"
+                >
+                  {biografia ? (
+                    <p className="text-gray-700 whitespace-pre-line">{biografia}</p>
+                  ) : (
+                    <p className="text-gray-400 italic flex items-center">
+                      Biografia
+                      <Edit2 size={16} className="ml-2 text-gray-400 group-hover:text-purple-600" />
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
+
+          {abaAtiva === 'fotos' && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFotosChange}
+                className="hidden"
+                id="galeriaFotos"
+              />
+              <label
+                htmlFor="galeriaFotos"
+                className="aspect-w-3 aspect-h-2 rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+              >
+                <div className="text-center">
+                  <Plus size={48} className="mx-auto text-gray-400" />
+                  <span className="mt-2 block text-gray-600">Adicionar fotos</span>
+                </div>
+              </label>
+              {carregandoFotos && (
+                <div className="aspect-w-3 aspect-h-2 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                    <span className="mt-2 block text-gray-600">Carregando {fotosCarregando} foto{fotosCarregando !== 1 ? 's' : ''}...</span>
+                  </div>
+                </div>
+              )}
+              {fotosPreview.map((foto, idx) => (
+                <div key={idx} className="relative group">
+                  <NextImage
+                    src={foto}
+                    alt={`Foto ${idx + 1}`}
+                    width={300}
+                    height={200}
+                    className="rounded-lg object-cover w-full h-auto"
+                  />
+                  <button
+                    onClick={() => removerFotoGaleria(idx)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {abaAtiva === 'musica' && (
+            <div className="bg-white p-6 rounded-lg shadow">
+              <p className="mb-4">"Essa música representa a memória de {nome || 'nome do homenageado'}."</p>
+              {editandoCampo === 'musica' ? (
+                <input
+                  type="text"
+                  value={musica}
+                  onChange={(e) => setMusica(e.target.value)}
+                  onBlur={() => setEditandoCampo(null)}
+                  autoFocus
+                  placeholder="Cole aqui o link da música (YouTube, Spotify, etc)"
+                  className="w-full px-2 py-1 border-b-2 border-purple-500 focus:outline-none"
+                />
+              ) : (
+                <div 
+                  onClick={() => setEditandoCampo('musica')}
+                  className="cursor-pointer hover:text-purple-600 flex items-center group"
+                >
+                  {musica ? (
+                    <p className="text-gray-700">{musica}</p>
+                  ) : (
+                    <p className="text-gray-400 italic flex items-center">
+                      Link da música
+                      <Edit2 size={16} className="ml-2 text-gray-400 group-hover:text-purple-600" />
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="max-w-3xl mx-auto mt-8 px-4 mb-8">
+          <button 
+            onClick={handleSubmit}
+            disabled={isSaving}
+            className={`w-full px-6 py-3 rounded-lg text-lg font-medium text-white flex items-center justify-center ${
+              isSaving 
+                ? 'bg-purple-400 cursor-not-allowed' 
+                : 'bg-purple-600 hover:bg-purple-700'
+            }`}
+          >
+            {isSaving ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Salvando...
+              </>
+            ) : (
+              <>
+                <Save size={20} className="mr-2" />
+                Salvar homenagem
+              </>
+            )}
+          </button>
         </div>
       </div>
       <Footer />
