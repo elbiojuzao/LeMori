@@ -9,6 +9,10 @@ export interface Product {
   stock: number;
   features?: string[];
   active: boolean;
+  width: number;  // em centímetros
+  height: number; // em centímetros
+  length: number; // em centímetros
+  weight: number; // em gramas
 }
 
 export const mockProducts: Product[] = [
@@ -28,7 +32,11 @@ export const mockProducts: Product[] = [
       "Fast loading speed",
       "Easy customization"
     ],
-    active: true
+    active: true,
+    width: 100,
+    height: 75,
+    length: 0.5,
+    weight: 1000
   },
   {
     id: "2",
@@ -47,7 +55,11 @@ export const mockProducts: Product[] = [
       "Mobile-friendly design",
       "Payment gateway integration"
     ],
-    active: true
+    active: true,
+    width: 100,
+    height: 75,
+    length: 0.5,
+    weight: 1000
   },
   {
     id: "3",
@@ -66,7 +78,11 @@ export const mockProducts: Product[] = [
       "Client testimonial section",
       "Blog capability"
     ],
-    active: true
+    active: true,
+    width: 100,
+    height: 75,
+    length: 0.5,
+    weight: 1000
   },
   {
     id: "4",
@@ -85,7 +101,11 @@ export const mockProducts: Product[] = [
       "Inventory monitoring",
       "Export and sharing capabilities"
     ],
-    active: true
+    active: true,
+    width: 100,
+    height: 75,
+    length: 0.5,
+    weight: 1000
   },
   {
     id: "5",
@@ -104,7 +124,11 @@ export const mockProducts: Product[] = [
       "Content scheduling",
       "Version history"
     ],
-    active: true
+    active: true,
+    width: 100,
+    height: 75,
+    length: 0.5,
+    weight: 1000
   }
 ];
 

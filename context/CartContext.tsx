@@ -6,6 +6,17 @@ interface CartItem {
   quantity: number;
 }
 
+interface ShippingOption {
+  id: number;
+  name: string;
+  price: number;
+  delivery_time: number;
+  delivery_range: {
+    min: number;
+    max: number;
+  };
+}
+
 interface CartContextType {
   items: CartItem[];
   totalItems: number;
@@ -14,26 +25,31 @@ interface CartContextType {
   total: number;
   couponCode: string | null;
   discount: number;
+  shippingOptions: ShippingOption[];
+  selectedShippingOption: ShippingOption | null;
   addItem: (product: Product, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   applyCoupon: (code: string) => boolean;
   removeCoupon: () => void;
+  calculateShipping: (cep: string) => Promise<void>;
+  selectShippingOption: (option: ShippingOption) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const SHIPPING_COST = 10; // Fixed shipping cost
 const COUPONS = [
   { code: 'WELCOME10', discount: 0.1 }, // 10% discount
-  { code: 'FREESHIP', discount: SHIPPING_COST } // Free shipping
+  { code: 'FREESHIP', discount: 0 } // Free shipping
 ];
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [selectedShippingOption, setSelectedShippingOption] = useState<ShippingOption | null>(null);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -83,7 +99,57 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (sum, item) => sum + (item.product.price * item.quantity), 
       0
     );
-    setDiscount(Math.min(discountValue, subtotal + SHIPPING_COST));
+    const shippingCost = selectedShippingOption?.price || 0;
+    setDiscount(Math.min(discountValue, subtotal + shippingCost));
+  };
+
+  const calculateShipping = async (cep: string) => {
+    try {
+      const response = await fetch('/api/shipping/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cep,
+          items: items.map(item => ({
+            id: item.product.id,
+            width: item.product.width,
+            height: item.product.height,
+            length: item.product.length,
+            weight: item.product.weight,
+            quantity: item.quantity
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao calcular frete');
+      }
+
+      const data = await response.json();
+      setShippingOptions(data.shippingOptions);
+      
+      // Seleciona a primeira opção por padrão
+      if (data.shippingOptions.length > 0) {
+        setSelectedShippingOption(data.shippingOptions[0]);
+      }
+    } catch (error) {
+      console.error('Erro ao calcular frete:', error);
+      throw error;
+    }
+  };
+
+  const selectShippingOption = (option: ShippingOption) => {
+    setSelectedShippingOption(option);
+    
+    // Recalcula o desconto se houver cupom aplicado
+    if (couponCode) {
+      const coupon = COUPONS.find(c => c.code === couponCode);
+      if (coupon) {
+        calculateDiscount(coupon.discount);
+      }
+    }
   };
 
   const addItem = (product: Product, quantity = 1) => {
@@ -174,7 +240,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (sum, item) => sum + (Number(item.product.price) * item.quantity), 
     0
   ).toFixed(2));
-  const shipping = items.length > 0 ? SHIPPING_COST : 0;
+  const shipping = selectedShippingOption?.price || 0;
   const total = Number((subtotal + shipping - discount).toFixed(2));
 
   const value = {
@@ -185,12 +251,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     total,
     couponCode,
     discount,
+    shippingOptions,
+    selectedShippingOption,
     addItem,
     removeItem,
     updateQuantity,
     clearCart,
     applyCoupon,
-    removeCoupon
+    removeCoupon,
+    calculateShipping,
+    selectShippingOption
   };
 
   return (

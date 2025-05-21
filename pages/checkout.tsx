@@ -21,14 +21,16 @@ interface Endereco {
 
 export default function Checkout() {
   const router = useRouter();
-  const { items, subtotal, shipping, discount, total, applyCoupon, removeCoupon } = useCart();
+  const { items, subtotal, shipping, discount, total, applyCoupon, removeCoupon, shippingOptions, selectedShippingOption, calculateShipping, selectShippingOption } = useCart();
   const [enderecos, setEnderecos] = useState<Endereco[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [cep, setCep] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'mercado-pago' | 'pix'>('mercado-pago');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -46,6 +48,7 @@ export default function Checkout() {
         setEnderecos(response.data.addresses);
         if (response.data.addresses.length > 0) {
           setSelectedAddressId(response.data.addresses[0]._id);
+          setCep(response.data.addresses[0].cep); // Preenche o CEP do endereço principal
         }
       } catch (error) {
         console.error('Erro ao carregar endereços:', error);
@@ -55,6 +58,13 @@ export default function Checkout() {
 
     fetchEnderecos();
   }, [router]);
+
+  // Redireciona se o carrinho estiver vazio
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/shop');
+    }
+  }, [items, router]);
 
   const handleApplyCoupon = () => {
     if (!couponCode.trim()) {
@@ -128,9 +138,24 @@ export default function Checkout() {
     }
   };
 
-  // Redireciona se o carrinho estiver vazio
+  // Adicionar função para calcular o frete
+  const handleCalculateShipping = async () => {
+    if (!cep || cep.length < 8) {
+      setError('Digite um CEP válido para calcular o frete.');
+      return;
+    }
+    setIsCalculatingShipping(true);
+    setError(null);
+    try {
+      await calculateShipping(cep);
+    } catch (err) {
+      setError('Erro ao calcular o frete. Tente novamente.');
+    } finally {
+      setIsCalculatingShipping(false);
+    }
+  };
+
   if (items.length === 0) {
-    router.push('/shop');
     return null;
   }
 
@@ -170,7 +195,7 @@ export default function Checkout() {
       <Header />
       <div className="bg-gray-50 py-10 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold text-gray-500 mb-8">Finalizar Compra</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Finalizar Compra</h1>
           
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
@@ -180,118 +205,248 @@ export default function Checkout() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Formulário de Checkout */}
-            <div className="lg:col-span-2">
-              <form onSubmit={handleSubmitOrder}>
-                {/* Seção de Endereço */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                  <h2 className="text-lg font-semibold text-gray-500 mb-6">Endereço de Entrega</h2>
+            <div className="lg:col-span-2 space-y-6">
+              {/* Seção de Endereço */}
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <MapPin className="h-5 w-5 mr-2 text-purple-600" />
+                  Endereço de Entrega
+                </h2>
+                
+                <div className="space-y-4">
+                  {enderecos.map((endereco) => (
+                    <div key={endereco._id} className="flex items-start p-4 border rounded-lg hover:border-purple-500 transition-colors">
+                      <input
+                        type="radio"
+                        id={`address-${endereco._id}`}
+                        name="shipping-address"
+                        checked={selectedAddressId === endereco._id}
+                        onChange={() => {
+                          setSelectedAddressId(endereco._id);
+                          setCep(endereco.cep);
+                        }}
+                        className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
+                      />
+                      <label htmlFor={`address-${endereco._id}`} className="ml-3 block flex-1 cursor-pointer">
+                        <div className="text-gray-900 font-medium">
+                          {endereco.rua}, {endereco.numero}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-1">
+                          {endereco.complemento && `${endereco.complemento}, `}
+                          {endereco.bairro}, {endereco.cidade} - {endereco.estado}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-1">
+                          CEP: {endereco.cep}
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => router.push('/endereco')}
+                  className="mt-4 text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
+                >
+                  <MapPin className="h-4 w-4 mr-1" />
+                  Adicionar novo endereço
+                </button>
+              </div>
+
+              {/* Seção de Pagamento */}
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <CreditCard className="h-5 w-5 mr-2 text-purple-600" />
+                  Método de Pagamento
+                </h2>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start p-4 border rounded-lg hover:border-purple-500 transition-colors">
+                    <input
+                      type="radio"
+                      id="mercado-pago"
+                      name="payment-method"
+                      checked={paymentMethod === 'mercado-pago'}
+                      onChange={() => setPaymentMethod('mercado-pago')}
+                      className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
+                    />
+                    <label htmlFor="mercado-pago" className="ml-3 block flex-1 cursor-pointer">
+                      <div className="flex items-center text-gray-900 font-medium">
+                        <CreditCard className="mr-2 h-5 w-5" />
+                        Mercado Pago
+                      </div>
+                      <div className="text-gray-600 text-sm mt-1">
+                        Cartão de crédito, débito ou boleto
+                      </div>
+                    </label>
+                  </div>
                   
+                  <div className="flex items-start p-4 border rounded-lg hover:border-purple-500 transition-colors">
+                    <input
+                      type="radio"
+                      id="pix"
+                      name="payment-method"
+                      checked={paymentMethod === 'pix'}
+                      onChange={() => setPaymentMethod('pix')}
+                      className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
+                    />
+                    <label htmlFor="pix" className="ml-3 block flex-1 cursor-pointer">
+                      <div className="flex items-center text-gray-900 font-medium">
+                        <Banknote className="mr-2 h-5 w-5" />
+                        Pix
+                      </div>
+                      <div className="text-gray-600 text-sm mt-1">
+                        Pagamento instantâneo
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Informações de Segurança */}
+                <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-gray-900">Pagamento Seguro</h3>
+                      <p className="mt-1 text-sm text-gray-600">
+                        Todos os pagamentos são processados pelo Mercado Pago, garantindo a segurança dos seus dados.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Resumo do Pedido */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <Tag className="h-5 w-5 mr-2 text-purple-600" />
+                  Resumo do Pedido
+                </h2>
+
+                <div className="space-y-6">
+                  {/* Campo de cálculo de frete */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">CEP para cálculo do frete</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={cep}
+                        onChange={e => setCep(e.target.value.replace(/\D/g, ''))}
+                        maxLength={8}
+                        className="text-gray-400 flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Digite o CEP"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCalculateShipping}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                        disabled={isCalculatingShipping}
+                      >
+                        {isCalculatingShipping ? 'Calculando' : 'Calcular'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Exibir opções de frete */}
+                  {shippingOptions.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Opções de frete</label>
+                      <div className="space-y-2">
+                        {shippingOptions.map(option => (
+                          <div key={option.id} className="flex items-center p-2 hover:bg-white rounded-md transition-colors">
+                            <input
+                              type="radio"
+                              name="shipping-option"
+                              checked={selectedShippingOption?.id === option.id}
+                              onChange={() => selectShippingOption(option)}
+                              className="h-4 w-4 text-purple-600"
+                            />
+                            <span className="ml-2 text-gray-700">
+                              {option.name} - R$ {option.price.toFixed(2)} ({option.delivery_time} dias)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Itens do pedido */}
                   <div className="space-y-4">
-                    {enderecos.map((endereco) => (
-                      <div key={endereco._id} className="flex items-start">
-                        <input
-                          type="radio"
-                          id={`address-${endereco._id}`}
-                          name="shipping-address"
-                          checked={selectedAddressId === endereco._id}
-                          onChange={() => setSelectedAddressId(endereco._id)}
-                          className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
-                        />
-                        <label htmlFor={`address-${endereco._id}`} className="ml-3 block">
-                          <div className="text-gray-500 font-medium">
-                            {endereco.rua}, {endereco.numero}
-                          </div>
-                          <div className="text-gray-500 text-sm">
-                            {endereco.complemento && `${endereco.complemento}, `}
-                            {endereco.bairro}, {endereco.cidade} - {endereco.estado}
-                          </div>
-                          <div className="text-gray-500 text-sm">
-                            CEP: {endereco.cep}
-                          </div>
-                        </label>
+                    {items.map((item) => (
+                      <div key={item.product.id} className="flex justify-between text-sm">
+                        <div>
+                          <span className="font-medium text-gray-900">{item.quantity}x</span>{' '}
+                          <span className="text-gray-600">{item.product.name}</span>
+                        </div>
+                        <span className="text-gray-900">
+                          R$ {(item.product.price * item.quantity).toFixed(2)}
+                        </span>
                       </div>
                     ))}
                   </div>
-                  
+
+                  <div className="border-t pt-4 space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="text-gray-900">R$ {subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Frete</span>
+                      <span className="text-gray-900">R$ {shipping.toFixed(2)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Desconto</span>
+                        <span>- R$ {discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-lg font-semibold pt-3 border-t">
+                      <span className="text-gray-900">Total</span>
+                      <span className="text-gray-900">R$ {total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Campo de Cupom */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Cupom de desconto</label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Tag className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Digite seu cupom"
+                          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="mt-2 text-sm text-red-600">{couponError}</p>
+                    )}
+                  </div>
+
+                  {/* Botão de Finalizar Compra */}
                   <button
                     type="button"
-                    onClick={() => router.push('/endereco')}
-                    className="mt-4 text-purple-600 hover:text-purple-800 text-sm font-medium"
-                  >
-                    + Adicionar novo endereço
-                  </button>
-                </div>
-
-                {/* Seção de Pagamento */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                  <h2 className="text-lg font-semibold text-gray-500 mb-6">Método de Pagamento</h2>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <input
-                        type="radio"
-                        id="mercado-pago"
-                        name="payment-method"
-                        checked={paymentMethod === 'mercado-pago'}
-                        onChange={() => setPaymentMethod('mercado-pago')}
-                        className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
-                      />
-                      <label htmlFor="mercado-pago" className="ml-3 block">
-                        <div className="flex items-center text-gray-500 font-medium">
-                          <CreditCard className="mr-2 h-5 w-5" />
-                          Mercado Pago
-                        </div>
-                        <div className="text-gray-500 text-sm mt-1">
-                          Cartão de crédito, débito ou boleto
-                        </div>
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <input
-                        type="radio"
-                        id="pix"
-                        name="payment-method"
-                        checked={paymentMethod === 'pix'}
-                        onChange={() => setPaymentMethod('pix')}
-                        className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
-                      />
-                      <label htmlFor="pix" className="ml-3 block">
-                        <div className="flex items-center text-gray-500 font-medium">
-                          <Banknote className="mr-2 h-5 w-5" />
-                          Pix
-                        </div>
-                        <div className="text-gray-500 text-sm mt-1">
-                          Pagamento instantâneo
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Informações de Segurança */}
-                  <div className="mt-6 bg-blue-50 p-4 rounded-md">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 pt-0.5">
-                        <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-gray-500">Pagamento Seguro</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          Todos os pagamentos são processados pelo Mercado Pago, garantindo a segurança dos seus dados.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botão de Finalizar Compra (Mobile) */}
-                <div className="lg:hidden">
-                  <button
-                    type="submit"
+                    onClick={handleSubmitOrder}
                     disabled={isProcessing}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center transition duration-150 disabled:bg-purple-400 disabled:cursor-not-allowed"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
                   >
                     {isProcessing ? (
                       <>
@@ -302,98 +457,6 @@ export default function Checkout() {
                       <>
                         <Check className="mr-2 h-5 w-5" />
                         Finalizar Compra - R$ {total.toFixed(2)}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Resumo do Pedido */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                <h2 className="text-lg font-semibold text-gray-500 mb-6">Resumo do Pedido</h2>
-                
-                <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.product.id} className="flex justify-between text-sm">
-                      <div>
-                        <span className="font-medium text-gray-500">{item.quantity}x</span>{' '}
-                        <span className="text-gray-500">{item.product.name}</span>
-                      </div>
-                      <span className="text-gray-500">
-                        R$ {(item.product.price * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-
-                  <div className="border-t pt-4 mt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Subtotal</span>
-                      <span className="text-gray-500">R$ {subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm mt-2">
-                      <span className="text-gray-500">Frete</span>
-                      <span className="text-gray-500">R$ {shipping.toFixed(2)}</span>
-                    </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-sm mt-2 text-green-600">
-                        <span>Desconto</span>
-                        <span>- R$ {discount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t">
-                      <span className="text-gray-500">Total</span>
-                      <span className="text-gray-500">R$ {total.toFixed(2)}</span>
-                    </div>
-
-                    {/* Campo de Cupom */}
-                    <div className="mt-6">
-                      <div className="flex items-center space-x-2">
-                        <div className="relative flex-1">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Tag className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="text"
-                            value={couponCode}
-                            onChange={(e) => setCouponCode(e.target.value)}
-                            placeholder="Cupom de desconto"
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-gray-500 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                          />
-                        </div>
-            <button
-                          type="button"
-                          onClick={handleApplyCoupon}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-            >
-                          Aplicar
-            </button>
-          </div>
-                      {couponError && (
-                        <p className="mt-2 text-sm text-red-600">{couponError}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botão de Finalizar Compra (Desktop) */}
-                <div className="hidden lg:block mt-6">
-                  <button
-                    type="button"
-                    onClick={handleSubmitOrder}
-                    disabled={isProcessing}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center transition duration-150 disabled:bg-purple-400 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="mr-2 h-5 w-5" />
-                        Finalizar Compra
                       </>
                     )}
                   </button>

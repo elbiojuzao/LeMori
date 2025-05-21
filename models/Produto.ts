@@ -8,6 +8,11 @@ export interface IProduto {
   destaque: boolean
   createdAt: string
   updatedAt: string
+  isFisico: boolean
+  largura?: number    // em centímetros
+  altura?: number     // em centímetros
+  comprimento?: number // em centímetros
+  peso?: number       // em gramas
 }
 
 const ProdutoSchema = new Schema({
@@ -67,6 +72,63 @@ const ProdutoSchema = new Schema({
   categoria: {
     type: String,
     required: [true, 'Categoria é obrigatória']
+  },
+  isFisico: {
+    type: Boolean,
+    required: [true, 'É necessário informar se o produto é físico ou não'],
+    default: false
+  },
+  largura: {
+    type: Number,
+    required: function(this: any) {
+      return this.isFisico;
+    },
+    min: [0, 'Largura não pode ser negativa'],
+    validate: {
+      validator: function(this: any, val: number) {
+        return !this.isFisico || (val !== undefined && val !== null);
+      },
+      message: 'Largura é obrigatória para produtos físicos'
+    }
+  },
+  altura: {
+    type: Number,
+    required: function(this: any) {
+      return this.isFisico;
+    },
+    min: [0, 'Altura não pode ser negativa'],
+    validate: {
+      validator: function(this: any, val: number) {
+        return !this.isFisico || (val !== undefined && val !== null);
+      },
+      message: 'Altura é obrigatória para produtos físicos'
+    }
+  },
+  comprimento: {
+    type: Number,
+    required: function(this: any) {
+      return this.isFisico;
+    },
+    min: [0, 'Comprimento não pode ser negativo'],
+    validate: {
+      validator: function(this: any, val: number) {
+        return !this.isFisico || (val !== undefined && val !== null);
+      },
+      message: 'Comprimento é obrigatório para produtos físicos'
+    }
+  },
+  peso: {
+    type: Number,
+    required: function(this: any) {
+      return this.isFisico;
+    },
+    min: [0, 'Peso não pode ser negativo'],
+    validate: {
+      validator: function(this: any, val: number) {
+        return !this.isFisico || (val !== undefined && val !== null);
+      },
+      message: 'Peso é obrigatório para produtos físicos'
+    }
   }
 }, {
   timestamps: true
