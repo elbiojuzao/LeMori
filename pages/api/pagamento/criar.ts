@@ -3,7 +3,7 @@ import { mp } from '@/lib/mercadopago'
 import { Preference } from 'mercadopago/dist/clients/preference'
 import dbConnect from '@/lib/dbConnect'
 import Pedido from '@/models/Pedido'
-import { verifyToken, TokenPayload } from '@/lib/auth'
+import { verifyToken } from '@/lib/auth'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
