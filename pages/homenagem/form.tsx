@@ -96,7 +96,7 @@ function FormHomenagem() {
 
   function compressImage(base64: string, maxWidth: number, maxHeight: number): Promise<string> {
     return new Promise((resolve) => {
-      const img = new Image()
+      const img = new (window.Image as any)()
       img.onload = () => {
         const canvas = document.createElement('canvas')
         let width = img.width
