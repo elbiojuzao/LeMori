@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingCart, PenSquare } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -79,9 +80,11 @@ export default function Home() {
                   <div className="h-4 w-32 bg-gray-200 rounded"></div>
                 </div>
                 <div className="bg-white p-8 rounded-lg shadow-2xl relative z-10">
-                  <img 
+                  <Image 
                     src="/images/products/homenagem-basica.jpg" 
                     alt="homenagem" 
+                    width={500}
+                    height={300}
                     className="rounded-lg mb-6 w-full"
                   />
                   <div className="flex justify-between items-center">
@@ -123,9 +126,11 @@ export default function Home() {
                   {produtos.map(produto => (
                     <div key={produto._id} className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:shadow-xl hover:-translate-y-1">
                       <div className="h-64 overflow-hidden">
-                        <img 
+                        <Image 
                           src={produto.imagens?.[0] || '/placeholder-image.jpg'} 
                           alt={produto.nome}
+                          width={400}
+                          height={300}
                           className="w-full h-full object-cover transition duration-300 transform hover:scale-105"
                         />
                       </div>
@@ -175,11 +180,17 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-gray-600 mb-6 mt-4">
-                  "This platform changed everything for my small business. Creating a professional website and selling my products has never been easier. Sales have increased by 75% since I started!"
+                  &ldquo;This platform changed everything for my small business. Creating a professional website and selling my products has never been easier. Sales have increased by 75% since I started!&rdquo;
                 </p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
-                    <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Sarah J." className="w-full h-full object-cover" />
+                    <Image 
+                      src="/img/teste (1).jpg" 
+                      alt="Sarah J." 
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900">Sarah J.</h4>
@@ -196,11 +207,17 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-gray-600 mb-6 mt-4">
-                  "As a photographer, I needed a platform to showcase my work and sell my prints. This service provided exactly that - a beautiful portfolio page and integrated shop. Couldn't be happier!"
+                  &ldquo;As a photographer, I needed a platform to showcase my work and sell my prints. This service provided exactly that - a beautiful portfolio page and integrated shop. Couldn&apos;t be happier!&rdquo;
                 </p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
-                    <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="David M." className="w-full h-full object-cover" />
+                    <Image 
+                      src="/img/teste (2).jpg" 
+                      alt="David M." 
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900">David M.</h4>
@@ -217,11 +234,17 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-gray-600 mb-6 mt-4">
-                  "I was able to turn my side hustle into a full-time business using this platform. The combination of a professional website and e-commerce capabilities made all the difference."
+                  &ldquo;I was able to turn my side hustle into a full-time business using this platform. The combination of a professional website and e-commerce capabilities made all the difference.&rdquo;
                 </p>
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
-                    <img src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Emily R." className="w-full h-full object-cover" />
+                    <Image 
+                      src="/img/teste (3).jpg" 
+                      alt="Emily R." 
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900">Emily R.</h4>
