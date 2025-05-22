@@ -114,46 +114,4 @@ function calculatePrice(weight: number, value: number, service: string): number 
 
   // Arredondar para 2 casas decimais
   return Number(Math.round(price * 100) / 100);
-}
-
-// Funções auxiliares mantidas como fallback
-function calculateDistance(cep1: string, cep2: string): number {
-  const num1 = parseInt(cep1.replace(/\D/g, ''));
-  const num2 = parseInt(cep2.replace(/\D/g, ''));
-  return Math.abs(num1 - num2) / 1000;
-}
-
-function calculateDeliveryTime(distance: number, service: string): number {
-  const baseTime = {
-    'PAC': 5,
-    'SEDEX': 3,
-    'SEDEX10': 1
-  };
-  const extraDays = Math.floor(distance / 1000);
-  return baseTime[service as keyof typeof baseTime] + extraDays;
-}
-
-function calculateShippingPrice(weight: number, value: number, service: string, distance: number): number {
-  const basePricePerKg = {
-    'PAC': 5,
-    'SEDEX': 10,
-    'SEDEX10': 15
-  };
-
-  weight = Number(weight) || 0;
-  value = Number(value) || 0;
-
-  let price = weight * (basePricePerKg[service as keyof typeof basePricePerKg] || 5);
-  price += value * 0.01;
-
-  const fixedFee = {
-    'PAC': 5,
-    'SEDEX': 10,
-    'SEDEX10': 15
-  };
-  price += fixedFee[service as keyof typeof fixedFee] || 5;
-  price += distance * 0.1;
-  price = Math.max(5, price);
-
-  return Number(Math.round(price * 100) / 100);
 } 

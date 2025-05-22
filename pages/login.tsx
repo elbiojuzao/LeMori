@@ -3,18 +3,22 @@ import { useRouter } from 'next/router'
 import axios from 'axios'
 import { redirectToAfterLogin, replaceToAfterLogin } from '@/lib/redirectTo'
 import Link from 'next/link';
-import { User, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
+
+interface LoginError {
+  message: string;
+  unverifiedEmail?: boolean;
+}
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [error, setErro] = useState('')
-  const [emailNaoVerificado, setEmailNaoVerificado] = useState(false)
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
 
   useEffect(() => {
     const verificarAutenticacao = async () => {
@@ -26,31 +30,21 @@ export default function Login() {
           headers: { Authorization: `Bearer ${token}` }
         })
 
-        const { redirect } = router.query
         if (res.status === 200) {
           replaceToAfterLogin(router)
         }
-      } catch (error) {
+      } catch {
         // Se o token for inválido, segue na tela de login
       }
     }
 
     verificarAutenticacao()
-  }, [])
-
-  const handleReenviarEmail = async () => {
-    try {
-      await axios.post('/api/auth/reenviar-confirmacao', { email })
-      alert('E-mail de verificação reenviado com sucesso!')
-    } catch (err) {
-      alert('Erro ao reenviar e-mail de verificação.')
-    }
-  }
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErro('')
-    setEmailNaoVerificado(false)
+    setIsLoading(true)
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -63,7 +57,7 @@ export default function Login() {
 
       if (!res.ok) {
         if (data.unverifiedEmail) {
-          setEmailNaoVerificado(true)
+          setErro('Por favor, verifique seu e-mail antes de fazer login.')
         } else {
           throw new Error(data.error || 'Erro no login')
         }
@@ -72,8 +66,11 @@ export default function Login() {
 
       localStorage.setItem('token', data.token)
       redirectToAfterLogin(router)
-    } catch (err: any) {
-      setErro(err.message)
+    } catch (err) {
+      const error = err as LoginError
+      setErro(error.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 
