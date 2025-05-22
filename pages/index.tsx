@@ -11,7 +11,8 @@ interface Produto {
   nome: string
   descricao: string
   valor: number
-  imagemUrl: string
+  imagemUrl?: string
+  imagens?: string[]
 }
 
 export default function Home() {
@@ -79,14 +80,14 @@ export default function Home() {
                 </div>
                 <div className="bg-white p-8 rounded-lg shadow-2xl relative z-10">
                   <img 
-                    src="https://images.pexels.com/photos/6214476/pexels-photo-6214476.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
-                    alt="Website Builder" 
+                    src="/images/products/homenagem-basica.jpg" 
+                    alt="homenagem" 
                     className="rounded-lg mb-6 w-full"
                   />
                   <div className="flex justify-between items-center">
                     <div>
-                      <div className="text-lg font-semibold text-gray-900">Your Online Store</div>
-                      <div className="text-sm text-gray-600">Professional and customizable</div>
+                      <div className="text-lg font-semibold text-gray-900">Suas homenagens</div>
+                      <div className="text-sm text-gray-600">Personalize com fotos e músicas</div>
                     </div>
                     <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
                       Live
@@ -123,7 +124,7 @@ export default function Home() {
                     <div key={produto._id} className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:shadow-xl hover:-translate-y-1">
                       <div className="h-64 overflow-hidden">
                         <img 
-                          src={produto.imagemUrl} 
+                          src={produto.imagens?.[0] || '/placeholder-image.jpg'} 
                           alt={produto.nome}
                           className="w-full h-full object-cover transition duration-300 transform hover:scale-105"
                         />

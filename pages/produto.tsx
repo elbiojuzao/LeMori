@@ -45,10 +45,14 @@ export default function ProductPage() {
         price: product.valor,
         description: product.descricao,
         fullDescription: product.descricao,
-        imageSrc: product.imagemUrl || '/placeholder-image.jpg',
+        imageSrc: product.imagens?.[0] || '/placeholder-image.jpg',
         category: 'homenagens',
         stock: 1,
-        active: true
+        active: true,
+        width: product.largura || 0,
+        height: product.altura || 0,
+        length: product.comprimento || 0,
+        weight: product.peso || 0
       }, quantity);
       
       setAddedToCart(true);
@@ -119,7 +123,7 @@ export default function ProductPage() {
               {/* Product Image */}
               <div className="rounded-lg overflow-hidden">
                 <img 
-                  src={product.imagemUrl || '/placeholder-image.jpg'} 
+                  src={product.imagens?.[0] || '/placeholder-image.jpg'} 
                   alt={product.nome}
                   className="w-full h-[500px] object-cover"
                 />

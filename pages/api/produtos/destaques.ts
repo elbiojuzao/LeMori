@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const produtos = await ProdutoModel.find({ destaque: true })
       .limit(3)
-      .select('nome descricao valor imagemUrl')
+      .select('nome descricao valor imagens')
       .sort({ createdAt: -1 })
 
     // Mapeia os produtos para o formato esperado pelo frontend
@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       nome: produto.nome,
       descricao: produto.descricao,
       valor: Number(produto.valor) || 0,
+      imagens: produto.imagens,
       imagemUrl: produto.imagemUrl
     }))
 

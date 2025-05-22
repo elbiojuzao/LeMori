@@ -47,10 +47,14 @@ export default function Shop() {
       price: priceValue,
       description: produto.descricao,
       fullDescription: produto.descricao,
-      imageSrc: '/placeholder-image.jpg',
+      imageSrc: produto.imagens?.[0] || '/placeholder-image.jpg',
       category: 'produtos',
       stock: 1,
-      active: true
+      active: true,
+      width: produto.largura || 0,
+      height: produto.altura || 0,
+      length: produto.comprimento || 0,
+      weight: produto.peso || 0
     }, 1);
   };
 
@@ -130,6 +134,13 @@ export default function Shop() {
                   key={produto._id} 
                   className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:shadow-xl hover:-translate-y-1"
                 >
+                  <div className="h-64 overflow-hidden">
+                    <img 
+                      src={produto.imagens?.[0] || '/placeholder-image.jpg'} 
+                      alt={produto.nome}
+                      className="w-full h-full object-cover transition duration-300 transform hover:scale-105"
+                    />
+                  </div>
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-purple-600 transition duration-150">
                       {produto.nome}

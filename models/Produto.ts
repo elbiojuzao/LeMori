@@ -13,6 +13,7 @@ export interface IProduto {
   altura?: number     // em centímetros
   comprimento?: number // em centímetros
   peso?: number       // em gramas
+  imagens?: string[]  // Caminhos das imagens do produto
 }
 
 const ProdutoSchema = new Schema({
