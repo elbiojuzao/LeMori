@@ -4,7 +4,6 @@ import {
   EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
-  StarIcon,
   CalendarIcon,
   ClockIcon,
 } from '@heroicons/react/24/solid';

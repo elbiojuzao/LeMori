@@ -8,7 +8,7 @@ export function verifyToken(token: string): { userId: string } {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
     return { userId: decoded.userId }
-  } catch (error) {
+  } catch {
     throw new Error('Token inválido')
   }
 }

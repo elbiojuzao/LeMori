@@ -2,10 +2,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import type { ComponentType, JSX } from 'react'
 
-type AdminAuthProps = {
-  isAdmin?: boolean
-}
-
 export default function withAdminAuth<P extends JSX.IntrinsicAttributes>(
   WrappedComponent: ComponentType<P>
 ) {

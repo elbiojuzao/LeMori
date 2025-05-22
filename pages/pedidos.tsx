@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import Header from '@/components/Header'
@@ -8,14 +8,10 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   ShoppingBag,
-  Package,
   ChevronDown,
   ChevronUp,
-  RefreshCcw,
   AlertCircle,
-  Eye,
   Calendar,
-  Clock,
   MapPin,
   Truck,
   Receipt,
@@ -55,6 +51,13 @@ interface Pedido {
   }
 }
 
+async function fetchPedidos(token: string) {
+  const response = await axios.get('/api/pedidos/user', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+  return response.data
+}
+
 export default function Pedidos() {
   const router = useRouter()
   const [pedidos, setPedidos] = useState<Pedido[]>([])
@@ -64,11 +67,7 @@ export default function Pedidos() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
   const [ordenacao, setOrdenacao] = useState<'recentes' | 'antigos'>('recentes')
 
-  useEffect(() => {
-    carregarPedidos()
-  }, [])
-
-  const carregarPedidos = async () => {
+  const carregarPedidos = useCallback(async () => {
     const token = localStorage.getItem('token')
     if (!token) {
       router.push('/login')
@@ -76,17 +75,19 @@ export default function Pedidos() {
     }
 
     try {
-      const response = await axios.get('/api/pedidos/user', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setPedidos(response.data)
+      const data = await fetchPedidos(token)
+      setPedidos(data)
       setLoading(false)
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error)
       setError('Não foi possível carregar seus pedidos. Tente novamente mais tarde.')
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    carregarPedidos()
+  }, [carregarPedidos])
 
   const solicitarReembolso = async (pedidoId: string) => {
     if (!confirm('Tem certeza que deseja solicitar reembolso deste pedido?')) return
@@ -281,7 +282,7 @@ export default function Pedidos() {
                                 />
                               ) : (
                                 <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center">
-                                  <Package className="h-6 w-6 text-gray-400" />
+                                  <ShoppingBag className="h-6 w-6 text-gray-400" />
                                 </div>
                               )}
                               <div className="flex-1">

@@ -3,6 +3,15 @@ import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+interface ResetPasswordError {
+  response?: {
+    data?: {
+      error?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function RedefinirSenha() {
   const router = useRouter()
   const [senha, setSenha] = useState('')
@@ -37,15 +46,16 @@ export default function RedefinirSenha() {
     setCarregando(true)
 
     try {
-      const res = await axios.post('/api/auth/resetar-senha', {
+      await axios.post('/api/auth/resetar-senha', {
         token,
         novaSenha: senha,
       })
 
       setSucesso('Senha redefinida com sucesso! Você será redirecionado para o login...')
       setTimeout(() => router.push('/login'), 3000)
-    } catch (err: any) {
-      setErro(err.response?.data?.error || 'Erro ao redefinir senha.')
+    } catch (err) {
+      const error = err as ResetPasswordError
+      setErro(error.response?.data?.error || 'Erro ao redefinir senha.')
     } finally {
       setCarregando(false)
     }
