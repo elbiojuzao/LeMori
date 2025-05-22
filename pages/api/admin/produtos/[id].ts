@@ -82,10 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(405).json({ message: 'Método não permitido' })
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+    const errorMessage = 'Erro ao processar a requisição'
+    console.error('Erro:', error)
     res.status(500).json({ 
       message: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
     })
   }
 } 
