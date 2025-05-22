@@ -2,20 +2,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
-import { ShoppingCart, User, Menu, X, LogOut, Package, Home } from 'lucide-react'
+import { ShoppingCart, User, Menu, X, LogOut, Home } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { logout, isAuthenticated } from '@/lib/authClient'
 import { useCart } from '../context/CartContext'
-
-interface CartItem {
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    imageSrc: string;
-  };
-  quantity: number;
-}
 
 const Header = () => {
   const router = useRouter()

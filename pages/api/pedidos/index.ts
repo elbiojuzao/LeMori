@@ -9,7 +9,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       await dbConnect()
 
       const { search, statusPagamento, tipoProduto, dataInicio, dataFim, ordenacao } = req.query
-      const filtros: Record<string, any> = {}
+      const filtros: Record<string, unknown> = {}
       const sort: Record<string, 1 | -1> = {}
 
       if (search) {
@@ -48,9 +48,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         .populate('user', 'nome email cpf telefone')
 
       res.status(200).json(pedidos)
-    } catch (error) {
-      console.error('Erro ao buscar pedidos:', error)
-      res.status(500).json({ message: 'Erro ao buscar pedidos' })
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao listar pedidos';
+      res.status(500).json({ message: errorMessage });
     }
   } else {
     res.setHeader('Allow', ['GET'])

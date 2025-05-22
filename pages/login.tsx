@@ -68,7 +68,7 @@ export default function Login() {
       redirectToAfterLogin(router)
     } catch (err) {
       const error = err as LoginError
-      setErro(error.message)
+      setErro(error.message || 'Erro ao fazer login')
     } finally {
       setIsLoading(false)
     }

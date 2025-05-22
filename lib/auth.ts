@@ -10,6 +10,15 @@ export interface TokenPayload {
   exp?: number
 }
 
+// Defina o tipo do payload esperado
+interface JwtPayload {
+  userId: string;
+  email?: string;
+  isAdmin?: boolean;
+  iat?: number;
+  exp?: number;
+}
+
 export function signToken(payload: TokenPayload): string {
   const tokenPayload = {
     ...payload,
@@ -26,7 +35,7 @@ export function verifyToken(token: string): Promise<TokenPayload> {
         return
       }
       
-      const payload = decoded as any
+      const payload = decoded as JwtPayload;
       if (!payload || typeof payload !== 'object') {
         reject(new Error('Token inválido'))
         return

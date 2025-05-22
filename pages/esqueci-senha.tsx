@@ -25,7 +25,7 @@ export default function EsqueciSenha() {
     }
 
     verificarAutenticacao()
-  }, [])
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,8 +36,12 @@ export default function EsqueciSenha() {
     try {
       await axios.post('/api/auth/esqueci-senha', { email })
       setSucesso('E-mail enviado com sucesso! Verifique sua caixa de entrada.')
-    } catch (err: any) {
-      setErro(err.response?.data?.error || 'Erro ao enviar e-mail. Tente novamente.')
+    } catch (error) {
+      if (typeof error === 'object' && error && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error) {
+        setErro((error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Erro ao enviar e-mail. Tente novamente.')
+      } else {
+        setErro('Erro ao enviar e-mail. Tente novamente.')
+      }
     } finally {
       setCarregando(false)
     }

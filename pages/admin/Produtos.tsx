@@ -64,13 +64,14 @@ const Produtos: React.FC = () => {
       const data = await response.json();
       setProdutos(data);
       setLoading(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar produtos:', error);
-      setError(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar produtos';
+      setError(errorMessage);
       setLoading(false);
-      toast.error(error.message);
+      toast.error(errorMessage);
       
-      if (error.message.includes('login')) {
+      if (errorMessage.includes('login')) {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }
@@ -170,8 +171,9 @@ const Produtos: React.FC = () => {
       carregarProdutos();
       setShowForm(false);
       setEditingProduto(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao salvar produto');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar produto';
+      toast.error(errorMessage);
     }
   };
 
@@ -190,9 +192,10 @@ const Produtos: React.FC = () => {
       toast.success('Produto excluído com sucesso!');
       carregarProdutos();
       setShowDeleteConfirm(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao excluir produto:', error);
-      toast.error('Erro ao excluir produto');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir produto';
+      toast.error(errorMessage);
     }
   };
 
@@ -228,9 +231,10 @@ const Produtos: React.FC = () => {
       ));
 
       toast.success('Destaque atualizado com sucesso!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar destaque:', error);
-      toast.error(error.message || 'Erro ao atualizar destaque do produto');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar destaque do produto';
+      toast.error(errorMessage);
       
       // Reverte o estado local em caso de erro
       setProdutos(produtos.map(produto => 

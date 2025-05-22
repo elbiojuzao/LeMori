@@ -11,8 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await mongooseConnect()
     const produtos = await ProdutoModel.find()
     res.status(200).json(produtos)
-  } catch (error) {
-    console.error('Erro ao buscar produtos:', error)
-    res.status(500).json({ error: 'Erro ao buscar produtos' })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao listar produtos';
+    res.status(500).json({ message: errorMessage });
   }
 }

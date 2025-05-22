@@ -35,8 +35,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Homenagens encontradas:', homenagens.length)
 
     return res.status(200).json(homenagens)
-  } catch (error: any) {
-    console.error('Erro ao buscar homenagens:', error)
-    return res.status(500).json({ error: 'Erro ao buscar homenagens', detalhes: error.message })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar homenagens';
+    console.error('Erro ao buscar homenagens:', errorMessage);
+    return res.status(500).json({ error: 'Erro ao buscar homenagens', detalhes: errorMessage });
   }
 }

@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     for (const homenagem of expiradas) {
-      const usuario = homenagem.criadoPor as any
+      const usuario = homenagem.criadoPor as { email?: string };
       const email = usuario?.email
       if (!email) continue
 

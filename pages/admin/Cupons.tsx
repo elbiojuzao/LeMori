@@ -206,8 +206,9 @@ export default function Cupons() {
       carregarCupons()
       setShowForm(false)
       setEditingCupom(null)
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao salvar cupom')
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar cupom'
+      toast.error(errorMessage)
     }
   }
   
@@ -226,9 +227,10 @@ export default function Cupons() {
       toast.success('Cupom excluído com sucesso!')
       carregarCupons()
       setShowDeleteConfirm(null)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao excluir cupom:', error)
-      toast.error('Erro ao excluir cupom')
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir cupom'
+      toast.error(errorMessage)
     }
   }
   

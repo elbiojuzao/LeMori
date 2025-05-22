@@ -69,16 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         return res.status(200).json(produtoAtualizado);
-      } catch (error: any) {
-        console.error('Erro ao atualizar produto:', error);
-        if (error.name === 'ValidationError') {
-          const errors = Object.values(error.errors).map((err: any) => err.message);
-          return res.status(400).json({ message: 'Erro de validação', errors });
-        }
-        return res.status(500).json({ 
-          message: 'Erro ao atualizar produto',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar produto';
+        res.status(500).json({ message: errorMessage });
       }
     }
 
@@ -88,10 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(405).json({ message: 'Método não permitido' })
-  } catch (error: any) {
-    console.error('Erro na API de produtos:', error)
-    return res.status(500).json({ 
-      message: 'Erro interno do servidor',
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+    res.status(500).json({ 
+      message: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     })
   }

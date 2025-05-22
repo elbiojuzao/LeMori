@@ -6,7 +6,6 @@ import Footer from '@/components/Footer'
 import { 
   PencilIcon, 
   TrashIcon,
-  HomeIcon,
   PlusIcon,
   MapPinIcon
 } from '@heroicons/react/24/solid'
@@ -58,6 +57,7 @@ export default function Endereco() {
 
   useEffect(() => {
     fetchEnderecos()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchEnderecos = async () => {
@@ -107,10 +107,11 @@ export default function Endereco() {
         cidade: '',
         estado: ''
       })
-    } catch (error: any) {
-      console.error('Erro ao salvar endereço:', error)
-      if (error.response?.data?.error) {
-        alert(error.response.data.error)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar endereço';
+      console.error('Erro ao salvar endereço:', errorMessage)
+      if (typeof error === 'object' && error && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error) {
+        alert((error as { response?: { data?: { error?: string } } }).response?.data?.error)
       } else {
         alert('Erro ao salvar endereço')
       }

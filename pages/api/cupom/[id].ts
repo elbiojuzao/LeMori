@@ -22,8 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const atualizado = await Cupom.findByIdAndUpdate(id, req.body, { new: true })
       if (!atualizado) return res.status(404).json({ erro: "Cupom não encontrado" })
       return res.status(200).json(atualizado)
-    } catch (err) {
-      return res.status(400).json({ erro: "Os dados fornecidos são inválidos. Verifique as informações e tente novamente." })
+    } catch {
+      return res.status(500).json({ message: 'Erro ao validar cupom' });
     }
   }
 

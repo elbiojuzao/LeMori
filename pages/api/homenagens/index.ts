@@ -121,9 +121,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       await user.save()
 
       return res.status(201).json(homenagemSalva)
-    } catch (error) {
-      console.error('Erro ao criar homenagem:', error)
-      return res.status(500).json({ error: 'Erro ao criar homenagem' })
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar homenagem'
+      res.status(500).json({ message: errorMessage })
     }
   })
 }

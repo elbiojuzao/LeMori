@@ -34,7 +34,7 @@ const Usuarios: React.FC = () => {
 
   useEffect(() => {
     carregarUsuarios();
-  }, []);
+  }, [carregarUsuarios]);
 
   const carregarUsuarios = async () => {
     try {

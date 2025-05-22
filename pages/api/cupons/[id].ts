@@ -71,11 +71,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(405).json({ error: 'Método não permitido' })
-  } catch (error: any) {
-    console.error('Erro ao processar requisição de cupom:', error)
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ error: 'Dados inválidos', details: error.message })
-    }
-    res.status(500).json({ error: 'Erro interno do servidor' })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar cupom';
+    res.status(500).json({ message: errorMessage });
   }
 } 

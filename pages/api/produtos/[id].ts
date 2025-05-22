@@ -49,9 +49,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         res.status(200).json(produto)
-      } catch (error) {
-        console.error('Erro ao atualizar produto:', error)
-        res.status(500).json({ error: 'Erro ao atualizar produto' })
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar produto';
+        res.status(500).json({ message: errorMessage });
       }
       break
 

@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { connectToDatabase } from '@/lib/mongodb'
 import { verifyToken } from '@/lib/auth'
-import { ObjectId } from 'mongodb'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -71,11 +70,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     return res.status(200).json(homenagens)
-  } catch (error: any) {
-    console.error('Erro ao listar homenagens:', error)
-    return res.status(500).json({ 
-      message: 'Erro ao carregar homenagens',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao listar homenagens';
+    res.status(500).json({ message: errorMessage });
   }
 } 

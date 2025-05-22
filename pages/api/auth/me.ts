@@ -48,9 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(405).end()
-  } catch (err: any) {
-    if (err.name === 'TokenExpiredError')  return res.status(401).json({ error: 'Token expirado' })
-
-    return res.status(401).json({ error: 'Token inválido ou erro na operação' })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar token'
+    if (errorMessage === 'jwt expired')  return res.status(401).json({ error: 'Token expirado' })
+    return res.status(401).json({ error: errorMessage })
   }
 }

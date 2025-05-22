@@ -21,7 +21,7 @@ interface Endereco {
 
 export default function Checkout() {
   const router = useRouter();
-  const { items, subtotal, shipping, discount, total, applyCoupon, removeCoupon, shippingOptions, selectedShippingOption, calculateShipping, selectShippingOption } = useCart();
+  const { items, subtotal, shipping, discount, total, applyCoupon, shippingOptions, selectedShippingOption, calculateShipping, selectShippingOption } = useCart();
   const [enderecos, setEnderecos] = useState<Endereco[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [cep, setCep] = useState('');
@@ -131,8 +131,8 @@ export default function Checkout() {
         throw new Error('URL de pagamento não encontrada');
       }
 
-    } catch (err) {
-      console.error('Erro no checkout:', err);
+    } catch (error) {
+      console.error('Erro no checkout:', error);
       setError('Erro ao processar pagamento. Tente novamente.');
       setIsProcessing(false);
     }

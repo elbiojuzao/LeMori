@@ -13,7 +13,7 @@ let clientPromise: Promise<MongoClient>
 if (process.env.NODE_ENV === 'development') {
   // Em desenvolvimento, use uma variável global para preservar o valor
   // entre recarregamentos do módulo causados por Hot Reloading.
-  let globalWithMongo = global as typeof globalThis & {
+  const globalWithMongo = global as typeof globalThis & {
     _mongoClientPromise?: Promise<MongoClient>
   }
 

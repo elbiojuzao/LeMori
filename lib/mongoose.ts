@@ -5,13 +5,20 @@ interface CachedConnection {
   promise: Promise<typeof mongoose> | null;
 }
 
-let cached: CachedConnection = (global as any).mongoose || {
-  conn: null,
-  promise: null,
-};
+// Definir interface para global.mongoose
+interface GlobalWithMongoose {
+  mongoose?: {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+  };
+}
 
-if (!(global as any).mongoose) {
-  (global as any).mongoose = cached;
+const globalWithMongoose = global as typeof global & GlobalWithMongoose;
+
+const cached = globalWithMongoose.mongoose || { conn: null, promise: null };
+
+if (!globalWithMongoose.mongoose) {
+  globalWithMongoose.mongoose = cached;
 }
 
 const MONGODB_URI = process.env.MONGODB_URI;

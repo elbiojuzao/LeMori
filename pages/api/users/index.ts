@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       minHomenagens
     } = req.query
 
-    const filtros: any = {}
+    const filtros: Record<string, unknown> = {}
 
     if (nome) {
       filtros.$or = [
@@ -111,11 +111,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(200).json(usuarios)
-  } catch (error: any) {
-    console.error('Erro ao buscar usuários:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar usuários';
+    console.error('Erro ao buscar usuários:', errorMessage)
     return res.status(500).json({ 
       error: 'Erro ao buscar usuários',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     })
   }
 }

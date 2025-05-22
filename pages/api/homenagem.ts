@@ -46,9 +46,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.status(201).json(novaHomenagem)
 
-    } catch (error) {
-      console.error('Erro ao salvar homenagem:', error)
-      return res.status(500).json({ mensagem: 'Erro interno do servidor', error })
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar homenagem';
+      res.status(500).json({ message: errorMessage });
     }
 
   } else {

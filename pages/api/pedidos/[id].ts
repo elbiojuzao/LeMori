@@ -23,9 +23,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       return res.status(200).json(pedido)
-    } catch (error) {
-      console.error('Erro ao buscar pedido:', error)
-      return res.status(500).json({ message: 'Erro ao buscar pedido' })
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar pedido';
+      console.error(errorMessage);
+      return res.status(500).json({ message: errorMessage });
     }
   } else {
     res.setHeader('Allow', ['GET'])

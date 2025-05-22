@@ -53,11 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const urls = await Promise.all(uploadPromises)
     return res.status(200).json({ urls })
-  } catch (error: any) {
-    console.error('Erro no upload de arquivos:', error)
-    return res.status(500).json({ 
-      message: 'Erro no upload de arquivos',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer upload do arquivo';
+    res.status(500).json({ message: errorMessage });
   }
 } 

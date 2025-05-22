@@ -73,12 +73,12 @@ function FormHomenagem() {
           setFotoPrincipal(data.fotos?.[0] || '')
           setFotoPerfilPreview(data.fotos?.[0] || '')
           setFotosPreview(data.fotos || [])
-        } catch (err: any) {
-          if (err.response?.status === 403) {
+        } catch (error) {
+          if (typeof error === 'object' && error && 'response' in error && (error as { response?: { status?: number } }).response?.status === 403) {
             alert('Você não tem permissão para editar esta homenagem.')
             router.push('/perfil')
           } else {
-            console.error('Erro ao carregar homenagem:', err)
+            console.error('Erro ao carregar homenagem:', error)
           }
         }
       }

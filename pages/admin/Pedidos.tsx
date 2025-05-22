@@ -164,7 +164,7 @@ const Orders: React.FC = () => {
                                   <div className="flex items-center space-x-2">
                                     <select
                                       defaultValue={order.status}
-                                      onChange={(e) => handleStatusChange(order.id, e.target.value as any)}
+                                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStatusChange(order.id, e.target.value as 'pending' | 'processing' | 'shipped' | 'delivered')}
                                       className="block w-full py-2 pl-3 pr-10 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                                     >
                                       <option value="pending">Pending</option>

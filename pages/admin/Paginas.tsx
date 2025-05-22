@@ -65,13 +65,14 @@ const WebPages: React.FC = () => {
       console.log('Homenagens carregadas:', data.length);
       setHomenagens(data);
       setLoading(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao carregar homenagens:', error);
-      setError(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar homenagens';
+      setError(errorMessage);
       setLoading(false);
-      toast.error(error.message);
+      toast.error(errorMessage);
       
-      if (error.message.includes('login') || error.message.includes('permissão')) {
+      if (errorMessage.includes('login') || errorMessage.includes('permissão')) {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }
@@ -112,9 +113,10 @@ const WebPages: React.FC = () => {
 
       toast.success('Visibilidade atualizada com sucesso!');
       carregarHomenagens();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar visibilidade:', error);
-      toast.error(error.message || 'Erro ao atualizar visibilidade da homenagem');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar visibilidade da homenagem';
+      toast.error(errorMessage);
     }
   };
   

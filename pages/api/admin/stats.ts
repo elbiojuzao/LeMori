@@ -163,11 +163,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         crescimento: faturamentoMesValor > 0 ? ((faturamentoRecenteValor / faturamentoMesValor) * 100) : 0
       }
     })
-  } catch (error: any) {
-    console.error('Erro ao buscar estatísticas:', error)
-    return res.status(500).json({ 
-      error: 'Erro ao buscar estatísticas',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar estatísticas';
+    res.status(500).json({ message: errorMessage });
   }
 } 

@@ -95,11 +95,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-  } catch (error: any) {
-    console.error('Erro no processo de login:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
+    console.error('Erro no processo de login:', errorMessage)
     return res.status(500).json({ 
       error: 'Erro interno do servidor',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     })
   }
 }

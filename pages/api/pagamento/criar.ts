@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const preference = new Preference(mp)
     const result = await preference.create({
       body: {
-        items: items.map((item: any) => ({
+        items: items.map((item: { _id: string, nome: string, quantidade: number, valor: number }) => ({
           id: item._id,
           title: item.nome,
           quantity: item.quantidade,
@@ -59,8 +59,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     res.status(200).json({ id: result.id, init_point: result.init_point })
-  } catch (err) {
-    console.error('Erro ao criar preferência:', err)
-    res.status(500).json({ error: 'Erro ao criar preferência de pagamento' })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar preferência de pagamento';
+    console.error('Erro ao criar preferência:', errorMessage);
+    res.status(500).json({ error: errorMessage });
   }
 }

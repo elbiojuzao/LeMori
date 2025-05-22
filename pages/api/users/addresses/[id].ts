@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     const userId = decoded.userId;
     const addressId = req.query.id;
 
@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       return res.status(405).end();
     }
-  } catch (err) {
+  } catch {
     return res.status(401).json({ error: 'Token inválido' });
   }
 }

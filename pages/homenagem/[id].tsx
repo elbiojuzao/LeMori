@@ -30,7 +30,6 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
   const currentUrl = `${typeof window !== 'undefined' ? window.location.origin : 'SEU_DOMINIO'}${asPath}`
   const title = `Homenagem a ${homenagem.nomeHomenageado} | LeMori`
   const description = homenagem.biografia || `Veja a homenagem especial para ${homenagem.nomeHomenageado} no LeMori.`
-  const imageUrl = homenagem.fotos?.[0] || `${typeof window !== 'undefined' ? window.location.origin : 'SEU_DOMINIO'}/img/avatar.png`
 
   const handleShare = async () => {
     // Verifica se o dispositivo suporta a Web Share API
@@ -170,7 +169,7 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
               className={`px-4 py-2 rounded-md ${
                 abaAtiva === aba ? 'bg-indigo-600 text-white' : 'bg-gray-200'
               }`}
-              onClick={() => setAbaAtiva(aba as any)}
+              onClick={() => setAbaAtiva(aba as 'sobre' | 'fotos' | 'musica')}
             >
               {aba.charAt(0).toUpperCase() + aba.slice(1)}
             </button>

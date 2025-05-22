@@ -31,21 +31,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           valor: req.body.valor
         })
         return res.status(201).json(produto)
-      } catch (error: any) {
-        if (error.name === 'ValidationError') {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar produto'
+        if (error instanceof Error && error.name === 'ValidationError') {
           const errors = Object.values(error.errors).map((err: any) => err.message)
-          return res.status(400).json({ message: 'Erro de validação', errors })
+          return res.status(400).json({ message: errorMessage, errors })
         }
-        throw error
+        return res.status(500).json({ message: errorMessage })
       }
     }
 
     return res.status(405).json({ message: 'Método não permitido' })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor'
     console.error('Erro na API de produtos:', error)
     return res.status(500).json({ 
-      message: 'Erro interno do servidor',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     })
   }
 } 

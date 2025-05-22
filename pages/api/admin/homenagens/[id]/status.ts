@@ -45,8 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(200).json({ message: 'Status atualizado com sucesso' })
-  } catch (error: any) {
-    console.error('Erro ao atualizar status da homenagem:', error)
-    return res.status(500).json({ message: 'Erro ao atualizar status da homenagem' })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar status da homenagem';
+    res.status(500).json({ message: errorMessage });
   }
 } 
