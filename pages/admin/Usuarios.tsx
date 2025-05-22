@@ -31,15 +31,6 @@ const Usuarios: React.FC = () => {
     dataNascimentoFim: '',
     minHomenagens: ''
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    isAdmin: false
-  });
 
   const carregarUsuarios = useCallback(async () => {
     try {

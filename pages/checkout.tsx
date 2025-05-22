@@ -148,7 +148,7 @@ export default function Checkout() {
     setError(null);
     try {
       await calculateShipping(cep);
-    } catch (err) {
+    } catch {
       setError('Erro ao calcular o frete. Tente novamente.');
     } finally {
       setIsCalculatingShipping(false);
