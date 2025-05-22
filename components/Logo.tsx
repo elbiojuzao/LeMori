@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+import Image from 'next/image'
 
 interface LogoProps {
   className?: string
@@ -17,9 +18,11 @@ export default function Logo({ className = '' }: LogoProps) {
       className={`focus:outline-none ${className}`}
       style={{ border: 'none', padding: 0, background: 'none', cursor: 'pointer' }}
     >
-      <img
+      <Image
         src="/img/Lumenis.png"
         alt="Logo Lumenis"
+        width={40}
+        height={40}
         className={`h-10 ${className}`}
       />
     </button>

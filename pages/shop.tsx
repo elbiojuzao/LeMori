@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, ShoppingCart } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -135,9 +136,11 @@ export default function Shop() {
                   className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:shadow-xl hover:-translate-y-1"
                 >
                   <div className="h-64 overflow-hidden">
-                    <img 
+                    <Image 
                       src={produto.imagens?.[0] || '/placeholder-image.jpg'} 
                       alt={produto.nome}
+                      width={400}
+                      height={300}
                       className="w-full h-full object-cover transition duration-300 transform hover:scale-105"
                     />
                   </div>

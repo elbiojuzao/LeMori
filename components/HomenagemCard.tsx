@@ -1,4 +1,5 @@
 import { Menu } from '@headlessui/react';
+import Image from 'next/image';
 import {
   EllipsisVerticalIcon,
   PencilIcon,
@@ -38,9 +39,11 @@ export default function HomenagemCard({ homenagem, onEdit, onDelete }: Homenagem
         <div className="flex justify-between items-start">
           <div className="flex items-center space-x-4">
             {homenagem.fotoPerfil ? (
-              <img
+              <Image
                 src={homenagem.fotoPerfil}
                 alt={`Foto de ${homenagem.nomeHomenageado}`}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-full object-cover border-4 border-purple-100"
               />
             ) : (

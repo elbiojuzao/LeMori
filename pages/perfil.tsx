@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
 import Head from 'next/head'
+import Image from 'next/image'
 
 interface ProfileFormValues {
   nome: string
@@ -318,15 +319,19 @@ export default function Perfil() {
                         <div className="flex items-center">
                           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
                             {homenagem.fotoPerfil ? (
-                              <img
+                              <Image
                                 src={homenagem.fotoPerfil}
                                 alt={`Foto de ${homenagem.nomeHomenageado}`}
-                                className="w-8 h-8 rounded-full object-cover"
+                                width={48}
+                                height={48}
+                                className="w-12 h-12 rounded-full object-cover"
                               />
                             ) : (
-                              <span className="text-sm text-purple-600 font-medium">
-                                {homenagem.nomeHomenageado.charAt(0)}
-                              </span>
+                              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                <span className="text-lg text-purple-600">
+                                  {homenagem.nomeHomenageado.charAt(0)}
+                                </span>
+                              </div>
                             )}
                           </div>
                           <div>

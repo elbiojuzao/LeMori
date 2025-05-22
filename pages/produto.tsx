@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import Image from 'next/image'
 import { ShoppingCart, ChevronLeft, Plus, Minus, Check, Star, Truck, Shield } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -122,9 +123,11 @@ export default function ProductPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 p-8">
               {/* Product Image */}
               <div className="rounded-lg overflow-hidden">
-                <img 
+                <Image 
                   src={product.imagens?.[0] || '/placeholder-image.jpg'} 
                   alt={product.nome}
+                  width={800}
+                  height={500}
                   className="w-full h-[500px] object-cover"
                 />
               </div>

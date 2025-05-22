@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import axios from 'axios'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import Image from 'next/image'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
@@ -270,12 +271,18 @@ export default function Pedidos() {
                         <div className="space-y-4">
                           {pedido.items.map((item, index) => (
                             <div key={index} className="flex items-center space-x-4">
-                              {item.product.imageSrc && (
-                                <img
+                              {item.product.imageSrc ? (
+                                <Image
                                   src={item.product.imageSrc}
                                   alt={item.product.name}
-                                  className="w-16 h-16 object-cover rounded-lg"
+                                  width={48}
+                                  height={48}
+                                  className="w-12 h-12 rounded-md object-cover"
                                 />
+                              ) : (
+                                <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center">
+                                  <Package className="h-6 w-6 text-gray-400" />
+                                </div>
                               )}
                               <div className="flex-1">
                                 <h5 className="text-sm font-medium text-gray-900">{item.product.name}</h5>

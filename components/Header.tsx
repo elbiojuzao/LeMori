@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import Image from 'next/image'
 import { ShoppingCart, User, Menu, X, LogOut, Package, Home } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { logout, isAuthenticated } from '@/lib/authClient'
@@ -95,9 +96,11 @@ const Header = () => {
                         <div className="space-y-4 max-h-96 overflow-auto">
                           {items.map((item) => (
                             <div key={item.product.id} className="flex items-center space-x-4">
-                              <img 
+                              <Image 
                                 src={item.product.imageSrc} 
                                 alt={item.product.name} 
+                                width={64}
+                                height={64}
                                 className="h-16 w-16 object-cover rounded"
                               />
                               <div className="flex-1">

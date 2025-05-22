@@ -3,6 +3,7 @@ import { Search, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -176,9 +177,11 @@ const WebPages: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-md overflow-hidden">
-                                <img 
+                                <Image 
                                   src={(homenagem.fotos && homenagem.fotos.length > 0 ? homenagem.fotos[0] : '/placeholder.jpg')} 
                                   alt={homenagem.nomeHomenageado || 'Homenagem sem nome'} 
+                                  width={40}
+                                  height={40}
                                   className="h-10 w-10 object-cover"
                                 />
                               </div>
