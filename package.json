@@ -24,6 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.487.0",
     "mercadopago": "^2.4.0",
+    "moment": "^2.30.1",
     "mongoose": "^8.13.2",
     "next": "15.2.4",
     "next-auth": "^4.24.11",

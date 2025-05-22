@@ -288,7 +288,29 @@ export default function Perfil() {
 
               {/* Card de Nomes */}
               <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Pessoas Homenageadas</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Pessoas Homenageadas</h2>
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-600">
+                      Créditos disponíveis: <span className="font-semibold text-purple-600">{user?.homenagemCreditos || 0}</span>
+                    </div>
+                    {user?.homenagemCreditos > 0 ? (
+                      <button
+                        onClick={() => router.push('/homenagem/form')}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                      >
+                        Criar Nova Homenagem
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => router.push('/shop')}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                      >
+                        Comprar Créditos
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <ul className="divide-y divide-gray-200">
                   {homenagens.length > 0 ? (
                     homenagens.map((homenagem) => (
