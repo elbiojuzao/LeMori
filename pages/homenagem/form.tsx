@@ -313,7 +313,7 @@ function FormHomenagem() {
               className={`px-4 py-2 rounded-md ${
                 abaAtiva === aba ? 'bg-indigo-600 text-white' : 'bg-gray-200'
               }`}
-              onClick={() => setAbaAtiva(aba as any)}
+              onClick={() => setAbaAtiva(aba as 'sobre' | 'fotos' | 'musica')}
             >
               {aba.charAt(0).toUpperCase() + aba.slice(1)}
             </button>

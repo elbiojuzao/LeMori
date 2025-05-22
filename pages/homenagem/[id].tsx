@@ -183,7 +183,7 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
               <h3 className="text-xl font-bold mb-2">{homenagem.nomeHomenageado}</h3>
               <p>{homenagem.biografia}</p>
               <p className="text-gray-600">
-                {`"A vida é uma jornada, não um destino. Cada momento é uma oportunidade de criar memórias que durarão para sempre."`}
+                &ldquo;A vida é uma jornada, não um destino. Cada momento é uma oportunidade de criar memórias que durarão para sempre.&rdquo;
               </p>
             </div>
           )}
