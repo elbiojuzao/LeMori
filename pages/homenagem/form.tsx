@@ -40,18 +40,14 @@ function FormHomenagem() {
   const [fotosCarregando, setFotosCarregando] = useState<number>(0)
 
   const carregarHomenagem = useCallback(async () => {
-    if (!id) return
-
     try {
       setLoading(true)
       const response = await fetch(`/api/homenagens/${id}`)
-      if (!response.ok) throw new Error('Erro ao carregar homenagem')
-      
       const data = await response.json()
       setFormData({
         nome: data.nome,
-        dataNascimento: data.dataNascimento ? new Date(data.dataNascimento).toISOString().split('T')[0] : '',
-        dataFalecimento: data.dataFalecimento ? new Date(data.dataFalecimento).toISOString().split('T')[0] : '',
+        dataNascimento: data.dataNascimento || '',
+        dataFalecimento: data.dataFalecimento || '',
         mensagem: data.mensagem || '',
         fotos: [],
         musica: data.musica || ''
@@ -60,12 +56,12 @@ function FormHomenagem() {
         setFotosPreview(data.fotos)
       }
       setFotoPerfilPreview(data.fotos?.[0] || '')
-    } catch (error) {
+    } catch {
       toast.error('Erro ao carregar homenagem')
     } finally {
       setLoading(false)
     }
-  }, [id, router])
+  }, [id])
 
   useEffect(() => {
     if (id) {
@@ -94,7 +90,7 @@ function FormHomenagem() {
 
   function compressImage(base64: string, maxWidth: number, maxHeight: number): Promise<string> {
     return new Promise((resolve) => {
-      const img = new (window.Image as any)()
+      const img = new window.Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')
         let width = img.width
