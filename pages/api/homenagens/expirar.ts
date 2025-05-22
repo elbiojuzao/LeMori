@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.status(200).json({ expiradas: expiradas.length })
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Erro interno' })
   }
 }

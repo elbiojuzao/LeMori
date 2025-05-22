@@ -1,10 +1,5 @@
 import mongoose from 'mongoose';
 
-interface CachedConnection {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
-
 // Definir interface para global.mongoose
 interface GlobalWithMongoose {
   mongoose?: {
@@ -93,15 +88,15 @@ async function mongooseConnect() {
   try {
     cached.conn = await cached.promise;
     return cached.conn;
-  } catch (error: any) {
+  } catch (error: unknown) {
     cached.promise = null;
-    const errorMessage = error.message.includes('timed out')
+    const errorMessage = error instanceof Error && error.message.includes('timed out')
       ? 'Timeout na conexão com MongoDB. Verifique:\n' +
         '1. Se há problemas de rede/firewall\n' +
         '2. Se o IP está liberado no MongoDB Atlas\n' +
         '3. Se o cluster está ativo\n' +
         '4. Se as credenciais estão corretas'
-      : `Erro na conexão: ${error.message}`;
+      : `Erro na conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
     
     throw new Error(errorMessage);
   }

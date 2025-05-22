@@ -43,7 +43,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     // Faz upload das imagens para o Cloudinary
-    const uploadPromises = Object.values(files).map(async (file: any) => {
+    const uploadPromises = Object.values(files).map(async (fileOrArray) => {
+      const file = Array.isArray(fileOrArray) ? fileOrArray[0] : fileOrArray
+      if (!file || typeof file !== 'object' || !('filepath' in file)) {
+        throw new Error('Arquivo inválido')
+      }
       const result = await cloudinary.uploader.upload(file.filepath, {
         folder: 'produtos',
         resource_type: 'auto'
@@ -54,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const urls = await Promise.all(uploadPromises)
     return res.status(200).json({ urls })
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer upload do arquivo';
-    res.status(500).json({ message: errorMessage });
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer upload do arquivo'
+    res.status(500).json({ message: errorMessage })
   }
 } 

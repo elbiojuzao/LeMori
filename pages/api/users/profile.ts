@@ -7,6 +7,12 @@ import bcrypt from 'bcrypt'
 const JWT_SECRET = process.env.JWT_SECRET || 'secret'
 const SALT_ROUNDS = 10
 
+interface JwtPayload {
+  userId: string;
+  iat?: number;
+  exp?: number;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await mongooseConnect()
 
@@ -20,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = authHeader.split(' ')[1]
 
     try {
-      const decoded: any = jwt.verify(token, JWT_SECRET)
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload
       const userId = decoded.userId
 
       const { nome, senha } = req.body

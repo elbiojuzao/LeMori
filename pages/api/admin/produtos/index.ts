@@ -2,6 +2,13 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import mongooseConnect from '@/lib/mongoose'
 import { verifyToken } from '@/lib/auth'
 import Produto from '@/models/Produto'
+import mongoose from 'mongoose'
+
+interface ValidationErrorItem {
+  message: string;
+  path: string;
+  value: unknown;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -33,8 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(201).json(produto)
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar produto'
-        if (error instanceof Error && error.name === 'ValidationError') {
-          const errors = Object.values(error.errors).map((err: any) => err.message)
+        if (error instanceof mongoose.Error.ValidationError) {
+          const errors = Object.values(error.errors).map((err) => err.message)
           return res.status(400).json({ message: errorMessage, errors })
         }
         return res.status(500).json({ message: errorMessage })

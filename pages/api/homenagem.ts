@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import Homenagem from '@/models/Homenagem'
 import mongooseConnect from '@/lib/mongoose'
-import formidable, { File } from 'formidable'
+import formidable from 'formidable'
 
 export const config = {
   api: {

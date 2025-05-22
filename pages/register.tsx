@@ -9,8 +9,8 @@ import Footer from '@/components/Footer'
 
 export default function Register() {
   const router = useRouter()
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [error] = useState('');
+  const [isLoading] = useState(false);
 
   useEffect(() => {
     const verificarAutenticacao = async () => {
@@ -26,7 +26,7 @@ export default function Register() {
     }
 
     verificarAutenticacao()
-  }, [])
+  }, [router])
 
   const [formData, setForm] = useState({
     nome: '',
@@ -37,7 +37,7 @@ export default function Register() {
     termos: false,
   })
 
-  const [errors, setErrors] = useState({
+  const [formErrors, setFormErrors] = useState({
     nome: false,
     cpf: false,
     email: false,
@@ -49,7 +49,7 @@ export default function Register() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-    setErrors(prev => ({ ...prev, [name]: false })) // limpa erro ao digitar
+    setFormErrors(prev => ({ ...prev, [name]: false })) // limpa erro ao digitar
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +64,7 @@ export default function Register() {
       termos: !formData.termos,
     }
 
-    setErrors(novosErros)
+    setFormErrors(novosErros)
 
     const temErros = Object.values(novosErros).some(Boolean)
     if (temErros) return
@@ -87,7 +87,7 @@ export default function Register() {
         const data = await res.json()
         alert(data.error || 'Erro ao registrar usuário.')
       }
-    } catch (err) {
+    } catch {
       alert('Erro de conexão. Tente novamente.')
     }
   }

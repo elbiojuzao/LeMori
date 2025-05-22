@@ -5,7 +5,6 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { User, Mail, Check, ShoppingBag, Package, MoreVertical, Edit, Trash2, CreditCard } from 'lucide-react'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
 import Head from 'next/head'
@@ -42,6 +41,15 @@ interface Pedido {
   total: number
 }
 
+interface User {
+  _id: string;
+  nome: string;
+  cpf: string;
+  email: string;
+  isAdmin?: boolean;
+  homenagemCreditos?: number;
+}
+
 export default function Perfil() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -49,7 +57,7 @@ export default function Perfil() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [homenagens, setHomenagens] = useState<Homenagem[]>([])
   const [ultimosPedidos, setUltimosPedidos] = useState<Pedido[]>([])
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [profileForm, setProfileForm] = useState<ProfileFormValues>({
     nome: '',
     cpf: '',
@@ -85,7 +93,7 @@ export default function Perfil() {
       setHomenagens(resHomenagens.data)
       
       setLoading(false)
-    } catch (err) {
+    } catch {
       router.push('/login')
     }
   }, [router])
@@ -131,8 +139,7 @@ export default function Perfil() {
       setTimeout(() => {
         setShowSuccessMessage(false)
       }, 3000)
-    } catch (err) {
-      console.error('Erro ao atualizar perfil:', err)
+    } catch {
       alert('Erro ao atualizar dados do perfil.')
     }
   }
@@ -295,7 +302,7 @@ export default function Perfil() {
                     <div className="text-sm text-gray-600">
                       Créditos disponíveis: <span className="font-semibold text-purple-600">{user?.homenagemCreditos || 0}</span>
                     </div>
-                    {user?.homenagemCreditos > 0 ? (
+                    {user?.homenagemCreditos && user.homenagemCreditos > 0 ? (
                       <button
                         onClick={() => router.push('/homenagem/form')}
                         className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
