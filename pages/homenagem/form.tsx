@@ -1,52 +1,57 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import NextImage from 'next/image'
 import axios from 'axios'
 import withAuth from '@/lib/withAuth'
 import { useRouter } from 'next/router'
-import { Save, Edit2, Plus } from 'lucide-react'
+import { Save, Edit2, Plus, X, Music, Image as ImageIcon } from 'lucide-react'
 import moment from 'moment'
 import 'moment/locale/pt-br'
 import Logo from '@/components/Logo'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Header from '@/components/Header'
+import { toast } from 'react-hot-toast'
 
-interface FormData {
-  nomeHomenageado: string;
+interface HomenagemFormData {
+  nome: string;
   dataNascimento: string;
   dataFalecimento: string;
-  biografia: string;
-  musica: string;
-  fotoPrincipal: File | null;
+  mensagem: string;
   fotos: File[];
+  musica: string;
+}
+
+interface ValidationError {
+  errors: {
+    [key: string]: {
+      message: string;
+      path: string;
+      value: unknown;
+    }
+  }
 }
 
 function FormHomenagem() {
   const router = useRouter()
+  const { id } = router.query
   const [homenagemId, setHomenagemId] = useState<string | null>(null)
-
-  const [nome, setNome] = useState('')
-  const [nascimento, setNascimento] = useState('')
-  const [falecimento, setFalecimento] = useState('')
-  const [biografia, setBiografia] = useState('')
-  const [fotoPrincipal, setFotoPrincipal] = useState<string>('')
-  const [musica, setMusica] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState<HomenagemFormData>({
+    nome: '',
+    dataNascimento: '',
+    dataFalecimento: '',
+    mensagem: '',
+    fotos: [],
+    musica: ''
+  })
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [editandoCampo, setEditandoCampo] = useState<string | null>(null)
   const [abaAtiva, setAbaAtiva] = useState<'sobre' | 'fotos' | 'musica'>('sobre')
   const [fotoPerfilPreview, setFotoPerfilPreview] = useState<string | null>(null)
   const [fotosPreview, setFotosPreview] = useState<string[]>([])
   const [carregandoFotos, setCarregandoFotos] = useState(false)
   const [fotosCarregando, setFotosCarregando] = useState<number>(0)
-  const [formData, setFormData] = useState<FormData>({
-    nomeHomenageado: '',
-    dataNascimento: '',
-    dataFalecimento: '',
-    biografia: '',
-    musica: '',
-    fotoPrincipal: null,
-    fotos: []
-  })
 
   useEffect(() => {
     if (router.query.id) {
@@ -54,38 +59,48 @@ function FormHomenagem() {
     }
   }, [router.query])
 
-  useEffect(() => {
-    if (homenagemId) {
-      const fetchData = async () => {
-        const token = localStorage.getItem('token')
-        if (!token) return
+  const carregarHomenagem = useCallback(async () => {
+    if (!id) return
 
-        try {
-          const res = await axios.get(`/api/homenagens/${homenagemId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          const data = res.data
-          setNome(data.nomeHomenageado || '')
-          setNascimento(data.dataNascimento?.slice(0, 10) || '')
-          setFalecimento(data.dataFalecimento?.slice(0, 10) || '')
-          setBiografia(data.biografia || '')
-          setMusica(data.musica || '')
-          setFotoPrincipal(data.fotos?.[0] || '')
-          setFotoPerfilPreview(data.fotos?.[0] || '')
-          setFotosPreview(data.fotos || [])
-        } catch (error) {
-          if (typeof error === 'object' && error && 'response' in error && (error as { response?: { status?: number } }).response?.status === 403) {
-            alert('Você não tem permissão para editar esta homenagem.')
-            router.push('/perfil')
-          } else {
-            console.error('Erro ao carregar homenagem:', error)
-          }
-        }
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const res = await axios.get(`/api/homenagens/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = res.data
+      setFormData({
+        nome: data.nome || '',
+        dataNascimento: data.dataNascimento ? new Date(data.dataNascimento).toISOString().split('T')[0] : '',
+        dataFalecimento: data.dataFalecimento ? new Date(data.dataFalecimento).toISOString().split('T')[0] : '',
+        mensagem: data.mensagem || '',
+        fotos: [],
+        musica: data.musica || ''
+      })
+      if (data.fotos) {
+        setPreviewUrls(data.fotos)
       }
-
-      fetchData()
+      setFotoPerfilPreview(data.fotos?.[0] || '')
+      setFotosPreview(data.fotos || [])
+    } catch (error) {
+      if (typeof error === 'object' && error && 'response' in error && (error as { response?: { status?: number } }).response?.status === 403) {
+        alert('Você não tem permissão para editar esta homenagem.')
+        router.push('/perfil')
+      } else {
+        console.error('Erro ao carregar homenagem:', error)
+      }
+    } finally {
+      setLoading(false)
     }
-  }, [homenagemId])
+  }, [id])
+
+  useEffect(() => {
+    if (id) {
+      carregarHomenagem()
+    }
+  }, [id, carregarHomenagem])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -101,7 +116,7 @@ function FormHomenagem() {
       reader.onloadend = () => {
         compressImage(reader.result as string, 800, 800).then((compressed) => {
           setFotoPerfilPreview(compressed)
-          setFotoPrincipal(compressed)
+          setFormData(prev => ({ ...prev, fotos: [new File([], '')] }))
         })
       }
       reader.readAsDataURL(file)
@@ -177,28 +192,28 @@ function FormHomenagem() {
   }
 
   const validarFormulario = () => {
-    if (!nome.trim()) {
+    if (!formData.nome.trim()) {
       alert('O nome é obrigatório.')
       return false
     }
 
-    if (nome.trim().length < 3) {
+    if (formData.nome.trim().length < 3) {
       alert('O nome deve conter pelo menos 3 caracteres.')
       return false
     }
 
-    if (!nascimento) {
+    if (!formData.dataNascimento) {
       alert('A data de nascimento é obrigatória.')
       return false
     }
 
-    if (!falecimento) {
+    if (!formData.dataFalecimento) {
       alert('A data de falecimento é obrigatória.')
       return false
     }
 
-    const nascimentoDate = new Date(nascimento)
-    const falecimentoDate = new Date(falecimento)
+    const nascimentoDate = new Date(formData.dataNascimento)
+    const falecimentoDate = new Date(formData.dataFalecimento)
     const dataAtual = new Date()
 
     if (nascimentoDate > dataAtual) {
@@ -225,91 +240,41 @@ function FormHomenagem() {
     return true
   }
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const token = localStorage.getItem('token')
-    if (!token) return
-
-    if (!validarFormulario()) return
+    setLoading(true)
+    setUploadProgress(0)
 
     try {
-      setIsSaving(true)
-      const formData = new FormData()
-      
-      formData.append('nomeHomenageado', nome)
-      formData.append('dataNascimento', nascimento)
-      formData.append('dataFalecimento', falecimento)
-      formData.append('biografia', biografia)
-      formData.append('musica', musica)
+      const formDataEnvio = new FormData()
+      formDataEnvio.append('nome', formData.nome)
+      formDataEnvio.append('dataNascimento', formData.dataNascimento)
+      formDataEnvio.append('dataFalecimento', formData.dataFalecimento)
+      formDataEnvio.append('mensagem', formData.mensagem)
+      formDataEnvio.append('musica', formData.musica)
 
-      if (fotoPrincipal) {
-        const base64Data = fotoPrincipal.split(',')[1]
-        const byteCharacters = atob(base64Data)
-        const byteArrays = []
-        
-        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-          const slice = byteCharacters.slice(offset, offset + 512)
-          const byteNumbers = new Array(slice.length)
-          
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i)
-          }
-          
-          const byteArray = new Uint8Array(byteNumbers)
-          byteArrays.push(byteArray)
-        }
-        
-        const blob = new Blob(byteArrays, { type: 'image/jpeg' })
-        formData.append('fotoPrincipal', blob, 'fotoPrincipal.jpg')
+      // Upload das fotos
+      for (const file of formData.fotos) {
+        formDataEnvio.append('fotos', file)
       }
 
-      if (fotosPreview.length > 0) {
-        for (let i = 0; i < fotosPreview.length; i++) {
-          const base64Data = fotosPreview[i].split(',')[1]
-          const byteCharacters = atob(base64Data)
-          const byteArrays = []
-          
-          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-            const slice = byteCharacters.slice(offset, offset + 512)
-            const byteNumbers = new Array(slice.length)
-            
-            for (let j = 0; j < slice.length; j++) {
-              byteNumbers[j] = slice.charCodeAt(j)
-            }
-            
-            const byteArray = new Uint8Array(byteNumbers)
-            byteArrays.push(byteArray)
-          }
-          
-          const blob = new Blob(byteArrays, { type: 'image/jpeg' })
-          formData.append('fotos', blob, `foto${i}.jpg`)
-        }
-      }
+      const response = await fetch(id ? `/api/homenagens/${id}` : '/api/homenagens', {
+        method: id ? 'PUT' : 'POST',
+        body: formDataEnvio
+      })
 
-      let response
-      if (homenagemId) {
-        response = await axios.put(`/api/homenagens/${homenagemId}`, formData, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          },
-        })
-        alert('Homenagem atualizada com sucesso!')
+      if (response.ok) {
+        alert(id ? 'Homenagem atualizada com sucesso!' : 'Homenagem criada com sucesso!')
+        router.push(id ? `/homenagem/${id}` : '/homenagem')
       } else {
-        response = await axios.post('/api/homenagens', formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          },
-        })
-        alert('Homenagem criada com sucesso!')
-        router.push(`/homenagem/${response.data._id}`)
+        console.error('Erro ao salvar homenagem:', response.statusText)
+        alert(response.statusText || 'Erro ao salvar homenagem')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao salvar homenagem:', error)
-      alert(error.response?.data?.error || 'Erro ao salvar homenagem')
+      alert(error instanceof Error ? error.message : 'Erro ao salvar homenagem')
     } finally {
-      setIsSaving(false)
+      setLoading(false)
     }
   }
 
@@ -320,21 +285,34 @@ function FormHomenagem() {
     return ''
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'principal' | 'galeria') => {
-    const files = e.target.files
-    if (!files) return
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
-    if (type === 'principal') {
-      setFormData(prev => ({
-        ...prev,
-        fotoPrincipal: files[0]
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        fotos: Array.from(files)
-      }))
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    // Verifica o tamanho total dos arquivos
+    const totalSize = files.reduce((acc, file) => acc + file.size, 0)
+    if (totalSize > 10 * 1024 * 1024) { // 10MB
+      toast.error('O tamanho total dos arquivos não pode exceder 10MB')
+      return
     }
+
+    // Cria URLs de preview
+    const newPreviewUrls = files.map(file => URL.createObjectURL(file))
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls])
+    setFormData(prev => ({ ...prev, fotos: [...prev.fotos, ...files] }))
+  }
+
+  const removeFile = (index: number) => {
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index))
+    setFormData(prev => ({
+      ...prev,
+      fotos: prev.fotos.filter((_, i) => i !== index)
+    }))
   }
 
   return (
@@ -381,8 +359,8 @@ function FormHomenagem() {
                 {editandoCampo === 'nome' ? (
                   <input
                     type="text"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
+                    value={formData.nome}
+                    onChange={handleInputChange}
                     onBlur={() => setEditandoCampo(null)}
                     autoFocus
                     className="text-3xl font-bold border-b-2 border-purple-500 focus:outline-none bg-transparent"
@@ -393,7 +371,7 @@ function FormHomenagem() {
                     onClick={() => setEditandoCampo('nome')}
                     className="text-3xl font-bold cursor-pointer hover:text-purple-600 flex items-center group"
                   >
-                    {nome || 'Nome do homenageado'}
+                    {formData.nome || 'Nome do homenageado'}
                     <Edit2 size={20} className="ml-2 text-gray-400 group-hover:text-purple-600" />
                   </h2>
                 )}
@@ -401,8 +379,8 @@ function FormHomenagem() {
                   {editandoCampo === 'nascimento' ? (
                     <input
                       type="date"
-                      value={nascimento}
-                      onChange={(e) => setNascimento(e.target.value)}
+                      value={formData.dataNascimento}
+                      onChange={handleInputChange}
                       onBlur={() => setEditandoCampo(null)}
                       autoFocus
                       max={new Date().toISOString().split('T')[0]}
@@ -413,15 +391,15 @@ function FormHomenagem() {
                       onClick={() => setEditandoCampo('nascimento')}
                       className="cursor-pointer text-gray-400 hover:text-purple-600 flex items-center group mb-1"
                     >
-                      {formatarData(nascimento) || 'Data de nascimento'}
+                      {formatarData(formData.dataNascimento) || 'Data de nascimento'}
                       <Edit2 size={16} className="ml-2 group-hover:text-purple-600" />
                     </span>
                   )}
                   {editandoCampo === 'falecimento' ? (
                     <input
                       type="date"
-                      value={falecimento}
-                      onChange={(e) => setFalecimento(e.target.value)}
+                      value={formData.dataFalecimento}
+                      onChange={handleInputChange}
                       onBlur={() => setEditandoCampo(null)}
                       autoFocus
                       max={new Date().toISOString().split('T')[0]}
@@ -433,7 +411,7 @@ function FormHomenagem() {
                       className="cursor-pointer text-gray-400 hover:text-purple-600 flex items-center group"
                     >
                       <span className="mr-2">†</span>
-                      {formatarData(falecimento) || 'Data de falecimento'}
+                      {formatarData(formData.dataFalecimento) || 'Data de falecimento'}
                       <Edit2 size={16} className="ml-2 text-gray-400 group-hover:text-purple-600" />
                     </span>
                   )}
@@ -460,26 +438,26 @@ function FormHomenagem() {
         <div className="max-w-3xl mx-auto mt-6 px-4">
           {abaAtiva === 'sobre' && (
             <div className="bg-white p-6 rounded-lg shadow">
-              {editandoCampo === 'biografia' ? (
+              {editandoCampo === 'mensagem' ? (
                 <textarea
-                  value={biografia}
-                  onChange={(e) => setBiografia(e.target.value)}
+                  value={formData.mensagem}
+                  onChange={handleInputChange}
                   onBlur={() => setEditandoCampo(null)}
                   autoFocus
                   rows={6}
-                  placeholder="Escreva a biografia do homenageado..."
+                  placeholder="Escreva a mensagem para o homenageado..."
                   className="w-full px-2 py-1 border-2 border-purple-500 rounded-md focus:outline-none"
                 />
               ) : (
                 <div 
-                  onClick={() => setEditandoCampo('biografia')}
+                  onClick={() => setEditandoCampo('mensagem')}
                   className="cursor-pointer hover:text-purple-600 group"
                 >
-                  {biografia ? (
-                    <p className="text-gray-700 whitespace-pre-line">{biografia}</p>
+                  {formData.mensagem ? (
+                    <p className="text-gray-700 whitespace-pre-line">{formData.mensagem}</p>
                   ) : (
                     <p className="text-gray-400 italic flex items-center">
-                      Biografia
+                      Mensagem
                       <Edit2 size={16} className="ml-2 text-gray-400 group-hover:text-purple-600" />
                     </p>
                   )}
@@ -539,12 +517,12 @@ function FormHomenagem() {
 
           {abaAtiva === 'musica' && (
             <div className="bg-white p-6 rounded-lg shadow">
-              <p className="mb-4">&ldquo;Essa música representa a memória de {nome || 'nome do homenageado'}.&rdquo;</p>
+              <p className="mb-4">&ldquo;Essa música representa a memória de {formData.nome || 'nome do homenageado'}.&rdquo;</p>
               {editandoCampo === 'musica' ? (
                 <input
                   type="text"
-                  value={musica}
-                  onChange={(e) => setMusica(e.target.value)}
+                  value={formData.musica}
+                  onChange={(e) => setFormData(prev => ({ ...prev, musica: e.target.value }))}
                   onBlur={() => setEditandoCampo(null)}
                   autoFocus
                   placeholder="Cole aqui o link da música (YouTube, Spotify, etc)"
@@ -555,8 +533,8 @@ function FormHomenagem() {
                   onClick={() => setEditandoCampo('musica')}
                   className="cursor-pointer hover:text-purple-600 flex items-center group"
                 >
-                  {musica ? (
-                    <p className="text-gray-700">{musica}</p>
+                  {formData.musica ? (
+                    <p className="text-gray-700">{formData.musica}</p>
                   ) : (
                     <p className="text-gray-400 italic flex items-center">
                       Link da música
@@ -572,14 +550,14 @@ function FormHomenagem() {
         <div className="max-w-3xl mx-auto mt-8 px-4 mb-8">
           <button 
             onClick={handleSubmit}
-            disabled={isSaving}
+            disabled={loading}
             className={`w-full px-6 py-3 rounded-lg text-lg font-medium text-white flex items-center justify-center ${
-              isSaving 
+              loading 
                 ? 'bg-purple-400 cursor-not-allowed' 
                 : 'bg-purple-600 hover:bg-purple-700'
             }`}
           >
-            {isSaving ? (
+            {loading ? (
               <>
                 <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

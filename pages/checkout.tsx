@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import Head from 'next/head';
+import { toast } from 'react-hot-toast';
 
 interface Endereco {
   _id: string;
@@ -131,10 +132,10 @@ export default function Checkout() {
         throw new Error('URL de pagamento não encontrada');
       }
 
-    } catch (error) {
-      console.error('Erro no checkout:', error);
-      setError('Erro ao processar pagamento. Tente novamente.');
-      setIsProcessing(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao processar pagamento'
+      toast.error(errorMessage)
+      setIsProcessing(false)
     }
   };
 

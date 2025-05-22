@@ -2,15 +2,15 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import Link from 'next/link';
-import { User, Mail, Lock, AlertCircle } from 'lucide-react';
+import Link from 'next/link'
+import { User, Mail, Lock, AlertCircle } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
 export default function Register() {
   const router = useRouter()
-  const [error] = useState('');
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     const verificarAutenticacao = async () => {
@@ -28,7 +28,7 @@ export default function Register() {
     verificarAutenticacao()
   }, [router])
 
-  const [formData, setForm] = useState({
+  const [formData, setFormData] = useState({
     nome: '',
     cpf: '',
     email: '',
@@ -37,37 +37,52 @@ export default function Register() {
     termos: false,
   })
 
-  const [formErrors, setFormErrors] = useState({
-    nome: false,
-    cpf: false,
-    email: false,
-    senha: false,
-    confirmarSenha: false,
-    termos: false,
-  })
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
-    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
-    setFormErrors(prev => ({ ...prev, [name]: false })) // limpa erro ao digitar
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    setErrorMessage('')
 
-    const novosErros = {
-      nome: !formData.nome.trim(),
-      cpf: !formData.cpf.trim(),
-      email: !formData.email.trim(),
-      senha: !formData.senha,
-      confirmarSenha: formData.senha !== formData.confirmarSenha,
-      termos: !formData.termos,
+    // Validação dos campos
+    if (!formData.nome.trim()) {
+      setErrorMessage('Por favor, preencha seu nome.')
+      setIsLoading(false)
+      return
     }
 
-    setFormErrors(novosErros)
+    if (!formData.cpf.trim()) {
+      setErrorMessage('Por favor, preencha seu CPF.')
+      setIsLoading(false)
+      return
+    }
 
-    const temErros = Object.values(novosErros).some(Boolean)
-    if (temErros) return
+    if (!formData.email.trim()) {
+      setErrorMessage('Por favor, preencha seu email.')
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.senha) {
+      setErrorMessage('Por favor, preencha sua senha.')
+      setIsLoading(false)
+      return
+    }
+
+    if (formData.senha !== formData.confirmarSenha) {
+      setErrorMessage('As senhas não coincidem.')
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.termos) {
+      setErrorMessage('Por favor, aceite os termos de uso.')
+      setIsLoading(false)
+      return
+    }
 
     try {
       const res = await fetch('/api/auth/register', {
@@ -85,10 +100,12 @@ export default function Register() {
         router.push('/sucesso')
       } else {
         const data = await res.json()
-        alert(data.error || 'Erro ao registrar usuário.')
+        setErrorMessage(data.error || 'Erro ao registrar usuário.')
       }
     } catch {
-      alert('Erro de conexão. Tente novamente.')
+      setErrorMessage('Erro de conexão. Tente novamente.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -115,32 +132,53 @@ export default function Register() {
 
           <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
             <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-              {error && (
+              {errorMessage && (
                 <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start">
                   <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>{error}</span>
+                  <span>{errorMessage}</span>
                 </div>
               )}
               
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700">
                     Nome completo
                   </label>
-                  <div className="mt-1 relative rounded-md shadow-sm ">
+                  <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <User size={18} className="text-gray-700" />
                     </div>
                     <input
-                      id="name"
-                      name="name"
+                      id="nome"
+                      name="nome"
                       type="text"
                       autoComplete="name"
                       required
                       value={formData.nome}
                       onChange={handleChange}
-                      className="block text-gray-700 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 "
+                      className="block text-gray-700 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                       placeholder="Nome e sobrenome"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">
+                    CPF
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="cpf"
+                      name="cpf"
+                      type="text"
+                      required
+                      value={formData.cpf}
+                      onChange={handleChange}
+                      className="block text-gray-700 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="000.000.000-00"
                     />
                   </div>
                 </div>
@@ -168,7 +206,7 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="senha" className="block text-sm font-medium text-gray-700">
                     Senha
                   </label>
                   <div className="mt-1 relative rounded-md shadow-sm">
@@ -176,8 +214,8 @@ export default function Register() {
                       <Lock size={18} className="text-gray-400" />
                     </div>
                     <input
-                      id="password"
-                      name="password"
+                      id="senha"
+                      name="senha"
                       type="password"
                       autoComplete="new-password"
                       required
@@ -190,7 +228,7 @@ export default function Register() {
                 </div>
                 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="confirmarSenha" className="block text-sm font-medium text-gray-700">
                     Confirmar senha
                   </label>
                   <div className="mt-1 relative rounded-md shadow-sm">
@@ -198,8 +236,8 @@ export default function Register() {
                       <Lock size={18} className="text-gray-400" />
                     </div>
                     <input
-                      id="confirmPassword"
-                      name="confirmPassword"
+                      id="confirmarSenha"
+                      name="confirmarSenha"
                       type="password"
                       autoComplete="new-password"
                       required
@@ -213,13 +251,15 @@ export default function Register() {
 
                 <div className="flex items-center">
                   <input
-                    id="terms"
-                    name="terms"
+                    id="termos"
+                    name="termos"
                     type="checkbox"
                     required
+                    checked={formData.termos}
+                    onChange={handleChange}
                     className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="termos" className="ml-2 block text-sm text-gray-700">
                     Eu concordo com os{' '}
                     <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
                       Termos de Serviço
@@ -239,7 +279,7 @@ export default function Register() {
                       isLoading ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500'
                     }`}
                   >
-                    {isLoading ? 'Criando conta...' : 'Conta criada'}
+                    {isLoading ? 'Criando conta...' : 'Criar conta'}
                   </button>
                 </div>
               </form>
@@ -249,5 +289,5 @@ export default function Register() {
         <Footer />
       </div>
     </>
-  );
+  )
 }

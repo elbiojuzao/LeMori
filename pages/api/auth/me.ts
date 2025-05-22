@@ -1,56 +1,37 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import mongooseConnect from '@/lib/mongoose'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { verifyToken } from '@/lib/auth'
 import User from '@/models/User'
-import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret'
+interface TokenPayload {
+  userId: string;
+  email: string;
+  isAdmin: boolean;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await mongooseConnect()
-
-  const authHeader = req.headers.authorization
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token não fornecido' })
+  if (req.method !== 'GET') {
+    return res.status(405).json({ message: 'Método não permitido' })
   }
 
-  const token = authHeader.split(' ')[1]
-
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET)
-    const userId = decoded.userId
-
-    if (req.method === 'GET') {
-      const user = await User.findById(userId).select('nome cpf email homenagemCreditos isAdmin')
-      if (!user) {
-        return res.status(404).json({ error: 'Usuário não encontrado' })
-      }
-      return res.status(200).json(user)
+    const token = req.headers.authorization?.split(' ')[1]
+    if (!token) {
+      return res.status(401).json({ message: 'Token não fornecido' })
     }
 
-    if (req.method === 'PUT') {
-      const { nome } = req.body
-
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { nome },
-        { new: true }
-      )
-
-      if (!updatedUser) {
-        return res.status(404).json({ error: 'Usuário não encontrado' })
-      }
-
-      return res.status(200).json({
-        message: 'Dados do perfil atualizados com sucesso',
-        user: updatedUser
-      })
+    const decoded = await verifyToken(token) as TokenPayload
+    if (!decoded) {
+      return res.status(401).json({ message: 'Token inválido' })
     }
 
-    return res.status(405).end()
+    const user = await User.findById(decoded.userId).select('-senha')
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' })
+    }
+
+    return res.status(200).json(user)
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar token'
-    if (errorMessage === 'jwt expired')  return res.status(401).json({ error: 'Token expirado' })
-    return res.status(401).json({ error: errorMessage })
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar usuário'
+    return res.status(500).json({ message: errorMessage })
   }
 }

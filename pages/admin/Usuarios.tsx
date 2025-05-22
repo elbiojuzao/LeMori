@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Mail, User, AlertCircle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
@@ -31,12 +31,17 @@ const Usuarios: React.FC = () => {
     dataNascimentoFim: '',
     minHomenagens: ''
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    isAdmin: false
+  });
 
-  useEffect(() => {
-    carregarUsuarios();
-  }, [carregarUsuarios]);
-
-  const carregarUsuarios = async () => {
+  const carregarUsuarios = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -62,7 +67,11 @@ const Usuarios: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros, searchTerm]);
+
+  useEffect(() => {
+    carregarUsuarios();
+  }, [carregarUsuarios]);
 
   const handleFiltroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

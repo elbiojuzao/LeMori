@@ -1,57 +1,73 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import Homenagem from '@/models/Homenagem'
 import mongooseConnect from '@/lib/mongoose'
-import formidable from 'formidable'
+import { verifyToken } from '@/lib/auth'
+import Homenagem from '@/models/Homenagem'
+import User from '@/models/User'
 
-export const config = {
-  api: {
-    bodyParser: false, // necessário para usar formidable
-  },
-}
-
-// Função auxiliar para parsear o FormData
-const parseForm = async (req: NextApiRequest): Promise<{ fields: any, files: any }> => {
-  const form = formidable({ multiples: true })
-  return new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err)
-      else resolve({ fields, files })
-    })
-  })
+interface ValidationError {
+  errors: {
+    [key: string]: {
+      message: string;
+      path: string;
+      value: unknown;
+    }
+  }
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await mongooseConnect()
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Método não permitido' })
+  }
 
-  if (req.method === 'POST') {
-    try {
-      const { fields } = await parseForm(req)
+  try {
+    await mongooseConnect()
 
-      const {
-        nome,
-        nascimento,
-        falecimento,
-        mensagem,
-        musicaLink,
-      } = fields
-
-      const novaHomenagem = await Homenagem.create({
-        nomeHomenageado: nome,
-        dataNascimento: new Date(nascimento),
-        dataFalecimento: new Date(falecimento),
-        biografia: mensagem,
-        imagemURL: '', // você pode salvar futuramente com Cloudinary, S3 etc.
-        criadoPor: 'teste@example.com' // substituir pelo usuário autenticado
-      })
-
-      return res.status(201).json(novaHomenagem)
-
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar homenagem';
-      res.status(500).json({ message: errorMessage });
+    const token = req.headers.authorization?.split(' ')[1]
+    if (!token) {
+      return res.status(401).json({ message: 'Token não fornecido' })
     }
 
-  } else {
-    return res.status(405).json({ mensagem: 'Método não permitido' })
+    const decoded = await verifyToken(token)
+    if (!decoded) {
+      return res.status(401).json({ message: 'Token inválido' })
+    }
+
+    const user = await User.findById(decoded.userId)
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' })
+    }
+
+    const {
+      nome,
+      dataNascimento,
+      dataFalecimento,
+      mensagem,
+      imagem,
+      musica
+    } = req.body
+
+    try {
+      const homenagem = await Homenagem.create({
+        nome,
+        dataNascimento,
+        dataFalecimento,
+        mensagem,
+        imagem,
+        musica,
+        criadoPor: user._id
+      })
+
+      return res.status(201).json(homenagem)
+    } catch (error: unknown) {
+      if (error instanceof Error && 'errors' in error) {
+        const validationError = error as ValidationError
+        const errors = Object.values(validationError.errors).map(err => err.message)
+        return res.status(400).json({ message: 'Erro de validação', errors })
+      }
+      throw error
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar homenagem'
+    return res.status(500).json({ message: errorMessage })
   }
 }

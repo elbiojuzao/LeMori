@@ -4,12 +4,6 @@ import { verifyToken } from '@/lib/auth'
 import Produto from '@/models/Produto'
 import mongoose from 'mongoose'
 
-interface ValidationErrorItem {
-  message: string;
-  path: string;
-  value: unknown;
-}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Verifica o token e se é admin
