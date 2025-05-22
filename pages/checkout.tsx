@@ -132,10 +132,9 @@ export default function Checkout() {
         throw new Error('URL de pagamento não encontrada');
       }
 
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao processar pagamento'
-      toast.error(errorMessage)
-      setIsProcessing(false)
+    } catch (error) {
+      console.error('Erro ao processar pagamento:', error)
+      toast.error('Erro ao processar pagamento. Tente novamente.')
     }
   };
 

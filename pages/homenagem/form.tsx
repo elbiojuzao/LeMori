@@ -1,16 +1,17 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/router'
+import { toast } from 'react-hot-toast'
+import Image from 'next/image'
+import { Upload, Edit2, Plus } from 'lucide-react'
 import NextImage from 'next/image'
 import axios from 'axios'
 import withAuth from '@/lib/withAuth'
-import { useRouter } from 'next/router'
-import { Save, Edit2, Plus, X, Music, Image as ImageIcon } from 'lucide-react'
 import moment from 'moment'
 import 'moment/locale/pt-br'
 import Logo from '@/components/Logo'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Header from '@/components/Header'
-import { toast } from 'react-hot-toast'
 
 interface HomenagemFormData {
   nome: string;
@@ -21,20 +22,9 @@ interface HomenagemFormData {
   musica: string;
 }
 
-interface ValidationError {
-  errors: {
-    [key: string]: {
-      message: string;
-      path: string;
-      value: unknown;
-    }
-  }
-}
-
 function FormHomenagem() {
   const router = useRouter()
   const { id } = router.query
-  const [homenagemId, setHomenagemId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<HomenagemFormData>({
     nome: '',
@@ -44,8 +34,6 @@ function FormHomenagem() {
     fotos: [],
     musica: ''
   })
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [editandoCampo, setEditandoCampo] = useState<string | null>(null)
   const [abaAtiva, setAbaAtiva] = useState<'sobre' | 'fotos' | 'musica'>('sobre')
   const [fotoPerfilPreview, setFotoPerfilPreview] = useState<string | null>(null)
@@ -53,26 +41,17 @@ function FormHomenagem() {
   const [carregandoFotos, setCarregandoFotos] = useState(false)
   const [fotosCarregando, setFotosCarregando] = useState<number>(0)
 
-  useEffect(() => {
-    if (router.query.id) {
-      setHomenagemId(router.query.id as string)
-    }
-  }, [router.query])
-
   const carregarHomenagem = useCallback(async () => {
     if (!id) return
 
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      if (!token) return
-
-      const res = await axios.get(`/api/homenagens/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = res.data
+      const response = await fetch(`/api/homenagens/${id}`)
+      if (!response.ok) throw new Error('Erro ao carregar homenagem')
+      
+      const data = await response.json()
       setFormData({
-        nome: data.nome || '',
+        nome: data.nome,
         dataNascimento: data.dataNascimento ? new Date(data.dataNascimento).toISOString().split('T')[0] : '',
         dataFalecimento: data.dataFalecimento ? new Date(data.dataFalecimento).toISOString().split('T')[0] : '',
         mensagem: data.mensagem || '',
@@ -80,21 +59,15 @@ function FormHomenagem() {
         musica: data.musica || ''
       })
       if (data.fotos) {
-        setPreviewUrls(data.fotos)
+        setFotosPreview(data.fotos)
       }
       setFotoPerfilPreview(data.fotos?.[0] || '')
-      setFotosPreview(data.fotos || [])
     } catch (error) {
-      if (typeof error === 'object' && error && 'response' in error && (error as { response?: { status?: number } }).response?.status === 403) {
-        alert('Você não tem permissão para editar esta homenagem.')
-        router.push('/perfil')
-      } else {
-        console.error('Erro ao carregar homenagem:', error)
-      }
+      toast.error('Erro ao carregar homenagem')
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, router])
 
   useEffect(() => {
     if (id) {
@@ -102,12 +75,10 @@ function FormHomenagem() {
     }
   }, [id, carregarHomenagem])
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/login')
-    }
-  }, [router])
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleFotoPerfilChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -116,7 +87,7 @@ function FormHomenagem() {
       reader.onloadend = () => {
         compressImage(reader.result as string, 800, 800).then((compressed) => {
           setFotoPerfilPreview(compressed)
-          setFormData(prev => ({ ...prev, fotos: [new File([], '')] }))
+          setFormData(prev => ({ ...prev, fotos: [new File([compressed], file.name, { type: file.type })] }))
         })
       }
       reader.readAsDataURL(file)
@@ -158,7 +129,7 @@ function FormHomenagem() {
     const files = Array.from(e.target.files || [])
 
     if (fotosPreview.length + files.length > 30) {
-      alert('Você só pode adicionar até 30 fotos.')
+      toast.error('Você só pode adicionar até 30 fotos.')
       return
     }
 
@@ -191,59 +162,9 @@ function FormHomenagem() {
     }
   }
 
-  const validarFormulario = () => {
-    if (!formData.nome.trim()) {
-      alert('O nome é obrigatório.')
-      return false
-    }
-
-    if (formData.nome.trim().length < 3) {
-      alert('O nome deve conter pelo menos 3 caracteres.')
-      return false
-    }
-
-    if (!formData.dataNascimento) {
-      alert('A data de nascimento é obrigatória.')
-      return false
-    }
-
-    if (!formData.dataFalecimento) {
-      alert('A data de falecimento é obrigatória.')
-      return false
-    }
-
-    const nascimentoDate = new Date(formData.dataNascimento)
-    const falecimentoDate = new Date(formData.dataFalecimento)
-    const dataAtual = new Date()
-
-    if (nascimentoDate > dataAtual) {
-      alert('A data de nascimento não pode ser maior que a data atual.')
-      return false
-    }
-
-    if (falecimentoDate > dataAtual) {
-      alert('A data de falecimento não pode ser maior que a data atual.')
-      return false
-    }
-
-    if (nascimentoDate > falecimentoDate) {
-      alert('A data de nascimento não pode ser maior que a de falecimento.')
-      return false
-    }
-
-    const diffAnos = (falecimentoDate.getTime() - nascimentoDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-    if (diffAnos > 100) {
-      const confirmar = confirm('A diferença entre as datas é maior que 100 anos. Tem certeza que está correto?')
-      if (!confirmar) return false
-    }
-
-    return true
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setUploadProgress(0)
 
     try {
       const formDataEnvio = new FormData()
@@ -264,15 +185,15 @@ function FormHomenagem() {
       })
 
       if (response.ok) {
-        alert(id ? 'Homenagem atualizada com sucesso!' : 'Homenagem criada com sucesso!')
+        toast.success(id ? 'Homenagem atualizada com sucesso!' : 'Homenagem criada com sucesso!')
         router.push(id ? `/homenagem/${id}` : '/homenagem')
       } else {
-        console.error('Erro ao salvar homenagem:', response.statusText)
-        alert(response.statusText || 'Erro ao salvar homenagem')
+        const data = await response.json()
+        toast.error(data.error || 'Erro ao salvar homenagem')
       }
     } catch (error) {
       console.error('Erro ao salvar homenagem:', error)
-      alert(error instanceof Error ? error.message : 'Erro ao salvar homenagem')
+      toast.error('Erro ao salvar homenagem. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -285,41 +206,11 @@ function FormHomenagem() {
     return ''
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length === 0) return
-
-    // Verifica o tamanho total dos arquivos
-    const totalSize = files.reduce((acc, file) => acc + file.size, 0)
-    if (totalSize > 10 * 1024 * 1024) { // 10MB
-      toast.error('O tamanho total dos arquivos não pode exceder 10MB')
-      return
-    }
-
-    // Cria URLs de preview
-    const newPreviewUrls = files.map(file => URL.createObjectURL(file))
-    setPreviewUrls(prev => [...prev, ...newPreviewUrls])
-    setFormData(prev => ({ ...prev, fotos: [...prev.fotos, ...files] }))
-  }
-
-  const removeFile = (index: number) => {
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index))
-    setFormData(prev => ({
-      ...prev,
-      fotos: prev.fotos.filter((_, i) => i !== index)
-    }))
-  }
-
   return (
     <>
       <Head>
-        <title>{homenagemId ? 'Editar Homenagem' : 'Nova Homenagem'} | Lemori</title>
-        <meta name="description" content={homenagemId ? 'Edite sua homenagem existente' : 'Crie uma nova homenagem em memória'} />
+        <title>{id ? 'Editar Homenagem' : 'Nova Homenagem'} | Lemori</title>
+        <meta name="description" content={id ? 'Edite sua homenagem existente' : 'Crie uma nova homenagem em memória'} />
       </Head>
       <Header />
       <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
@@ -481,7 +372,7 @@ function FormHomenagem() {
                 className="aspect-w-3 aspect-h-2 rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
               >
                 <div className="text-center">
-                  <Plus size={48} className="mx-auto text-gray-400" />
+                  <Upload size={48} className="mx-auto text-gray-400" />
                   <span className="mt-2 block text-gray-600">Adicionar fotos</span>
                 </div>
               </label>
@@ -567,7 +458,6 @@ function FormHomenagem() {
               </>
             ) : (
               <>
-                <Save size={20} className="mr-2" />
                 Salvar homenagem
               </>
             )}
