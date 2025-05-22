@@ -202,7 +202,7 @@ export default function HomenagemPage({ homenagem }: HomenagemProps) {
 
           {abaAtiva === 'musica' && (
             <div className="bg-white p-6 rounded-lg shadow">
-              <p className="mb-4">"Essa música representa a memória de {homenagem.nomeHomenageado}."</p>
+              <p className="mb-4">"Essa música representa a memória"</p>
               {homenagem.musica?.includes('spotify.com') ? (
                 <iframe
                   src={`https://open.spotify.com/embed/track/${getSpotifyTrackId(homenagem.musica)}`}
