@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Calendar, Mail, User, AlertCircle } from 'lucide-react';
+import { Search, Mail, User, AlertCircle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import axios from 'axios';
@@ -249,7 +249,7 @@ const Usuarios: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center text-sm text-gray-500">
-                                <Calendar size={14} className="mr-1 text-gray-400" />
+                                <Mail size={14} className="mr-1 text-gray-400" />
                                 {usuario.createdAt 
                                   ? format(new Date(usuario.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
                                   : 'Data não registrada'}

@@ -11,6 +11,16 @@ import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Header from '@/components/Header'
 
+interface FormData {
+  nomeHomenageado: string;
+  dataNascimento: string;
+  dataFalecimento: string;
+  biografia: string;
+  musica: string;
+  fotoPrincipal: File | null;
+  fotos: File[];
+}
+
 function FormHomenagem() {
   const router = useRouter()
   const [homenagemId, setHomenagemId] = useState<string | null>(null)
@@ -28,6 +38,15 @@ function FormHomenagem() {
   const [fotosPreview, setFotosPreview] = useState<string[]>([])
   const [carregandoFotos, setCarregandoFotos] = useState(false)
   const [fotosCarregando, setFotosCarregando] = useState<number>(0)
+  const [formData, setFormData] = useState<FormData>({
+    nomeHomenageado: '',
+    dataNascimento: '',
+    dataFalecimento: '',
+    biografia: '',
+    musica: '',
+    fotoPrincipal: null,
+    fotos: []
+  })
 
   useEffect(() => {
     if (router.query.id) {
@@ -67,6 +86,13 @@ function FormHomenagem() {
       fetchData()
     }
   }, [homenagemId])
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      router.push('/login')
+    }
+  }, [router])
 
   const handleFotoPerfilChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -199,7 +225,7 @@ function FormHomenagem() {
     return true
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     const token = localStorage.getItem('token')
     if (!token) return
@@ -292,6 +318,23 @@ function FormHomenagem() {
       return moment(data).locale('pt-br').format('DD/MM/YYYY')
     }
     return ''
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'principal' | 'galeria') => {
+    const files = e.target.files
+    if (!files) return
+
+    if (type === 'principal') {
+      setFormData(prev => ({
+        ...prev,
+        fotoPrincipal: files[0]
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        fotos: Array.from(files)
+      }))
+    }
   }
 
   return (
@@ -496,7 +539,7 @@ function FormHomenagem() {
 
           {abaAtiva === 'musica' && (
             <div className="bg-white p-6 rounded-lg shadow">
-              <p className="mb-4">"Essa música representa a memória de {nome || 'nome do homenageado'}."</p>
+              <p className="mb-4">&ldquo;Essa música representa a memória de {nome || 'nome do homenageado'}.&rdquo;</p>
               {editandoCampo === 'musica' ? (
                 <input
                   type="text"

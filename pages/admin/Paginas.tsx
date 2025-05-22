@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { Search, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import Link from 'next/link';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Trash2, Calendar, Edit, Check, X } from 'lucide-react'
+import { Plus, Trash2, Edit, Check, X } from 'lucide-react'
 import AdminLayout from './AdminLayout'
 import AdminRoute from '@/components/AdminRoute'
 import { format } from 'date-fns'
@@ -451,7 +451,7 @@ export default function Cupons() {
             ) : cupons.length === 0 ? (
               <div className="text-center py-12">
                 <div className="mb-4">
-                  <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                  {/* Ícone removido pois Calendar não está mais importado */}
                 </div>
                 <h3 className="text-lg font-medium text-gray-900">Nenhum cupom encontrado</h3>
                 <p className="mt-1 text-gray-500">Comece criando um novo cupom de desconto.</p>
