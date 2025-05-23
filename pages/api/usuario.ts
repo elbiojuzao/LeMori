@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const token = req.headers.authorization?.split(' ')[1]
   if (!token) return res.status(401).json({ message: 'Token não fornecido' })
 
-  const userId = verifyToken(token)
+  const userId = await verifyToken(token)
   if (!userId) return res.status(401).json({ message: 'Token inválido' })
 
   const user = await User.findById(userId).select('-password')

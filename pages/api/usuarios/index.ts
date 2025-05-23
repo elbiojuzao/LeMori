@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Token não fornecido' })
   }
 
-  const decoded = verifyToken(token)
+  const decoded = await verifyToken(token)
   if (!decoded) {
     return res.status(401).json({ error: 'Token inválido' })
   }
