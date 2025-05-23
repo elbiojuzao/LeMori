@@ -3,6 +3,18 @@ import mongooseConnect from '@/lib/mongoose'
 import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 
+interface FiltrosUsuario {
+  $or?: Array<{
+    nome?: { $regex: string; $options: string };
+    email?: { $regex: string; $options: string };
+    cpf?: { $regex: string; $options: string };
+    createdAt?: { $gte?: Date; $lte?: Date } | null;
+    dataNascimento?: { $gte?: Date; $lte?: Date } | null;
+  }>;
+  createdAt?: Record<string, unknown>;
+  dataNascimento?: Record<string, unknown>;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' })
@@ -31,13 +43,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       minHomenagens
     } = req.query
 
-    const filtros: Record<string, unknown> = {}
+    const filtros: FiltrosUsuario = {}
 
     if (nome) {
       filtros.$or = [
-        { nome: { $regex: nome, $options: 'i' } },
-        { email: { $regex: nome, $options: 'i' } },
-        { cpf: { $regex: nome, $options: 'i' } }
+        { nome: { $regex: nome as string, $options: 'i' } },
+        { email: { $regex: nome as string, $options: 'i' } },
+        { cpf: { $regex: nome as string, $options: 'i' } }
       ]
     }
 
