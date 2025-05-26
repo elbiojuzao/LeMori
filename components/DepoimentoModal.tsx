@@ -53,7 +53,7 @@ export default function DepoimentoModal({ isOpen, onClose }: DepoimentoModalProp
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-lg w-full mx-4 relative">
+      <div className="bg-white rounded-lg p-8 max-w-lg w-full mx-4 relative shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
