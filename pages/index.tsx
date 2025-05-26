@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, PenSquare } from 'lucide-react';
+import { ShoppingCart, PenSquare, MessageSquare } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import axios from 'axios';
 import Head from 'next/head'
+import DepoimentoModal from '@/components/DepoimentoModal';
+import { IDepoimento } from '@/models/Depoimento';
 
 interface Produto {
   _id: string
@@ -16,26 +18,41 @@ interface Produto {
   imagens?: string[]
 }
 
+interface Usuario {
+  _id: string;
+  nome: string;
+  foto?: string;
+}
+
+interface DepoimentoCompleto extends Omit<IDepoimento, 'usuario'> {
+  usuario: Usuario;
+}
+
 export default function Home() {
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [depoimentos, setDepoimentos] = useState<DepoimentoCompleto[]>([])
+  const [isDepoimentoModalOpen, setIsDepoimentoModalOpen] = useState(false)
 
   useEffect(() => {
-    const fetchProdutos = async () => {
+    async function loadData() {
       try {
-        const response = await axios.get('/api/produtos/destaques')
-        setProdutos(response.data)
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao carregar produtos:', error)
-        setError('Não foi possível carregar os produtos em destaque.')
-        setLoading(false)
+        const [produtosRes, depoimentosRes] = await Promise.all([
+          axios.get('/api/produtos'),
+          axios.get('/api/depoimentos')
+        ]);
+        setProdutos(produtosRes.data);
+        setDepoimentos(depoimentosRes.data);
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        setError('Erro ao carregar dados. Por favor, tente novamente mais tarde.');
+      } finally {
+        setLoading(false);
       }
     }
-
-    fetchProdutos()
-  }, [])
+    loadData();
+  }, []);
 
   return (
     <>
@@ -165,93 +182,62 @@ export default function Home() {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Veja alguns comentarios dos nossos clientes</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Ouça depoimentos de pessoas que utilizaram a nossa plataforma.
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Depoimentos</h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                Veja o que nossos clientes têm a dizer sobre a nossa plataforma.
               </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setIsDepoimentoModalOpen(true)}
+                  className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150"
+                >
+                  <MessageSquare size={20} className="mr-2" />
+                  Deixe seu depoimento
+                </button>
+                <Link
+                  href="/depoimentos"
+                  className="inline-flex items-center px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition duration-150"
+                >
+                  Ver todos os depoimentos
+                </Link>
+              </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Testimonial 1 */}
-              <div className="bg-white p-8 rounded-lg shadow-md relative">
-                <div className="text-purple-600 absolute -top-4 left-8">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.5 20H7.5C6.12 20 5 18.88 5 17.5V12.5C5 11.12 6.12 10 7.5 10H12.5C13.88 10 15 11.12 15 12.5V17.5C15 18.88 13.88 20 12.5 20ZM17.5 30H12.5C11.12 30 10 28.88 10 27.5V22.5C10 21.12 11.12 20 12.5 20H17.5C18.88 20 20 21.12 20 22.5V27.5C20 28.88 18.88 30 17.5 30ZM27.5 20H22.5C21.12 20 20 18.88 20 17.5V12.5C20 11.12 21.12 10 22.5 10H27.5C28.88 10 30 11.12 30 12.5V17.5C30 18.88 28.88 20 27.5 20ZM32.5 30H27.5C26.12 30 25 28.88 25 27.5V22.5C25 21.12 26.12 20 27.5 20H32.5C33.88 20 35 21.12 35 22.5V27.5C35 28.88 33.88 30 32.5 30Z" fill="currentColor" />
-                  </svg>
-                </div>
-                <p className="text-gray-600 mb-6 mt-4">
-                  &ldquo;This platform changed everything for my small business. Creating a professional website and selling my products has never been easier. Sales have increased by 75% since I started!&rdquo;
-                </p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
-                    <Image 
-                      src="/img/teste (1).jpg" 
-                      alt="Sarah J." 
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover" 
-                    />
+              {depoimentos.map((depoimento) => (
+                <div key={depoimento._id} className="bg-white p-8 rounded-lg shadow-md relative">
+                  <div className="text-purple-600 absolute -top-4 left-8">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12.5 20H7.5C6.12 20 5 18.88 5 17.5V12.5C5 11.12 6.12 10 7.5 10H12.5C13.88 10 15 11.12 15 12.5V17.5C15 18.88 13.88 20 12.5 20ZM17.5 30H12.5C11.12 30 10 28.88 10 27.5V22.5C10 21.12 11.12 20 12.5 20H17.5C18.88 20 20 21.12 20 22.5V27.5C20 28.88 18.88 30 17.5 30ZM27.5 20H22.5C21.12 20 20 18.88 20 17.5V12.5C20 11.12 21.12 10 22.5 10H27.5C28.88 10 30 11.12 30 12.5V17.5C30 18.88 28.88 20 27.5 20ZM32.5 30H27.5C26.12 30 25 28.88 25 27.5V22.5C25 21.12 26.12 20 27.5 20H32.5C33.88 20 35 21.12 35 22.5V27.5C35 28.88 33.88 30 32.5 30Z" fill="currentColor" />
+                    </svg>
                   </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">Sarah J.</h4>
-                    <p className="text-gray-500">Handmade Jewelry Shop</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Testimonial 2 */}
-              <div className="bg-white p-8 rounded-lg shadow-md relative">
-                <div className="text-purple-600 absolute -top-4 left-8">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.5 20H7.5C6.12 20 5 18.88 5 17.5V12.5C5 11.12 6.12 10 7.5 10H12.5C13.88 10 15 11.12 15 12.5V17.5C15 18.88 13.88 20 12.5 20ZM17.5 30H12.5C11.12 30 10 28.88 10 27.5V22.5C10 21.12 11.12 20 12.5 20H17.5C18.88 20 20 21.12 20 22.5V27.5C20 28.88 18.88 30 17.5 30ZM27.5 20H22.5C21.12 20 20 18.88 20 17.5V12.5C20 11.12 21.12 10 22.5 10H27.5C28.88 10 30 11.12 30 12.5V17.5C30 18.88 28.88 20 27.5 20ZM32.5 30H27.5C26.12 30 25 28.88 25 27.5V22.5C25 21.12 26.12 20 27.5 20H32.5C33.88 20 35 21.12 35 22.5V27.5C35 28.88 33.88 30 32.5 30Z" fill="currentColor" />
-                  </svg>
-                </div>
-                <p className="text-gray-600 mb-6 mt-4">
-                  &ldquo;As a photographer, I needed a platform to showcase my work and sell my prints. This service provided exactly that - a beautiful portfolio page and integrated shop. Couldn&apos;t be happier!&rdquo;
-                </p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
-                    <Image 
-                      src="/img/teste (2).jpg" 
-                      alt="David M." 
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">David M.</h4>
-                    <p className="text-gray-500">Professional Photographer</p>
+                  <p className="text-gray-600 mb-6 mt-4">
+                    &ldquo;{depoimento.depoimento}&rdquo;
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
+                      {depoimento.usuario.foto ? (
+                        <Image 
+                          src={depoimento.usuario.foto} 
+                          alt={depoimento.usuario.nome} 
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-purple-100 flex items-center justify-center">
+                          <span className="text-lg text-purple-600">
+                            {depoimento.usuario.nome.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">{depoimento.usuario.nome}</h4>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Testimonial 3 */}
-              <div className="bg-white p-8 rounded-lg shadow-md relative">
-                <div className="text-purple-600 absolute -top-4 left-8">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12.5 20H7.5C6.12 20 5 18.88 5 17.5V12.5C5 11.12 6.12 10 7.5 10H12.5C13.88 10 15 11.12 15 12.5V17.5C15 18.88 13.88 20 12.5 20ZM17.5 30H12.5C11.12 30 10 28.88 10 27.5V22.5C10 21.12 11.12 20 12.5 20H17.5C18.88 20 20 21.12 20 22.5V27.5C20 28.88 18.88 30 17.5 30ZM27.5 20H22.5C21.12 20 20 18.88 20 17.5V12.5C20 11.12 21.12 10 22.5 10H27.5C28.88 10 30 11.12 30 12.5V17.5C30 18.88 28.88 20 27.5 20ZM32.5 30H27.5C26.12 30 25 28.88 25 27.5V22.5C25 21.12 26.12 20 27.5 20H32.5C33.88 20 35 21.12 35 22.5V27.5C35 28.88 33.88 30 32.5 30Z" fill="currentColor" />
-                  </svg>
-                </div>
-                <p className="text-gray-600 mb-6 mt-4">
-                  &ldquo;I was able to turn my side hustle into a full-time business using this platform. The combination of a professional website and e-commerce capabilities made all the difference.&rdquo;
-                </p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden mr-4">
-                    <Image 
-                      src="/img/teste (3).jpg" 
-                      alt="Emily R." 
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">Emily R.</h4>
-                    <p className="text-gray-500">Handmade Candle Shop</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -271,6 +257,10 @@ export default function Home() {
         </section>
       </div>
       <Footer />
+      <DepoimentoModal 
+        isOpen={isDepoimentoModalOpen}
+        onClose={() => setIsDepoimentoModalOpen(false)}
+      />
     </>
   );
 }

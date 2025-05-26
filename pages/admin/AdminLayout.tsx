@@ -12,7 +12,8 @@ import {
   X, 
   ChevronRight,
   LogOut,
-  PenSquare
+  PenSquare,
+  MessageSquare
 } from 'lucide-react'
 import { useAdmin } from '@/hooks/useAdmin'
 
@@ -41,6 +42,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
     { name: 'Produtos', href: '/admin/Produtos', icon: Package, current: currentPage === 'produtos' },
     { name: 'Cupons', href: '/admin/Cupons', icon: Tag, current: currentPage === 'cupons' },
     { name: 'Usuários', href: '/admin/Usuarios', icon: Users, current: currentPage === 'usuarios' },
+    { name: 'Depoimentos', href: '/admin/depoimentos', icon: MessageSquare, current: currentPage === 'depoimentos' },
     { name: 'Páginas', href: '/admin/Paginas', icon: FileText, current: currentPage === 'paginas' },
   ]
 

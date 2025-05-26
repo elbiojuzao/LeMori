@@ -16,7 +16,8 @@ export interface IUser extends Document {
   ultimoLogin?: Date
   ultimaHomenagem?: string
   statusConta: 'ativo' | 'inativo'
-  isAdmin: boolean 
+  isAdmin: boolean
+  foto?: string
 }
 
 const UserSchema = new Schema<IUser>({
@@ -43,6 +44,7 @@ const UserSchema = new Schema<IUser>({
     default: 'ativo',
   },
   isAdmin: { type: Boolean, default: false },
+  foto: String,
 }, { timestamps: true })
 
 const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)

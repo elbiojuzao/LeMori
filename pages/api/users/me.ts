@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await mongooseConnect()
 
     const user = await UserModel.findById(decoded.userId)
-      .select('nome email isAdmin')
+      .select('nome email isAdmin foto')
 
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' })
@@ -32,7 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       _id: user._id,
       nome: user.nome,
       email: user.email,
-      isAdmin: user.isAdmin || false
+      isAdmin: user.isAdmin || false,
+      foto: user.foto || ''
     })
   } catch (error) {
     console.error('Erro ao buscar informações do usuário:', error)
