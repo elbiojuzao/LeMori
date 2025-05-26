@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, Calendar } from 'lucide-react'
 import AdminLayout from '@/pages/admin/AdminLayout'
 import { format } from 'date-fns'
@@ -37,7 +37,7 @@ export default function AdminDepoimentos() {
     status: 'todos'
   })
 
-  const carregarDepoimentos = async () => {
+  const carregarDepoimentos = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const params = new URLSearchParams()
@@ -58,11 +58,11 @@ export default function AdminDepoimentos() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filtros])
 
   useEffect(() => {
     carregarDepoimentos()
-  }, [filtros])
+  }, [carregarDepoimentos])
 
   const handleAprovar = async (id: string) => {
     try {
