@@ -4,8 +4,10 @@ import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
 interface TokenPayload {
-  id: string;
+  userId: string;
   isAdmin: boolean;
+  nome?: string;
+  email?: string;
 }
 
 export default async function handler(
@@ -30,7 +32,7 @@ export default async function handler(
       
       const depoimento = {
         depoimento: req.body.depoimento,
-        usuario: new ObjectId(decoded.id),
+        usuario: new ObjectId(decoded.userId),
         status: 'pendente',
         createdAt: new Date()
       };
