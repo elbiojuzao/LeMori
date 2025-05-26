@@ -6,7 +6,6 @@ import { ptBR } from 'date-fns/locale'
 import { toast } from 'react-hot-toast'
 import axios from 'axios'
 import Image from 'next/image'
-import Link from 'next/link'
 
 interface Usuario {
   _id: string

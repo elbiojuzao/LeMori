@@ -2,6 +2,18 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/mongodb';
 import jwt from 'jsonwebtoken';
 
+interface DepoimentoMongo {
+  _id: string | { toString: () => string };
+  depoimento: string;
+  status: string;
+  createdAt?: Date;
+  usuario?: {
+    _id: string | { toString: () => string };
+    nome: string;
+    foto?: string;
+  };
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -78,15 +90,16 @@ export default async function handler(
       const depoimentos = await db.collection('depoimentos')
         .aggregate(pipeline)
         .toArray();
-      const depoimentosFormatados = depoimentos.map((depoimento: any) => {
+      const depoimentosFormatados = depoimentos.map((depoimento) => {
+        const d = depoimento as DepoimentoMongo;
         return {
-          ...depoimento,
-          _id: depoimento._id.toString(),
-          usuario: depoimento.usuario ? {
-            ...depoimento.usuario,
-            _id: depoimento.usuario._id.toString()
+          ...d,
+          _id: typeof d._id === 'string' ? d._id : d._id.toString(),
+          usuario: d.usuario ? {
+            ...d.usuario,
+            _id: typeof d.usuario._id === 'string' ? d.usuario._id : d.usuario._id.toString()
           } : null,
-          dataCriacao: depoimento.createdAt ? depoimento.createdAt.toISOString() : ''
+          dataCriacao: d.createdAt ? d.createdAt.toISOString() : ''
         };
       });
       res.status(200).json(depoimentosFormatados);
