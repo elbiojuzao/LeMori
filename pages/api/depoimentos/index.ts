@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,7 +8,6 @@ export default async function handler(
   if (req.method === 'GET') {
     try {
       const { db } = await connectToDatabase();
-      
       const limit = Number(req.query.limit) || 3;
       const depoimentos = await db.collection('depoimentos')
         .aggregate([
@@ -37,10 +35,8 @@ export default async function handler(
           }
         ])
         .toArray();
-
       res.status(200).json(depoimentos);
     } catch (error) {
-      console.error('Erro ao buscar depoimentos:', error);
       res.status(500).json({ error: 'Erro ao buscar depoimentos' });
     }
   } else {

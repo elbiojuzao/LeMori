@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Calendar } from 'lucide-react'
 import AdminLayout from '@/pages/admin/AdminLayout'
 import { format } from 'date-fns'

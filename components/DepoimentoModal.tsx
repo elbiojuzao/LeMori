@@ -42,8 +42,12 @@ export default function DepoimentoModal({ isOpen, onClose }: DepoimentoModalProp
         onClose();
         setSuccess(false);
       }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao enviar depoimento');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || 'Erro ao enviar depoimento');
+      } else {
+        setError('Erro ao enviar depoimento');
+      }
     } finally {
       setLoading(false);
     }
