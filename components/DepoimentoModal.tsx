@@ -52,7 +52,7 @@ export default function DepoimentoModal({ isOpen, onClose }: DepoimentoModalProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-lg w-full mx-4 relative">
         <button
           onClick={onClose}
