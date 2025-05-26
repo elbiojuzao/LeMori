@@ -120,30 +120,22 @@ export default async function handler(
         }
       );
 
-      console.log('Pipeline de agregação:', JSON.stringify(pipeline, null, 2));
-
       // Primeiro, vamos verificar se existem depoimentos na coleção
       const totalDepoimentos = await db.collection('depoimentos').findOne();
-      console.log('Exemplo de depoimento:', totalDepoimentos);
 
       // Vamos verificar se o usuário existe
       if (totalDepoimentos) {
         const usuarioExemplo = await db.collection('usuarios').findOne({ 
           _id: new ObjectId(totalDepoimentos.usuario) 
         });
-        console.log('Usuário do depoimento exemplo:', usuarioExemplo);
       }
 
       const depoimentos = await db.collection('depoimentos')
         .aggregate(pipeline)
         .toArray();
 
-      console.log('Depoimentos encontrados:', depoimentos.length);
-      console.log('Primeiro depoimento:', depoimentos[0]);
-
       // Converter ObjectId para string e Date para string ISO
       const depoimentosFormatados = depoimentos.map(depoimento => {
-        console.log('Depoimento antes da formatação:', depoimento);
         return {
           ...depoimento,
           _id: depoimento._id.toString(),
@@ -155,11 +147,8 @@ export default async function handler(
         };
       });
 
-      console.log('Depoimentos formatados:', depoimentosFormatados);
-
       res.status(200).json(depoimentosFormatados);
     } catch (error) {
-      console.error('Erro ao buscar depoimentos:', error);
       res.status(500).json({ error: 'Erro ao buscar depoimentos' });
     }
   } else {

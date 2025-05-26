@@ -82,7 +82,7 @@ export default function DepoimentoModal({ isOpen, onClose }: DepoimentoModalProp
                 id="depoimento"
                 value={depoimento}
                 onChange={(e) => setDepoimento(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900"
                 rows={4}
                 required
                 placeholder="Conte-nos sua experiência..."
