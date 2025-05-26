@@ -26,7 +26,7 @@ export default function Depoimentos() {
   useEffect(() => {
     async function loadDepoimentos() {
       try {
-        const response = await axios.get('/api/depoimentos');
+        const response = await axios.get('/api/depoimentos?limit=20');
         setDepoimentos(response.data);
       } catch (err) {
         console.error('Erro ao carregar depoimentos:', err);

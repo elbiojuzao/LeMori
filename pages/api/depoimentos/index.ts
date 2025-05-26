@@ -10,10 +10,11 @@ export default async function handler(
     try {
       const { db } = await connectToDatabase();
       
+      const limit = Number(req.query.limit) || 3;
       const depoimentos = await db.collection('depoimentos')
         .aggregate([
           { $match: { status: 'aprovado' } },
-          { $sample: { size: 3 } },
+          { $sample: { size: limit } },
           {
             $lookup: {
               from: 'users',

@@ -40,7 +40,7 @@ export default function Home() {
       try {
         const [produtosRes, depoimentosRes] = await Promise.all([
           axios.get('/api/produtos'),
-          axios.get('/api/depoimentos')
+          axios.get('/api/depoimentos?limit=3')
         ]);
         setProdutos(produtosRes.data);
         setDepoimentos(depoimentosRes.data);
