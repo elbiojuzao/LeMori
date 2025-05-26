@@ -167,12 +167,12 @@ export default function Perfil() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-8">Minha conta</h1>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
             {/* Profile Information */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Perfil</h2>
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 lg:mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-0">Perfil</h2>
                   {!isEditing && (
                     <button 
                       onClick={() => setIsEditing(true)}
@@ -250,24 +250,23 @@ export default function Perfil() {
                         </div>
                       </div>
                       
-                      <div className="flex justify-end space-x-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                         <button 
                           type="button"
                           onClick={() => {
                             setIsEditing(false)
-                            // Reset form to current values
                             const token = localStorage.getItem('token')
                             if (token) {
                               fetchUser()
                             }
                           }}
-                          className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                          className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                           Cancelar
                         </button>
                         <button 
                           type="submit"
-                          className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
+                          className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
                         >
                           Salvar alterações
                         </button>
@@ -294,36 +293,37 @@ export default function Perfil() {
                 )}
               </div>
 
-              {/* Card de Nomes */}
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Pessoas Homenageadas</h2>
-                  <div className="flex items-center gap-4">
+              {/* Homenagens Section */}
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 lg:mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-0">Pessoas Homenageadas</h2>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
                     <div className="text-sm text-gray-600">
                       Créditos disponíveis: <span className="font-semibold text-purple-600">{user?.homenagemCreditos || 0}</span>
                     </div>
                     {user?.homenagemCreditos && user.homenagemCreditos > 0 ? (
                       <button
                         onClick={() => router.push('/homenagem/form')}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                        className="w-full sm:w-auto bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
                       >
                         Criar Nova Homenagem
                       </button>
                     ) : (
                       <button
                         onClick={() => router.push('/shop')}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+                        className="w-full sm:w-auto bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
                       >
                         Comprar Créditos
                       </button>
                     )}
                   </div>
                 </div>
+                
                 <ul className="divide-y divide-gray-200">
                   {homenagens.length > 0 ? (
                     homenagens.map((homenagem) => (
-                      <li key={homenagem._id} className="py-3 flex items-center justify-between">
-                        <div className="flex items-center">
+                      <li key={homenagem._id} className="py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                        <div className="flex items-center mb-2 sm:mb-0">
                           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
                             {homenagem.fotoPerfil ? (
                               <Image
@@ -348,7 +348,8 @@ export default function Perfil() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        
+                        <div className="flex items-center gap-2">
                           <Link
                             href={`/homenagem/${homenagem._id}`}
                             className="text-purple-600 hover:text-purple-800 text-sm font-medium"
@@ -373,54 +374,6 @@ export default function Perfil() {
                                   </Link>
                                 )}
                               </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <button
-                                    onClick={() => {
-                                      router.push({
-                                        pathname: '/homenagem/form',
-                                        query: { id: homenagem._id }
-                                      })
-                                    }}
-                                    className={`flex items-center px-4 py-2 text-sm ${
-                                      active ? 'bg-purple-50 text-purple-600' : 'text-gray-700'
-                                    }`}
-                                  >
-                                    <Edit className="h-4 w-4 mr-3" />
-                                    Editar
-                                  </button>
-                                )}
-                              </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
-                                  <button
-                                    onClick={async () => {
-                                      if (confirm('Tem certeza que deseja excluir esta homenagem?')) {
-                                        try {
-                                          const token = localStorage.getItem('token')
-                                          await axios.delete(`/api/homenagens/${homenagem._id}`, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                          })
-                                          // Atualiza a lista de homenagens
-                                          const resHomenagens = await axios.get(`/api/homenagens/user/${user?._id}`, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                          })
-                                          setHomenagens(resHomenagens.data)
-                                        } catch (error) {
-                                          console.error('Erro ao excluir homenagem:', error)
-                                          alert('Erro ao excluir homenagem')
-                                        }
-                                      }
-                                    }}
-                                    className={`flex items-center w-full px-4 py-2 text-sm ${
-                                      active ? 'bg-red-50 text-red-600' : 'text-gray-700'
-                                    }`}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-3" />
-                                    Excluir
-                                  </button>
-                                )}
-                              </Menu.Item>
                             </Menu.Items>
                           </Menu>
                         </div>
@@ -436,8 +389,8 @@ export default function Perfil() {
             </div>
             
             {/* Sidebar */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="space-y-4 lg:space-y-6">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Endereços</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Gerencie seus endereços de entrega
@@ -449,8 +402,8 @@ export default function Perfil() {
                   Gerenciar endereços
                 </button>
               </div>
-              
-              <div className="bg-white rounded-lg shadow-md p-6">
+
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos Recentes</h3>
                 {ultimosPedidos.length > 0 ? (
                   <div className="space-y-4 mb-4">
@@ -458,8 +411,8 @@ export default function Perfil() {
                       const totalItens = pedido.items.reduce((sum, item) => sum + item.quantity, 0)
                       return (
                         <div key={pedido._id} className="border-b border-gray-200 pb-4 last:border-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2 mb-2 sm:mb-0">
                               <ShoppingBag className="h-5 w-5 text-purple-600" />
                               <span className="text-sm font-medium text-gray-900">
                                 {totalItens} {totalItens === 1 ? 'item' : 'itens'}
@@ -469,8 +422,8 @@ export default function Perfil() {
                               {format(new Date(pedido.createdAt), "dd/MM/yyyy")}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                            <div className="flex items-center space-x-2 mb-2 sm:mb-0">
                               <Package className="h-5 w-5 text-gray-400" />
                               <span className="text-sm text-gray-600">
                                 Status: {pedido.status}
