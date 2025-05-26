@@ -186,21 +186,6 @@ export default function Home() {
               <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
                 Veja o que nossos clientes têm a dizer sobre a nossa plataforma.
               </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setIsDepoimentoModalOpen(true)}
-                  className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150"
-                >
-                  <MessageSquare size={20} className="mr-2" />
-                  Deixe seu depoimento
-                </button>
-                <Link
-                  href="/depoimentos"
-                  className="inline-flex items-center px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition duration-150"
-                >
-                  Ver todos os depoimentos
-                </Link>
-              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -238,6 +223,23 @@ export default function Home() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Botões abaixo dos depoimentos */}
+            <div className="flex justify-center gap-4 mt-8">
+              <Link
+                href="/depoimentos"
+                className="inline-flex items-center px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition duration-150"
+              >
+                Ver todos os depoimentos
+              </Link>
+              <button
+                onClick={() => setIsDepoimentoModalOpen(true)}
+                className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150"
+              >
+                <MessageSquare size={20} className="mr-2" />
+                Deixe seu depoimento
+              </button>
             </div>
           </div>
         </section>

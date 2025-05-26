@@ -12,35 +12,26 @@ export default async function handler(
       
       const depoimentos = await db.collection('depoimentos')
         .aggregate([
-          {
-            $match: {
-              aprovado: true
-            }
-          },
+          { $match: { status: 'aprovado' } },
+          { $sample: { size: 3 } },
           {
             $lookup: {
-              from: 'usuarios',
+              from: 'users',
               localField: 'usuario',
               foreignField: '_id',
               as: 'usuario'
             }
           },
-          {
-            $unwind: '$usuario'
-          },
+          { $unwind: '$usuario' },
           {
             $project: {
               _id: 1,
               depoimento: 1,
-              dataCriacao: 1,
+              status: 1,
+              createdAt: 1,
               'usuario._id': 1,
               'usuario.nome': 1,
               'usuario.foto': 1
-            }
-          },
-          {
-            $sort: {
-              dataCriacao: -1
             }
           }
         ])
