@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(
@@ -14,12 +13,12 @@ export default async function handler(
         return res.status(401).json({ error: 'Token não fornecido' });
       }
       const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-      if (!decoded || !(decoded as any).isAdmin) {
+      if (!decoded || !(decoded as { isAdmin?: boolean }).isAdmin) {
         return res.status(401).json({ error: 'Não autorizado' });
       }
       const { db } = await connectToDatabase();
       const { busca = '', status = 'todos', dataInicio, dataFim } = req.query;
-      const pipeline: any[] = [];
+      const pipeline: Record<string, unknown>[] = [];
       if (status && status !== 'todos') {
         pipeline.push({ $match: { status } });
       }
@@ -39,7 +38,7 @@ export default async function handler(
           }
         }
       );
-      const matchStage: any = {};
+      const matchStage: Record<string, unknown> = {};
       if (busca) {
         matchStage.$or = [
           { 'usuario.nome': { $regex: busca, $options: 'i' } },
@@ -49,10 +48,10 @@ export default async function handler(
       if (dataInicio || dataFim) {
         matchStage.createdAt = {};
         if (dataInicio) {
-          matchStage.createdAt.$gte = new Date(dataInicio as string);
+          (matchStage.createdAt as Record<string, unknown> ).$gte = new Date(dataInicio as string);
         }
         if (dataFim) {
-          matchStage.createdAt.$lte = new Date(dataFim as string);
+          (matchStage.createdAt as Record<string, unknown> ).$lte = new Date(dataFim as string);
         }
       }
       if (Object.keys(matchStage).length > 0) {
@@ -79,7 +78,7 @@ export default async function handler(
       const depoimentos = await db.collection('depoimentos')
         .aggregate(pipeline)
         .toArray();
-      const depoimentosFormatados = depoimentos.map(depoimento => {
+      const depoimentosFormatados = depoimentos.map((depoimento: any) => {
         return {
           ...depoimento,
           _id: depoimento._id.toString(),
@@ -91,7 +90,7 @@ export default async function handler(
         };
       });
       res.status(200).json(depoimentosFormatados);
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Erro ao buscar depoimentos' });
     }
   } else {

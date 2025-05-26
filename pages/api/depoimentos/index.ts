@@ -36,7 +36,7 @@ export default async function handler(
         ])
         .toArray();
       res.status(200).json(depoimentos);
-    } catch (error) {
+    } catch {
       res.status(500).json({ error: 'Erro ao buscar depoimentos' });
     }
   } else {
