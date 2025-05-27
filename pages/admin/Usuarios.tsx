@@ -3,10 +3,7 @@ import { Search, Mail, User, AlertCircle, Eye } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import axios from 'axios';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
-import Image from 'next/image';
 import UsuarioDetalhesModal from '@/components/UsuarioDetalhesModal';
 
 interface Usuario {
