@@ -52,22 +52,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (filtros.dataCriacaoInicio || filtros.dataCriacaoFim) {
-      query.createdAt = {}
+      query.createdAt = query.createdAt || {};
       if (filtros.dataCriacaoInicio) {
-        query.createdAt.$gte = new Date(filtros.dataCriacaoInicio)
+        (query.createdAt as Record<string, unknown>).$gte = new Date(filtros.dataCriacaoInicio);
       }
       if (filtros.dataCriacaoFim) {
-        query.createdAt.$lte = new Date(filtros.dataCriacaoFim)
+        (query.createdAt as Record<string, unknown>).$lte = new Date(filtros.dataCriacaoFim);
       }
     }
 
     if (filtros.dataNascimentoInicio || filtros.dataNascimentoFim) {
-      query.dataNascimento = {}
+      query.dataNascimento = query.dataNascimento || {};
       if (filtros.dataNascimentoInicio) {
-        query.dataNascimento.$gte = new Date(filtros.dataNascimentoInicio)
+        (query.dataNascimento as Record<string, unknown>).$gte = new Date(filtros.dataNascimentoInicio);
       }
       if (filtros.dataNascimentoFim) {
-        query.dataNascimento.$lte = new Date(filtros.dataNascimentoFim)
+        (query.dataNascimento as Record<string, unknown>).$lte = new Date(filtros.dataNascimentoFim);
       }
     }
 
