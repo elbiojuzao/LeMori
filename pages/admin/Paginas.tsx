@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Search, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
-import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import UsuarioDetalhesModal from '@/components/UsuarioDetalhesModal';
+import axios from 'axios';
 
 interface Homenagem {
   _id: string
@@ -27,6 +28,9 @@ const WebPages: React.FC = () => {
   const [homenagens, setHomenagens] = useState<Homenagem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
+  const [modalAberta, setModalAberta] = useState(false);
+  const [carregandoDetalhes, setCarregandoDetalhes] = useState(false);
   
   useEffect(() => {
     carregarHomenagens();
@@ -120,6 +124,31 @@ const WebPages: React.FC = () => {
     }
   };
   
+  const handleVerDetalhesUsuario = async (usuarioId: string) => {
+    try {
+      setCarregandoDetalhes(true);
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const [usuarioDetalhado, pedidos, homenagens, depoimentos] = await Promise.all([
+        axios.get(`/api/users/${usuarioId}`, { headers }),
+        axios.get(`/api/pedidos/user/${usuarioId}`, { headers }),
+        axios.get(`/api/homenagens/user/${usuarioId}`, { headers }),
+        axios.get(`/api/depoimentos/user/${usuarioId}`, { headers })
+      ]);
+      setUsuarioSelecionado({
+        ...usuarioDetalhado.data,
+        pedidos: pedidos.data,
+        homenagens: homenagens.data,
+        depoimentos: depoimentos.data
+      });
+      setModalAberta(true);
+    } catch (err) {
+      toast.error('Erro ao carregar detalhes do usuário');
+    } finally {
+      setCarregandoDetalhes(false);
+    }
+  };
+  
   return (
     <AdminRoute>
       <AdminLayout currentPage="web-pages">
@@ -198,9 +227,12 @@ const WebPages: React.FC = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <Link href={`/admin/usuarios/${homenagem.criadoPor}`} className="text-purple-600 hover:text-purple-900">
+                            <span
+                              className="text-purple-600 hover:text-purple-900 cursor-pointer"
+                              onClick={() => handleVerDetalhesUsuario(homenagem.criadoPor)}
+                            >
                               {homenagem.userName || 'Usuário não identificado'}
-                            </Link>
+                            </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {homenagem.createdAt ? 
@@ -231,17 +263,13 @@ const WebPages: React.FC = () => {
                             </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            {homenagem.ativo && (
-                              <a 
-                                href={`/homenagem/${homenagem.slug}`} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                              >
-                                Ver Homenagem
-                                <ExternalLink size={14} className="ml-1" />
-                              </a>
-                            )}
+                            <button
+                              onClick={() => window.open(`/homenagem/${homenagem._id}`, '_blank')}
+                              className="text-blue-600 hover:text-blue-900 p-1"
+                              title="Ver homenagem"
+                            >
+                              <Eye className="h-5 w-5" />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -266,6 +294,12 @@ const WebPages: React.FC = () => {
             </div>
           </div>
         </div>
+        <UsuarioDetalhesModal
+          usuarioSelecionado={usuarioSelecionado}
+          modalAberta={modalAberta}
+          setModalAberta={setModalAberta}
+          carregandoDetalhes={carregandoDetalhes}
+        />
       </AdminLayout>
     </AdminRoute>
   );
