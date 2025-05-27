@@ -13,6 +13,7 @@ export interface HomenagemDocument extends Document {
   createdAt: Date
   ativo: boolean
   slug: string
+  excluida?: boolean
 }
 
 const HomenagemSchema = new Schema<HomenagemDocument>({
@@ -26,8 +27,9 @@ const HomenagemSchema = new Schema<HomenagemDocument>({
   pedidoIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pedido' }],
   dataExpiracao: { type: Date, required: true },
   createdAt: { type: Date, default: Date.now },
-  ativo: { type: Boolean, default: false },
-  slug: { type: String, required: true, unique: true }
+  ativo: { type: Boolean, default: true },
+  slug: { type: String, required: true, unique: true },
+  excluida: { type: Boolean, default: false }
 })
 
 const Homenagem = mongoose.models.Homenagem || mongoose.model<HomenagemDocument>('Homenagem', HomenagemSchema)

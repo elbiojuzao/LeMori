@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Mail, User, AlertCircle } from 'lucide-react';
+import { Search, Mail, User, AlertCircle, Eye } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
+import UsuarioDetalhesModal from '@/components/UsuarioDetalhesModal';
 
 interface Usuario {
   _id: string;
@@ -17,6 +19,33 @@ interface Usuario {
   quantidadeHomenagens: number;
   statusConta: 'ativo' | 'inativo';
   isAdmin: boolean;
+  foto?: string;
+  homenagemCreditos?: number;
+  emailVerificado?: boolean;
+  ultimoLogin?: string;
+  ultimaHomenagem?: string;
+}
+
+interface UsuarioDetalhado extends Usuario {
+  pedidos?: Array<{
+    _id: string;
+    dataCompra: string;
+    statusPagamento: string;
+    statusPedido: string;
+    valorTotal: number;
+  }>;
+  homenagens?: Array<{
+    _id: string;
+    nomeHomenageado: string;
+    dataCriacao: string;
+    ativo: boolean;
+  }>;
+  depoimentos?: Array<{
+    _id: string;
+    depoimento: string;
+    status: string;
+    dataCriacao: string;
+  }>;
 }
 
 const Usuarios: React.FC = () => {
@@ -31,6 +60,9 @@ const Usuarios: React.FC = () => {
     dataNascimentoFim: '',
     minHomenagens: ''
   });
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<UsuarioDetalhado | null>(null);
+  const [modalAberta, setModalAberta] = useState(false);
+  const [carregandoDetalhes, setCarregandoDetalhes] = useState(false);
 
   const carregarUsuarios = useCallback(async () => {
     try {
@@ -41,6 +73,7 @@ const Usuarios: React.FC = () => {
         throw new Error('Token não encontrado');
       }
 
+      console.log('Buscando usuários...');
       const response = await axios.get('/api/users', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
@@ -49,6 +82,7 @@ const Usuarios: React.FC = () => {
         }
       });
 
+      console.log('Resposta da API:', response.data);
       setUsuarios(response.data);
       setError(null);
     } catch (err) {
@@ -90,6 +124,47 @@ const Usuarios: React.FC = () => {
     usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (usuario.cpf && usuario.cpf.includes(searchTerm))
   );
+
+  const handleVerDetalhes = async (usuario: Usuario) => {
+    try {
+      setCarregandoDetalhes(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('Token não encontrado');
+      }
+
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Verifica se o usuário é admin
+      const userResponse = await axios.get('/api/users/me', { headers });
+
+      if (!userResponse.data.isAdmin) {
+        throw new Error('Acesso não autorizado');
+      }
+
+      // Busca detalhes do usuário
+      const [usuarioDetalhado, pedidos, homenagens, depoimentos] = await Promise.all([
+        axios.get(`/api/users/${usuario._id}`, { headers }),
+        axios.get(`/api/pedidos/user/${usuario._id}`, { headers }),
+        axios.get(`/api/homenagens/user/${usuario._id}`, { headers }),
+        axios.get(`/api/depoimentos/user/${usuario._id}`, { headers })
+      ]);
+
+      setUsuarioSelecionado({
+        ...usuarioDetalhado.data,
+        pedidos: pedidos.data,
+        homenagens: homenagens.data,
+        depoimentos: depoimentos.data
+      });
+      setModalAberta(true);
+    } catch (err) {
+      console.error('Erro ao carregar detalhes do usuário:', err);
+      toast.error(err instanceof Error ? err.message : 'Erro ao carregar detalhes do usuário');
+    } finally {
+      setCarregandoDetalhes(false);
+    }
+  };
 
   return (
     <AdminRoute>
@@ -173,6 +248,14 @@ const Usuarios: React.FC = () => {
               </div>
             </div>
             
+            {/* Modal de Detalhes */}
+            <UsuarioDetalhesModal
+              usuarioSelecionado={usuarioSelecionado}
+              modalAberta={modalAberta}
+              setModalAberta={setModalAberta}
+              carregandoDetalhes={carregandoDetalhes}
+            />
+
             {/* Lista de Usuários */}
             {loading ? (
               <div className="flex justify-center py-8">
@@ -194,10 +277,10 @@ const Usuarios: React.FC = () => {
                             Usuário
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Email
+                            CPF
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tipo
+                            Data de Nascimento
                           </th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Homenagens
@@ -205,8 +288,8 @@ const Usuarios: React.FC = () => {
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Status
                           </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Cadastro
+                          <th scope="col" className="relative px-6 py-3">
+                            <span className="sr-only">Ações</span>
                           </th>
                         </tr>
                       </thead>
@@ -215,45 +298,48 @@ const Usuarios: React.FC = () => {
                           <tr key={usuario._id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                  <User className="h-6 w-6 text-purple-600" />
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <img
+                                    className="h-10 w-10 rounded-full"
+                                    src={usuario.foto || '/images/default-avatar.png'}
+                                    alt=""
+                                  />
                                 </div>
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">{usuario.nome}</div>
-                                  <div className="text-sm text-gray-500">{usuario.cpf || 'CPF não informado'}</div>
+                                  <div className="text-sm text-gray-500">{usuario.email}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center text-sm text-gray-500">
-                                <Mail size={14} className="mr-1 text-gray-400" />
-                                {usuario.email}
+                              <div className="text-sm text-gray-900">{usuario.cpf || '-'}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {usuario.dataNascimento ? new Date(usuario.dataNascimento).toLocaleDateString() : '-'}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                usuario.isAdmin ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                              }`}>
-                                {usuario.isAdmin ? 'Admin' : 'Cliente'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {usuario.quantidadeHomenagens}
+                              <div className="text-sm text-gray-900">
+                                {usuario.quantidadeHomenagens || 0}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                usuario.statusConta === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                usuario.statusConta === 'ativo' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
                               }`}>
                                 {usuario.statusConta === 'ativo' ? 'Ativo' : 'Inativo'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center text-sm text-gray-500">
-                                <Mail size={14} className="mr-1 text-gray-400" />
-                                {usuario.createdAt 
-                                  ? format(new Date(usuario.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                                  : 'Data não registrada'}
-                              </div>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button
+                                onClick={() => handleVerDetalhes(usuario)}
+                                className="text-purple-600 hover:text-purple-900"
+                              >
+                                Ver detalhes
+                              </button>
                             </td>
                           </tr>
                         ))}

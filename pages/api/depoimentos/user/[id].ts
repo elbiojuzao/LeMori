@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import mongooseConnect from '@/lib/mongoose'
 import { verifyToken } from '@/lib/auth'
-import Homenagem from '@/models/Homenagem'
+import { Depoimento } from '@/models/Depoimento'
 import User from '@/models/User'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,14 +33,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await mongooseConnect()
 
-    const homenagens = await Homenagem
-      .find({ criadoPor: id })
-      .sort({ createdAt: -1 })
+    const depoimentos = await Depoimento
+      .find({ usuario: id })
+      .sort({ dataCriacao: -1 })
       .exec()
 
-    res.status(200).json(homenagens)
+    res.status(200).json(depoimentos)
   } catch (error) {
-    console.error('Erro ao buscar homenagens do usuário:', error)
-    res.status(500).json({ error: 'Erro ao buscar homenagens' })
+    console.error('Erro ao buscar depoimentos do usuário:', error)
+    res.status(500).json({ error: 'Erro ao buscar depoimentos' })
   }
-}
+} 
