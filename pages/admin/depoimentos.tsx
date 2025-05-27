@@ -143,7 +143,7 @@ export default function AdminDepoimentos() {
                 value={filtros.busca}
                 onChange={handleFiltroChange}
                 placeholder="Buscar por usuário ou depoimento..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
@@ -152,7 +152,7 @@ export default function AdminDepoimentos() {
               name="status"
               value={filtros.status}
               onChange={handleFiltroChange}
-              className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
             >
               <option value="todos">Todos os Status</option>
               <option value="aprovado">Aprovados</option>
@@ -166,7 +166,7 @@ export default function AdminDepoimentos() {
                 name="dataInicio"
                 value={filtros.dataInicio || ''}
                 onChange={handleFiltroChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               />
               <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
@@ -177,7 +177,7 @@ export default function AdminDepoimentos() {
                 name="dataFim"
                 value={filtros.dataFim || ''}
                 onChange={handleFiltroChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               />
               <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
