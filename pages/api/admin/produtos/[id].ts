@@ -51,8 +51,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const updateData = {
           ...(req.body.nome !== undefined && { nome: req.body.nome }),
           ...(req.body.descricao !== undefined && { descricao: req.body.descricao }),
-          ...(req.body.valor !== undefined && { valor: req.body.valor }),
-          ...(req.body.destaque !== undefined && { destaque: req.body.destaque })
+          ...(req.body.preco !== undefined && { preco: req.body.preco }),
+          ...(req.body.precoPromocional !== undefined && { precoPromocional: req.body.precoPromocional }),
+          ...(req.body.promocaoAtiva !== undefined && { promocaoAtiva: req.body.promocaoAtiva }),
+          ...(req.body.inicioPromocao !== undefined && { inicioPromocao: req.body.inicioPromocao }),
+          ...(req.body.fimPromocao !== undefined && { fimPromocao: req.body.fimPromocao }),
+          ...(req.body.destaque !== undefined && { destaque: req.body.destaque }),
+          ...(req.body.ativo !== undefined && { ativo: req.body.ativo }),
+          ...(req.body.estoque !== undefined && { estoque: req.body.estoque }),
+          ...(req.body.categoria !== undefined && { categoria: req.body.categoria }),
+          ...(req.body.isFisico !== undefined && { isFisico: req.body.isFisico }),
+          ...(req.body.largura !== undefined && { largura: req.body.largura }),
+          ...(req.body.altura !== undefined && { altura: req.body.altura }),
+          ...(req.body.comprimento !== undefined && { comprimento: req.body.comprimento }),
+          ...(req.body.peso !== undefined && { peso: req.body.peso }),
+          ...(req.body.imagens !== undefined && { imagens: req.body.imagens })
         };
 
         const produtoAtualizado = await Produto.findByIdAndUpdate(
