@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Mail, User, AlertCircle, Eye } from 'lucide-react';
+import { Search, AlertCircle } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import UsuarioDetalhesModal from '@/components/UsuarioDetalhesModal';
+import Image from 'next/image';
 
 interface Usuario {
   _id: string;
@@ -296,10 +297,12 @@ const Usuarios: React.FC = () => {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="flex-shrink-0 h-10 w-10">
-                                  <img
+                                  <Image
                                     className="h-10 w-10 rounded-full"
                                     src={usuario.foto || '/images/default-avatar.png'}
                                     alt=""
+                                    width={40}
+                                    height={40}
                                   />
                                 </div>
                                 <div className="ml-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { Search, Eye, EyeOff } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import Image from 'next/image';
@@ -142,7 +142,7 @@ const WebPages: React.FC = () => {
         depoimentos: depoimentos.data
       });
       setModalAberta(true);
-    } catch (err) {
+    } catch {
       toast.error('Erro ao carregar detalhes do usuário');
     } finally {
       setCarregandoDetalhes(false);

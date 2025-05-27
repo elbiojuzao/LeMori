@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Prepara os filtros
     const filtros: FiltrosUsuario = req.query
-    const query: any = {}
+    const query: Record<string, unknown> = {}
 
     if (filtros.nome) {
       query.$or = [
@@ -103,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       : usuariosComHomenagens
 
     res.status(200).json(usuariosFiltrados)
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: 'Erro ao listar usuários' })
   }
 }
