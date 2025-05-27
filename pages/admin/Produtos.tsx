@@ -1,9 +1,7 @@
-import { Plus, Trash2, Edit, Check, X, Search, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Search, Upload } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import AdminRoute from '@/components/AdminRoute';
 import { toast } from 'react-hot-toast';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
@@ -71,8 +69,6 @@ const desformatarPreco = (valor: string): string => {
 
 const Produtos: React.FC = () => {
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
@@ -131,12 +127,9 @@ const Produtos: React.FC = () => {
       
       const data = await response.json();
       setProdutos(data);
-      setLoading(false);
     } catch (error: unknown) {
       console.error('Erro ao carregar produtos:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar produtos';
-      setError(errorMessage);
-      setLoading(false);
       toast.error(errorMessage);
       
       if (errorMessage.includes('login')) {
@@ -409,52 +402,6 @@ const Produtos: React.FC = () => {
       console.error('Erro ao excluir produto:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir produto';
       toast.error(errorMessage);
-    }
-  };
-
-  const handleToggleDestaque = async (produtoId: string, destaqueAtual: boolean) => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Log para debug
-      console.log('Alterando destaque do produto:', produtoId, 'de', destaqueAtual, 'para', !destaqueAtual);
-      
-      const response = await fetch(`/api/admin/produtos/${produtoId}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ destaque: !destaqueAtual })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao atualizar destaque do produto');
-      }
-
-      const produtoAtualizado = await response.json();
-      console.log('Resposta da API:', produtoAtualizado);
-
-      // Atualiza o estado local imediatamente
-      setProdutos(produtos.map(produto => 
-        produto._id === produtoId 
-          ? { ...produto, destaque: !destaqueAtual }
-          : produto
-      ));
-
-      toast.success('Destaque atualizado com sucesso!');
-    } catch (error: unknown) {
-      console.error('Erro ao atualizar destaque:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar destaque do produto';
-      toast.error(errorMessage);
-      
-      // Reverte o estado local em caso de erro
-      setProdutos(produtos.map(produto => 
-        produto._id === produtoId 
-          ? { ...produto, destaque: destaqueAtual }
-          : produto
-      ));
     }
   };
 
