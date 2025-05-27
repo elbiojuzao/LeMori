@@ -13,7 +13,7 @@ interface Produto {
   _id: string
   nome: string
   descricao: string
-  valor: number
+  preco: number
   imagemUrl?: string
   imagens?: string[]
 }
@@ -156,7 +156,7 @@ export default function Home() {
                         <p className="text-gray-600 mb-4">{produto.descricao}</p>
                         <div className="flex justify-between items-center">
                           <span className="text-purple-600 font-bold text-xl">
-                            R${(produto.valor || 0).toFixed(2)}
+                            R${(produto.preco || 0).toFixed(2)}
                           </span>
                           <Link href={`/produto?id=${produto._id}`} className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-150">
                             Ver detalhes

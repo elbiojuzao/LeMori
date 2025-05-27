@@ -43,7 +43,7 @@ export default function ProductPage() {
       addItem({
         id: product._id,
         name: product.nome,
-        price: product.valor,
+        price: product.preco,
         description: product.descricao,
         fullDescription: product.descricao,
         imageSrc: product.imagens?.[0] || '/placeholder-image.jpg',
@@ -145,7 +145,7 @@ export default function ProductPage() {
                 </div>
                 
                 <p className="text-2xl font-bold text-purple-600 mb-6">
-                  R$ {product.valor.toFixed(2)}
+                  R$ {product.preco.toFixed(2)}
                 </p>
                 
                 <div className="mb-8">

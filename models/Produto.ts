@@ -4,7 +4,11 @@ export interface IProduto {
   _id: string
   nome: string
   descricao: string
-  valor: number
+  preco: number
+  precoPromocional?: number
+  promocaoAtiva: boolean
+  inicioPromocao?: Date
+  fimPromocao?: Date
   destaque: boolean
   createdAt: string
   updatedAt: string
@@ -27,11 +31,6 @@ const ProdutoSchema = new Schema({
     required: [true, 'Descrição é obrigatória'],
     minlength: [10, 'Descrição deve ter no mínimo 10 caracteres']
   },
-  valor: {
-    type: Number,
-    required: [true, 'Valor é obrigatório'],
-    min: [0, 'Valor não pode ser negativo']
-  },
   preco: {
     type: Number,
     required: [true, 'Preço é obrigatório'],
@@ -45,6 +44,34 @@ const ProdutoSchema = new Schema({
         return !val || val < this.preco
       },
       message: 'Preço promocional deve ser menor que o preço normal'
+    }
+  },
+  promocaoAtiva: {
+    type: Boolean,
+    default: false
+  },
+  inicioPromocao: {
+    type: Date,
+    validate: {
+      validator: function(this: any, val: Date) {
+        if (!this.promocaoAtiva) return true;
+        if (!val) return false;
+        if (this.fimPromocao && val >= this.fimPromocao) return false;
+        return true;
+      },
+      message: 'Data de início da promoção inválida'
+    }
+  },
+  fimPromocao: {
+    type: Date,
+    validate: {
+      validator: function(this: any, val: Date) {
+        if (!this.promocaoAtiva) return true;
+        if (!val) return false;
+        if (this.inicioPromocao && val <= this.inicioPromocao) return false;
+        return true;
+      },
+      message: 'Data de fim da promoção inválida'
     }
   },
   imagens: {

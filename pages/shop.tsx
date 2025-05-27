@@ -40,7 +40,7 @@ export default function Shop() {
   const handleAddToCart = (produto: IProduto) => {
     if (!produto._id) return;
     
-    const priceValue = Number((produto.valor).toFixed(2));
+    const priceValue = Number((produto.preco).toFixed(2));
     
     addItem({
       id: produto._id,
@@ -151,7 +151,7 @@ export default function Shop() {
                     <p className="text-gray-600 mb-4">{produto.descricao}</p>
                     <div className="flex justify-between items-center">
                       <span className="text-purple-600 font-bold text-xl">
-                        R$ {produto.valor.toFixed(2)}
+                        R$ {produto.preco.toFixed(2)}
                       </span>
                       <div className="flex space-x-2">
                         <Link 
