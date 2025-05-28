@@ -6,6 +6,7 @@ export interface ItemPedidoDocument extends Document {
   quantidade: number
   valorUnitario: number
   pedidoId: mongoose.Schema.Types.ObjectId
+  tipoItem: 'homenagem' | 'fisico'
 }
 
 const ItemPedidoSchema = new Schema({
@@ -31,6 +32,11 @@ const ItemPedidoSchema = new Schema({
   pedidoId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Pedido',
+    required: true
+  },
+  tipoItem: {
+    type: String,
+    enum: ['homenagem', 'fisico'],
     required: true
   }
 }, {

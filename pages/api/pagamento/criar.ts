@@ -3,6 +3,7 @@ import { mp } from '@/lib/mercadopago'
 import { Preference } from 'mercadopago/dist/clients/preference'
 import dbConnect from '@/lib/dbConnect'
 import Pedido from '@/models/Pedido'
+import ItemPedido from '@/models/ItemPedido'
 import { verifyToken } from '@/lib/auth'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -10,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Método não permitido' })
   }
 
-  const { items, total, nome, email } = req.body
+  const { items, total, nome, email, endereco } = req.body
 
   // Validação básica dos itens e total
   if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Itens inválidos ou ausentes' })
@@ -35,10 +36,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userId: decoded.userId,
       statusPagamento: 'pendente',
       valorTotal: total,
+      endereco: endereco,
     })
 
     // Salvar pedido no banco de dados
     const pedidoSalvo = await pedido.save()
+
+    // Criar os itens do pedido
+    const itensPedido = await Promise.all(
+      items.map(async (item) => {
+        const itemPedido = new ItemPedido({
+          produtoId: item._id,
+          nomeProduto: item.nome,
+          quantidade: item.quantidade,
+          valorUnitario: item.valor,
+          pedidoId: pedidoSalvo._id,
+          tipoItem: item.tipo || 'fisico'
+        })
+        return itemPedido.save()
+      })
+    )
+
+    console.log('Pedido criado:', {
+      pedidoId: pedidoSalvo._id,
+      itens: itensPedido.map(item => ({
+        nome: item.nomeProduto,
+        quantidade: item.quantidade,
+        valor: item.valorUnitario,
+        tipo: item.tipoItem
+      }))
+    })
 
     // Criar preferência no Mercado Pago
     const preference = new Preference(mp)
