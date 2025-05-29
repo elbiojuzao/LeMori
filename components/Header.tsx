@@ -6,7 +6,6 @@ import { ShoppingCart, User, Menu, X, LogOut, Home, ShoppingBag } from 'lucide-r
 import Logo from '@/components/Logo'
 import { logout, isAuthenticated } from '@/lib/authClient'
 import { useCart } from '../context/CartContext'
-import { Product } from '@/data/products'
 
 const Header = () => {
   const router = useRouter()
