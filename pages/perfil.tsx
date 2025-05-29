@@ -40,10 +40,7 @@ interface Pedido {
     quantidade: number
     nomeProduto: string
     valorUnitario: number
-    produtoId: {
-      nome: string
-      preco: number
-    }
+    tipoItem: 'homenagem' | 'fisico'
   }>
 }
 

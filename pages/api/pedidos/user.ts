@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import mongooseConnect from '@/lib/mongoose'
 import { verifyToken } from '@/lib/auth'
 import PedidoModel from '@/models/Pedido'
+import ItemPedidoModel from '@/models/ItemPedido'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -23,26 +24,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const pedidos = await PedidoModel
       .find({ userId: decoded.userId })
-      .sort({ createdAt: -1 }) // Ordena do mais recente para o mais antigo
-      .populate({
-        path: 'items',
-        select: 'quantidade nomeProduto valorUnitario produtoId',
-        populate: {
-          path: 'produtoId',
-          select: 'nome preco'
-        },
-        options: { strictPopulate: false }
-      })
+      .sort({ createdAt: -1 })
       .lean()
       .exec()
 
-    // Garante que items seja sempre um array, mesmo que vazio
-    const pedidosFormatados = pedidos.map(pedido => ({
-      ...pedido,
-      items: pedido.items || []
-    }))
+    // Buscar os itens de cada pedido
+    const pedidosComItens = await Promise.all(
+      pedidos.map(async (pedido) => {
+        const itens = await ItemPedidoModel
+          .find({ pedidoId: pedido._id })
+          .select('quantidade nomeProduto valorUnitario tipoItem')
+          .lean()
+          .exec()
 
-    res.status(200).json(pedidosFormatados)
+        return {
+          ...pedido,
+          items: itens || []
+        }
+      })
+    )
+
+    res.status(200).json(pedidosComItens)
   } catch (error) {
     console.error('Erro ao buscar pedidos do usuário:', error)
     res.status(500).json({ error: 'Erro ao buscar pedidos' })

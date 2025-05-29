@@ -41,6 +41,7 @@ export default function ProductPage() {
   const handleAddToCart = () => {
     if (product) {
       addItem({
+        _id: product._id,
         id: product._id,
         name: product.nome,
         price: product.preco,
@@ -50,6 +51,7 @@ export default function ProductPage() {
         category: 'homenagens',
         stock: 1,
         active: true,
+        isFisico: product.isFisico,
         width: product.largura || 0,
         height: product.altura || 0,
         length: product.comprimento || 0,

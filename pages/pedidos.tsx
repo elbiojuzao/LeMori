@@ -21,17 +21,16 @@ import {
 interface Pedido {
   _id: string
   createdAt: string
-  status: string
+  statusPedido: string
+  statusPagamento: string
+  valorTotal: number
   items: Array<{
-    quantity: number
-    product: {
-      name: string
-      price: number
-      imageSrc?: string
-    }
+    quantidade: number
+    nomeProduto: string
+    valorUnitario: number
+    tipoItem: 'homenagem' | 'fisico'
   }>
-  total: number
-  endereco: {
+  endereco?: {
     rua: string
     numero: string
     complemento?: string
@@ -39,10 +38,6 @@ interface Pedido {
     cidade: string
     estado: string
     cep: string
-  }
-  pagamento: {
-    metodo: string
-    status: string
   }
   rastreio?: {
     codigo: string
@@ -123,7 +118,7 @@ export default function Pedidos() {
   }
 
   const pedidosFiltrados = pedidos
-    .filter(pedido => filtroStatus === 'todos' || pedido.status === filtroStatus)
+    .filter(pedido => filtroStatus === 'todos' || pedido.statusPedido === filtroStatus)
     .sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime()
       const dateB = new Date(b.createdAt).getTime()
@@ -229,8 +224,8 @@ export default function Pedidos() {
                           </span>
                         </div>
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${formatarStatus(pedido.status).cor}`}>
-                        {formatarStatus(pedido.status).texto}
+                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${formatarStatus(pedido.statusPedido).cor}`}>
+                        {formatarStatus(pedido.statusPedido).texto}
                       </div>
                     </div>
                     
@@ -238,11 +233,11 @@ export default function Pedidos() {
                       <div className="flex items-center space-x-2">
                         <ShoppingBag className="h-5 w-5 text-purple-600" />
                         <span className="text-sm font-medium text-gray-900">
-                          {pedido.items.reduce((sum, item) => sum + item.quantity, 0)} itens
+                          {pedido.items.reduce((sum, item) => sum + item.quantidade, 0)} itens
                         </span>
                       </div>
                       <div className="text-lg font-bold text-purple-600">
-                        R$ {pedido.total.toFixed(2)}
+                        R$ {pedido.valorTotal.toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -272,27 +267,20 @@ export default function Pedidos() {
                         <div className="space-y-4">
                           {pedido.items.map((item, index) => (
                             <div key={index} className="flex items-center space-x-4">
-                              {item.product.imageSrc ? (
-                                <Image
-                                  src={item.product.imageSrc}
-                                  alt={item.product.name}
-                                  width={48}
-                                  height={48}
-                                  className="w-12 h-12 rounded-md object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center">
-                                  <ShoppingBag className="h-6 w-6 text-gray-400" />
-                                </div>
-                              )}
+                              <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center">
+                                <ShoppingBag className="h-6 w-6 text-gray-400" />
+                              </div>
                               <div className="flex-1">
-                                <h5 className="text-sm font-medium text-gray-900">{item.product.name}</h5>
+                                <h5 className="text-sm font-medium text-gray-900">{item.nomeProduto}</h5>
                                 <p className="text-sm text-gray-500">
-                                  Quantidade: {item.quantity} x R$ {item.product.price.toFixed(2)}
+                                  Quantidade: {item.quantidade} x R$ {item.valorUnitario.toFixed(2)}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  Tipo: {item.tipoItem === 'fisico' ? 'Produto Físico' : 'Homenagem'}
                                 </p>
                               </div>
                               <span className="text-sm font-medium text-gray-900">
-                                R$ {(item.quantity * item.product.price).toFixed(2)}
+                                R$ {(item.quantidade * item.valorUnitario).toFixed(2)}
                               </span>
                             </div>
                           ))}
@@ -307,17 +295,17 @@ export default function Pedidos() {
                             <MapPin className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
                             <div>
                               <p className="text-sm text-gray-900">
-                                {pedido.endereco.rua}, {pedido.endereco.numero}
-                                {pedido.endereco.complemento && ` - ${pedido.endereco.complemento}`}
+                                {pedido.endereco?.rua}, {pedido.endereco?.numero}
+                                {pedido.endereco?.complemento && ` - ${pedido.endereco?.complemento}`}
                               </p>
                               <p className="text-sm text-gray-500">
-                                {pedido.endereco.bairro}
+                                {pedido.endereco?.bairro}
                               </p>
                               <p className="text-sm text-gray-500">
-                                {pedido.endereco.cidade} - {pedido.endereco.estado}
+                                {pedido.endereco?.cidade} - {pedido.endereco?.estado}
                               </p>
                               <p className="text-sm text-gray-500">
-                                CEP: {pedido.endereco.cep}
+                                CEP: {pedido.endereco?.cep}
                               </p>
                             </div>
                           </div>
@@ -349,7 +337,7 @@ export default function Pedidos() {
 
                       {/* Ações do Pedido */}
                       <div className="flex justify-end space-x-4">
-                        {['entregue', 'enviado'].includes(pedido.status) && (
+                        {['entregue', 'enviado'].includes(pedido.statusPedido) && (
                           <button
                             onClick={() => solicitarReembolso(pedido._id)}
                             className="px-4 py-2 border border-red-600 text-red-600 rounded-md text-sm font-medium hover:bg-red-50"
@@ -357,7 +345,7 @@ export default function Pedidos() {
                             Solicitar reembolso
                           </button>
                         )}
-                        {pedido.status === 'enviado' && pedido.rastreio && (
+                        {pedido.statusPedido === 'enviado' && pedido.rastreio && (
                           <a
                             href={`https://www.correios.com.br/rastreamento/${pedido.rastreio.codigo}`}
                             target="_blank"
