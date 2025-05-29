@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, mockProducts } from '../data/products';
+import { mockProducts } from '../data/products';
 
 interface CartItem {
   product: Product;
@@ -23,6 +23,7 @@ interface Product {
   name: string;
   price: number;
   isFisico: boolean;
+  imageSrc?: string;
   width?: number;
   height?: number;
   length?: number;

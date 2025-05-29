@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
-import { ShoppingCart, User, Menu, X, LogOut, Home } from 'lucide-react'
+import { ShoppingCart, User, Menu, X, LogOut, Home, ShoppingBag } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { logout, isAuthenticated } from '@/lib/authClient'
 import { useCart } from '../context/CartContext'
+import { Product } from '@/data/products'
 
 const Header = () => {
   const router = useRouter()
@@ -86,17 +87,23 @@ const Header = () => {
                         <div className="space-y-4 max-h-96 overflow-auto">
                           {items.map((item) => (
                             <div key={item.product.id} className="flex items-center space-x-4">
-                              <Image 
-                                src={item.product.imageSrc} 
-                                alt={item.product.name} 
-                                width={64}
-                                height={64}
-                                className="h-16 w-16 object-cover rounded"
-                              />
+                              {item.product.imageSrc ? (
+                                <Image 
+                                  src={item.product.imageSrc} 
+                                  alt={item.product.name} 
+                                  width={64}
+                                  height={64}
+                                  className="rounded-md object-cover"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
+                                  <ShoppingBag className="h-8 w-8 text-gray-400" />
+                                </div>
+                              )}
                               <div className="flex-1">
                                 <h4 className="text-sm font-medium text-gray-900">{item.product.name}</h4>
-                                <p className="text-sm text-gray-600">
-                                  {item.quantity} x R${item.product.price.toFixed(2)}
+                                <p className="text-sm text-gray-500">
+                                  {item.quantity} x R$ {item.product.price.toFixed(2)}
                                 </p>
                               </div>
                               <button
