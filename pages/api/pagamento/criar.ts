@@ -74,43 +74,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     pedidoSalvo.items = itensPedido.map(item => item._id)
     await pedidoSalvo.save()
 
-    const preference = new Preference(mp)
-
     const preferenceData = {
       body: {
-        items: filteredItems.map(item => ({
-          id: item._id,
-          title: item.nome,
+        items: itensPedido.map(item => ({
+          id: item._id.toString(),
+          title: item.nomeProduto,
           quantity: item.quantidade,
-          unit_price: Number(item.valor),
+          unit_price: item.valorUnitario,
           currency_id: 'BRL'
         })),
-        payer: {
-          name: user.nome || 'Comprador',
-          email: user.email || 'comprador@email.com'
-        },
-        back_urls: {
-          success: `${baseUrl}/pedidos/${pedidoSalvo._id}`,
-          failure: `${baseUrl}/checkout`,
-          pending: `${baseUrl}/pedidos/${pedidoSalvo._id}`
-        },
-        auto_return: "approved",
         external_reference: pedidoSalvo._id.toString(),
-        notification_url: `${baseUrl}/api/pagamento/webhook`,
-        shipments: {
-          cost: shipping,
-          mode: "not_specified"
+        back_urls: {
+          success: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success`,
+          failure: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/failure`,
+          pending: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/pending`
         },
-        statement_descriptor: "LEMORI",
-        expires: true,
-        expiration_date_from: new Date().toISOString(),
-        expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        auto_return: 'approved',
+        notification_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/pagamento/webhook`
       }
     }
 
-    const result = await preference.create(preferenceData)
+    const preference = await mp.preference.create(preferenceData)
 
-    if (!result?.id || !result?.init_point) {
+    if (!preference.id) {
       // Se falhar ao criar a preferência, remover o pedido e seus itens
       await ItemPedido.deleteMany({ pedidoId: pedidoSalvo._id })
       await Pedido.findByIdAndDelete(pedidoSalvo._id)
@@ -118,10 +104,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Atualizar o pedido com o ID da transação
-    pedidoSalvo.idTransacao = result.id
+    pedidoSalvo.idTransacao = preference.id
     await pedidoSalvo.save()
 
-    return res.status(200).json({ id: result.id, init_point: result.init_point })
+    return res.status(200).json({ preferenceId: preference.id })
   } catch (error) {
     console.error('Erro no criar.ts:', error)
     return res.status(500).json({
