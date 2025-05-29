@@ -7,6 +7,7 @@ import formidable from 'formidable'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import bcrypt from 'bcryptjs'
 
 export const config = {
   api: {
@@ -83,7 +84,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (fields.senha && fields.senha[0]) {
-      const bcrypt = require('bcryptjs')
       const salt = await bcrypt.genSalt(10)
       updateData.senha = await bcrypt.hash(fields.senha[0], salt)
     }
