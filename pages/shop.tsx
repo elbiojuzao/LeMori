@@ -43,15 +43,12 @@ export default function Shop() {
     const priceValue = Number((produto.preco).toFixed(2));
     
     addItem({
+      _id: produto._id,
       id: produto._id,
       name: produto.nome,
       price: priceValue,
-      description: produto.descricao,
-      fullDescription: produto.descricao,
       imageSrc: produto.imagens?.[0] || '/placeholder-image.jpg',
-      category: 'produtos',
-      stock: 1,
-      active: true,
+      isFisico: produto.isFisico,
       width: produto.largura || 0,
       height: produto.altura || 0,
       length: produto.comprimento || 0,
