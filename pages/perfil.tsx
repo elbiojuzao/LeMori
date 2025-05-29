@@ -286,9 +286,11 @@ export default function Perfil() {
                             <div className="relative w-24 h-24">
                               <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-200">
                                 {fotoPreview ? (
-                                  <img
+                                  <Image
                                     src={fotoPreview}
                                     alt="Preview"
+                                    width={96}
+                                    height={96}
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
@@ -432,9 +434,11 @@ export default function Perfil() {
                     <div className="flex items-center space-x-4 mb-6">
                       <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-200">
                         {user?.foto ? (
-                          <img
+                          <Image
                             src={user.foto}
                             alt="Foto de perfil"
+                            width={96}
+                            height={96}
                             className="w-full h-full object-cover"
                           />
                         ) : (

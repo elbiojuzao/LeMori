@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import axios from 'axios'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import Image from 'next/image'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
