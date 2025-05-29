@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (action === 'payment.updated' || action === 'payment.approved') {
       const paymentId = data.id
-      const payment = await mp.payment.get({ id: paymentId })
+      const payment = await mp.payment.get({ id: paymentId.toString() })
       console.log('Status do pagamento:', payment.status)
 
       if (payment.status === 'approved' || payment.status === 'pending') {
