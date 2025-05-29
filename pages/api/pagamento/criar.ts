@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { mp } from '@/lib/mercadopago'
-import { Preference } from 'mercadopago/dist/clients/preference'
 import dbConnect from '@/lib/dbConnect'
 import Pedido from '@/models/Pedido'
 import ItemPedido from '@/models/ItemPedido'
@@ -34,8 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const user = await User.findById(decoded.userId)
     if (!user) return res.status(404).json({ message: 'Usuário não encontrado' })
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 
     // ⚠️ Itens com valor 0 podem invalidar a preferência
     const filteredItems = items.filter(item => Number(item.valor) > 0)
