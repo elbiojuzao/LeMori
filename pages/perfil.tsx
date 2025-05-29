@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import axios from 'axios'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { User, Mail, Check, ShoppingBag, Package, MoreVertical, CreditCard } from 'lucide-react'
+import { User, Mail, Check, ShoppingBag, Package, MoreVertical, CreditCard, Calendar, Lock, Edit2 } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
@@ -15,6 +15,9 @@ interface ProfileFormValues {
   cpf: string
   email: string
   senha: string
+  confirmarSenha: string
+  dataNascimento: string
+  foto: File | null
 }
 
 interface Homenagem {
@@ -30,15 +33,18 @@ interface Homenagem {
 interface Pedido {
   _id: string
   createdAt: string
-  status: string
+  statusPedido: string
+  statusPagamento: string
+  valorTotal: number
   items: Array<{
-    quantity: number
-    product: {
-      name: string
-      price: number
+    quantidade: number
+    nomeProduto: string
+    valorUnitario: number
+    produtoId: {
+      nome: string
+      preco: number
     }
   }>
-  total: number
 }
 
 interface User {
@@ -48,6 +54,8 @@ interface User {
   email: string;
   isAdmin?: boolean;
   homenagemCreditos?: number;
+  foto?: string;
+  dataNascimento?: string;
 }
 
 export default function Perfil() {
@@ -63,7 +71,11 @@ export default function Perfil() {
     cpf: '',
     email: '',
     senha: '',
+    confirmarSenha: '',
+    dataNascimento: '',
+    foto: null
   })
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null)
 
   const fetchUser = useCallback(async () => {
     const token = localStorage.getItem('token')
@@ -84,6 +96,9 @@ export default function Perfil() {
         cpf: userData.cpf || '',
         email: userData.email || '',
         senha: '',
+        confirmarSenha: '',
+        dataNascimento: userData.dataNascimento ? new Date(userData.dataNascimento).toISOString().split('T')[0] : '',
+        foto: null
       })
 
       // Buscar homenagens do usuário
@@ -119,18 +134,50 @@ export default function Perfil() {
   }, [router, fetchUser, fetchPedidos])
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setProfileForm(prev => ({ ...prev, [name]: value }))
+    const { name, value, files } = e.target
+    if (name === 'foto' && files) {
+      const file = files[0]
+      setProfileForm(prev => ({ ...prev, foto: file }))
+      
+      // Criar preview da foto
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFotoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setProfileForm(prev => ({ ...prev, [name]: value }))
+    }
   }
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const token = localStorage.getItem('token')
 
+    if (profileForm.senha !== profileForm.confirmarSenha) {
+      alert('As senhas não coincidem')
+      return
+    }
+
     try {
-      await axios.put('/api/users/profile', profileForm, {
+      const formData = new FormData()
+      formData.append('nome', profileForm.nome)
+      formData.append('cpf', profileForm.cpf)
+      formData.append('email', profileForm.email)
+      if (profileForm.senha) {
+        formData.append('senha', profileForm.senha)
+      }
+      if (profileForm.dataNascimento) {
+        formData.append('dataNascimento', profileForm.dataNascimento)
+      }
+      if (profileForm.foto) {
+        formData.append('foto', profileForm.foto)
+      }
+
+      await axios.put('/api/users/profile', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
       })
       setIsEditing(false)
@@ -147,7 +194,9 @@ export default function Perfil() {
   const formatarData = (data: string | undefined) => {
     if (!data) return "Data não disponível"
     try {
-      return format(new Date(data), "dd/MM/yyyy")
+      const date = new Date(data);
+      date.setHours(date.getHours() + 3); // Ajusta para o fuso horário do Brasil
+      return format(date, "dd/MM/yyyy")
     } catch (error) {
       console.error("Erro ao formatar data:", error)
       return "Data não disponível"
@@ -231,26 +280,134 @@ export default function Perfil() {
                         </div>
                       </div>
                       
-                      <div>
-                        <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">
-                          CPF
-                        </label>
-                        <div className="relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <User size={18} className="text-gray-400" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Foto de Perfil
+                          </label>
+                          <div className="flex items-center space-x-4">
+                            <div className="relative w-24 h-24">
+                              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-200">
+                                {fotoPreview ? (
+                                  <img
+                                    src={fotoPreview}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-purple-100 flex items-center justify-center">
+                                    <User size={32} className="text-purple-400" />
+                                  </div>
+                                )}
+                              </div>
+                              <label
+                                htmlFor="foto"
+                                className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full cursor-pointer hover:bg-purple-700 transition-colors"
+                              >
+                                <Edit2 size={16} />
+                              </label>
+                              <input
+                                id="foto"
+                                name="foto"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleProfileChange}
+                                className="hidden"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-500">
+                                Clique no ícone para alterar sua foto de perfil
+                              </p>
+                            </div>
                           </div>
-                          <input
-                            id="cpf"
-                            name="cpf"
-                            type="text"
-                            value={profileForm.cpf}
-                            onChange={handleProfileChange}
-                            className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                          />
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label htmlFor="dataNascimento" className="block text-sm font-medium text-gray-700 mb-1">
+                              Data de Nascimento
+                            </label>
+                            <div className="relative rounded-md shadow-sm">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Calendar size={18} className="text-gray-400" />
+                              </div>
+                              <input
+                                id="dataNascimento"
+                                name="dataNascimento"
+                                type="date"
+                                value={profileForm.dataNascimento}
+                                onChange={handleProfileChange}
+                                className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">
+                              CPF
+                            </label>
+                            <div className="relative rounded-md shadow-sm">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <User size={18} className="text-gray-400" />
+                              </div>
+                              <input
+                                id="cpf"
+                                name="cpf"
+                                type="text"
+                                value={profileForm.cpf}
+                                onChange={handleProfileChange}
+                                className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="000.000.000-00"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-1">
+                            Nova Senha
+                          </label>
+                          <div className="relative rounded-md shadow-sm">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <Lock size={18} className="text-gray-400" />
+                            </div>
+                            <input
+                              id="senha"
+                              name="senha"
+                              type="password"
+                              value={profileForm.senha}
+                              onChange={handleProfileChange}
+                              className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                              placeholder="Deixe em branco para manter a senha atual"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label htmlFor="confirmarSenha" className="block text-sm font-medium text-gray-700 mb-1">
+                            Confirmar Nova Senha
+                          </label>
+                          <div className="relative rounded-md shadow-sm">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <Lock size={18} className="text-gray-400" />
+                            </div>
+                            <input
+                              id="confirmarSenha"
+                              name="confirmarSenha"
+                              type="password"
+                              value={profileForm.confirmarSenha}
+                              onChange={handleProfileChange}
+                              className="block text-gray-600 w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                              placeholder="Confirme a nova senha"
+                            />
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                      <div className="flex gap-4">
                         <button 
                           type="button"
                           onClick={() => {
@@ -275,19 +432,34 @@ export default function Perfil() {
                   </form>
                 ) : (
                   <div className="space-y-4">
-                    <div>
-                      <div className="text-sm font-medium text-gray-500 mb-1">Nome completo</div>
-                      <div className="text-gray-900">{profileForm.nome}</div>
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-200">
+                        {user?.foto ? (
+                          <img
+                            src={user.foto}
+                            alt="Foto de perfil"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-purple-100 flex items-center justify-center">
+                            <User size={32} className="text-purple-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">{profileForm.nome}</h3>
+                        <p className="text-sm text-gray-500">{profileForm.email}</p>
+                      </div>
                     </div>
-                    
-                    <div>
-                      <div className="text-sm font-medium text-gray-500 mb-1">Email</div>
-                      <div className="text-gray-900">{profileForm.email}</div>
-                    </div>
-                    
+
                     <div>
                       <div className="text-sm font-medium text-gray-500 mb-1">CPF</div>
-                      <div className="text-gray-900">{profileForm.cpf}</div>
+                      <div className="text-gray-900">{profileForm.cpf || 'Não informado'}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-medium text-gray-500 mb-1">Data de Nascimento</div>
+                      <div className="text-gray-900">{profileForm.dataNascimento ? formatarData(profileForm.dataNascimento) : 'Não informada'}</div>
                     </div>
                   </div>
                 )}
@@ -408,7 +580,7 @@ export default function Perfil() {
                 {ultimosPedidos.length > 0 ? (
                   <div className="space-y-4 mb-4">
                     {ultimosPedidos.map(pedido => {
-                      const totalItens = pedido.items.reduce((sum, item) => sum + item.quantity, 0)
+                      const totalItens = pedido.items.reduce((sum, item) => sum + item.quantidade, 0)
                       return (
                         <div key={pedido._id} className="border-b border-gray-200 pb-4 last:border-0">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
@@ -426,11 +598,11 @@ export default function Perfil() {
                             <div className="flex items-center space-x-2 mb-2 sm:mb-0">
                               <Package className="h-5 w-5 text-gray-400" />
                               <span className="text-sm text-gray-600">
-                                Status: {pedido.status}
+                                Status: {pedido.statusPedido}
                               </span>
                             </div>
                             <span className="text-sm font-medium text-purple-600">
-                              R$ {pedido.total.toFixed(2)}
+                              R$ {pedido.valorTotal.toFixed(2)}
                             </span>
                           </div>
                         </div>

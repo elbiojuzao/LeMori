@@ -24,10 +24,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const pedidos = await PedidoModel
       .find({ userId: decoded.userId })
       .sort({ createdAt: -1 }) // Ordena do mais recente para o mais antigo
-      .populate('items.product', 'name price') // Popula os dados do produto
+      .populate({
+        path: 'items',
+        select: 'quantidade nomeProduto valorUnitario produtoId',
+        populate: {
+          path: 'produtoId',
+          select: 'nome preco'
+        },
+        options: { strictPopulate: false }
+      })
+      .lean()
       .exec()
 
-    res.status(200).json(pedidos)
+    // Garante que items seja sempre um array, mesmo que vazio
+    const pedidosFormatados = pedidos.map(pedido => ({
+      ...pedido,
+      items: pedido.items || []
+    }))
+
+    res.status(200).json(pedidosFormatados)
   } catch (error) {
     console.error('Erro ao buscar pedidos do usuário:', error)
     res.status(500).json({ error: 'Erro ao buscar pedidos' })

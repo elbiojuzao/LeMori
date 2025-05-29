@@ -17,6 +17,18 @@ interface ShippingOption {
   };
 }
 
+interface Product {
+  _id: string;
+  id: string;
+  name: string;
+  price: number;
+  isFisico: boolean;
+  width?: number;
+  height?: number;
+  length?: number;
+  weight?: number;
+}
+
 interface CartContextType {
   items: CartItem[];
   totalItems: number;

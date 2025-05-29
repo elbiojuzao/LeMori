@@ -19,6 +19,7 @@ export interface PedidoDocument extends Document {
   formaPagamento: string
   idTransacao: string
   observacoes?: string
+  items?: mongoose.Schema.Types.ObjectId[]
 }
 
 const PedidoSchema = new Schema({
@@ -40,7 +41,11 @@ const PedidoSchema = new Schema({
   formaPagamento: { type: String, required: true },
   idTransacao: { type: String, required: true },
   observacoes: { type: String },
+  items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ItemPedido' }]
 }, { timestamps: true })
+
+// Adiciona índice para melhorar a performance das consultas
+PedidoSchema.index({ userId: 1, createdAt: -1 })
 
 const Pedido = mongoose.models.Pedido || mongoose.model<PedidoDocument>('Pedido', PedidoSchema)
 export default Pedido

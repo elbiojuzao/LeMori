@@ -90,6 +90,11 @@ export default function Checkout() {
       return;
     }
 
+    if (!selectedShippingOption) {
+      setError('Selecione uma opção de frete');
+      return;
+    }
+
     setIsProcessing(true);
     setError(null);
 
@@ -108,14 +113,16 @@ export default function Checkout() {
         },
         body: JSON.stringify({
           items: items.map(item => ({
-            title: item.product.name,
-            quantity: item.quantity,
-            unit_price: item.product.price,
+            _id: item.product.id,
+            nome: item.product.name,
+            quantidade: item.quantity,
+            valor: item.product.price,
+            isFisico: item.product.isFisico || false
           })),
-          addressId: selectedAddressId,
+          endereco: enderecos.find(addr => addr._id === selectedAddressId),
           paymentMethod,
           total,
-          shipping,
+          shipping: selectedShippingOption.price,
           discount
         }),
       });
@@ -332,7 +339,9 @@ export default function Checkout() {
                 <div className="space-y-6">
                   {/* Campo de cálculo de frete */}
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="block text-sm font-medium text-gray-900 mb-2">CEP para cálculo do frete</label>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                      CEP para cálculo do frete <span className="text-red-500">*</span>
+                    </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -356,7 +365,9 @@ export default function Checkout() {
                   {/* Exibir opções de frete */}
                   {shippingOptions.length > 0 && (
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <label className="block text-sm font-medium text-gray-900 mb-2">Opções de frete</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Opções de frete <span className="text-red-500">*</span>
+                      </label>
                       <div className="space-y-2">
                         {shippingOptions.map(option => (
                           <div key={option.id} className="flex items-center p-2 hover:bg-white rounded-md transition-colors">
