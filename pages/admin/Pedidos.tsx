@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, ChevronDown, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/router';
 import AdminLayout from './AdminLayout';
@@ -102,8 +102,6 @@ const Orders: React.FC = () => {
     currentPage: 1,
     limit: 10
   });
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('dataCompra');
@@ -112,7 +110,7 @@ const Orders: React.FC = () => {
   const [modalAberta, setModalAberta] = useState(false);
   const [carregandoDetalhes, setCarregandoDetalhes] = useState(false);
 
-  const fetchPedidos = async () => {
+  const fetchPedidos = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -120,7 +118,6 @@ const Orders: React.FC = () => {
         router.push('/login');
         return;
       }
-
       const response = await axios.get('/api/admin/pedidos', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
@@ -134,7 +131,6 @@ const Orders: React.FC = () => {
           sortOrder
         }
       });
-
       setPedidos(response.data.pedidos);
       setPagination(response.data.pagination);
       setError(null);
@@ -145,11 +141,11 @@ const Orders: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.currentPage, pagination.limit, filterStatus, searchTerm, startDate, endDate, sortBy, sortOrder, router]);
 
   useEffect(() => {
     fetchPedidos();
-  }, [pagination.currentPage, filterStatus, searchTerm, startDate, endDate, sortBy, sortOrder, fetchPedidos]);
+  }, [fetchPedidos]);
 
   const handleStatusChange = async (orderId: string, newStatus: 'pendente' | 'processando' | 'enviado' | 'entregue') => {
     try {
@@ -209,7 +205,7 @@ const Orders: React.FC = () => {
 
   return (
     <AdminLayout currentPage="orders">
-      {showUserModal && selectedUserId && (
+      {usuarioSelecionado && (
         <UsuarioDetalhesModal
           usuarioSelecionado={usuarioSelecionado}
           modalAberta={modalAberta}
@@ -421,7 +417,7 @@ const Orders: React.FC = () => {
                                     {['pendente', 'processando', 'enviado', 'entregue'].map((status) => (
                                       <button
                                         key={status}
-                                        onClick={() => status !== pedido.statusPedido && handleStatusChange(pedido._id, status as any)}
+                                        onClick={() => status !== pedido.statusPedido && handleStatusChange(pedido._id, status as 'pendente' | 'processando' | 'enviado' | 'entregue')}
                                         className={
                                           `px-3 py-1 rounded-full text-xs font-medium transition-colors ` +
                                           (pedido.statusPedido === status
@@ -526,14 +522,6 @@ const Orders: React.FC = () => {
           </div>
         </div>
       </div>
-      {usuarioSelecionado && (
-        <UsuarioDetalhesModal
-          usuarioSelecionado={usuarioSelecionado}
-          modalAberta={modalAberta}
-          setModalAberta={setModalAberta}
-          carregandoDetalhes={carregandoDetalhes}
-        />
-      )}
     </AdminLayout>
   );
 };

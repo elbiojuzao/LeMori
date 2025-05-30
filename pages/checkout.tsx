@@ -54,7 +54,7 @@ export default function Checkout() {
             setSelectedAddressId(response.data.addresses[0]._id);
             setCep(response.data.addresses[0].cep);
           }
-        } catch (error) {
+        } catch {
           setError('Erro ao carregar endereços. Por favor, tente novamente.');
         }
       };
