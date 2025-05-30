@@ -55,7 +55,6 @@ export default function Checkout() {
             setCep(response.data.addresses[0].cep);
           }
         } catch (error) {
-          console.error('Erro ao carregar endereços:', error);
           setError('Erro ao carregar endereços. Por favor, tente novamente.');
         }
       };
@@ -138,18 +137,27 @@ export default function Checkout() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao criar pagamento');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Erro ao criar pagamento');
       }
 
       const data = await response.json();
 
-      if (data.init_point) {
-        window.location.href = data.init_point;
+      // Verifica se a resposta tem a estrutura esperada
+      if (!data || typeof data !== 'object') {
+        throw new Error('Resposta inválida da API de pagamento');
+      }
+
+      // Tenta encontrar a URL de pagamento em diferentes formatos possíveis
+      const paymentUrl = data.init_point || data.payment_url || data.url || data.checkout_url;
+      
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
       } else {
-        throw new Error('URL de pagamento não encontrada');
+        throw new Error('URL de pagamento não encontrada na resposta da API');
       }
     } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao processar pagamento. Tente novamente.');
       toast.error('Erro ao processar pagamento. Tente novamente.');
     } finally {
       setIsProcessing(false);

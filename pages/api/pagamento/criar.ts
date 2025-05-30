@@ -104,9 +104,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     pedidoSalvo.idTransacao = preference.id
     await pedidoSalvo.save()
 
-    return res.status(200).json({ preferenceId: preference.id })
+    return res.status(200).json({ 
+      preferenceId: preference.id,
+      init_point: preference.init_point,
+      payment_url: preference.init_point
+    })
   } catch (error) {
-    console.error('Erro no criar.ts:', error)
     return res.status(500).json({
       error: error instanceof Error ? error.message : 'Erro ao criar preferência'
     })
