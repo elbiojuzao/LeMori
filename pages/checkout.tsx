@@ -33,6 +33,8 @@ export default function Checkout() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
+  const hasPhysicalProduct = items.some((item) => item.product.isFisico);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -40,27 +42,28 @@ export default function Checkout() {
       return;
     }
 
-    // Carregar endereços do usuário
-    const fetchEnderecos = async () => {
-      try {
-        const response = await axios.get('/api/users/addresses', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setEnderecos(response.data.addresses);
-        if (response.data.addresses.length > 0) {
-          setSelectedAddressId(response.data.addresses[0]._id);
-          setCep(response.data.addresses[0].cep); // Preenche o CEP do endereço principal
+    // Só busca endereços se houver produto físico
+    if (hasPhysicalProduct) {
+      const fetchEnderecos = async () => {
+        try {
+          const response = await axios.get('/api/users/addresses', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setEnderecos(response.data.addresses);
+          if (response.data.addresses.length > 0) {
+            setSelectedAddressId(response.data.addresses[0]._id);
+            setCep(response.data.addresses[0].cep);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar endereços:', error);
+          setError('Erro ao carregar endereços. Por favor, tente novamente.');
         }
-      } catch (error) {
-        console.error('Erro ao carregar endereços:', error);
-        setError('Erro ao carregar endereços. Por favor, tente novamente.');
-      }
-    };
+      };
 
-    fetchEnderecos();
-  }, [router]);
+      fetchEnderecos();
+    }
+  }, [router, hasPhysicalProduct]);
 
-  // Redireciona se o carrinho estiver vazio
   useEffect(() => {
     if (items.length === 0) {
       router.push('/shop');
@@ -84,15 +87,22 @@ export default function Checkout() {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!selectedAddressId) {
-      setError('Selecione um endereço de entrega');
-      return;
-    }
 
-    if (!selectedShippingOption) {
-      setError('Selecione uma opção de frete');
-      return;
+    if (hasPhysicalProduct) {
+      if (!selectedAddressId) {
+        setError('Selecione um endereço de entrega');
+        return;
+      }
+
+      if (!selectedShippingOption) {
+        setError('Selecione uma opção de frete');
+        return;
+      }
+
+      if (!cep || cep.length < 8) {
+        setError('Digite um CEP válido para calcular o frete');
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -109,21 +119,21 @@ export default function Checkout() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          items: items.map(item => ({
+          items: items.map((item) => ({
             _id: item.product.id,
             nome: item.product.name,
             quantidade: item.quantity,
             valor: item.product.price,
-            isFisico: item.product.isFisico || false
+            isFisico: item.product.isFisico || false,
           })),
-          endereco: enderecos.find(addr => addr._id === selectedAddressId),
+          endereco: hasPhysicalProduct ? enderecos.find((addr) => addr._id === selectedAddressId) : null,
           paymentMethod,
           total,
-          shipping: selectedShippingOption.price,
-          discount
+          shipping: hasPhysicalProduct && selectedShippingOption ? selectedShippingOption.price : 0,
+          discount,
         }),
       });
 
@@ -138,14 +148,14 @@ export default function Checkout() {
       } else {
         throw new Error('URL de pagamento não encontrada');
       }
-
     } catch (error) {
-      console.error('Erro ao processar pagamento:', error)
-      toast.error('Erro ao processar pagamento. Tente novamente.')
+      console.error('Erro ao processar pagamento:', error);
+      toast.error('Erro ao processar pagamento. Tente novamente.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // Adicionar função para calcular o frete
   const handleCalculateShipping = async () => {
     if (!cep || cep.length < 8) {
       setError('Digite um CEP válido para calcular o frete.');
@@ -162,12 +172,9 @@ export default function Checkout() {
     }
   };
 
-  if (items.length === 0) {
-    return null;
-  }
+  if (items.length === 0) return null;
 
-  // Caso não tenha endereços cadastrados
-  if (enderecos.length === 0) {
+  if (hasPhysicalProduct && enderecos.length === 0) {
     return (
       <>
         <Head>
@@ -184,7 +191,7 @@ export default function Checkout() {
             <p className="text-lg text-gray-600 mb-8">
               Você precisa cadastrar um endereço antes de finalizar a compra.
             </p>
-            <button 
+            <button
               onClick={() => router.push('/endereco')}
               className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150"
             >
@@ -213,52 +220,66 @@ export default function Checkout() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Formulário de Checkout */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Seção de Endereço */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-purple-600" />
-                  Endereço de Entrega
-                </h2>
-                
-                <div className="space-y-4">
-                  {enderecos.map((endereco) => (
-                    <div key={endereco._id} className="flex items-start p-4 border rounded-lg hover:border-purple-500 transition-colors">
-                      <input
-                        type="radio"
-                        id={`address-${endereco._id}`}
-                        name="shipping-address"
-                        checked={selectedAddressId === endereco._id}
-                        onChange={() => {
-                          setSelectedAddressId(endereco._id);
-                          setCep(endereco.cep);
-                        }}
-                        className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
-                      />
-                      <label htmlFor={`address-${endereco._id}`} className="ml-3 block flex-1 cursor-pointer">
-                        <div className="text-gray-900 font-medium">
-                          {endereco.rua}, {endereco.numero}
-                        </div>
-                        <div className="text-gray-600 text-sm mt-1">
-                          {endereco.complemento && `${endereco.complemento}, `}
-                          {endereco.bairro}, {endereco.cidade} - {endereco.estado}
-                        </div>
-                        <div className="text-gray-600 text-sm mt-1">
-                          CEP: {endereco.cep}
-                        </div>
-                      </label>
+              {/* Seção de Endereço - Só mostra se houver produto físico */}
+              {hasPhysicalProduct && (
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-purple-600" />
+                    Endereço de Entrega
+                  </h2>
+                  
+                  {enderecos.length === 0 ? (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 mb-4">Você precisa cadastrar um endereço para receber seu produto físico.</p>
+                      <button
+                        onClick={() => router.push('/endereco')}
+                        className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                      >
+                        Cadastrar Endereço
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {enderecos.map((endereco) => (
+                        <div key={endereco._id} className="flex items-start p-4 border rounded-lg hover:border-purple-500 transition-colors">
+                          <input
+                            type="radio"
+                            id={`address-${endereco._id}`}
+                            name="shipping-address"
+                            checked={selectedAddressId === endereco._id}
+                            onChange={() => {
+                              setSelectedAddressId(endereco._id);
+                              setCep(endereco.cep);
+                            }}
+                            className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
+                          />
+                          <label htmlFor={`address-${endereco._id}`} className="ml-3 block flex-1 cursor-pointer">
+                            <div className="text-gray-900 font-medium">
+                              {endereco.rua}, {endereco.numero}
+                            </div>
+                            <div className="text-gray-600 text-sm mt-1">
+                              {endereco.complemento && `${endereco.complemento}, `}
+                              {endereco.bairro}, {endereco.cidade} - {endereco.estado}
+                            </div>
+                            <div className="text-gray-600 text-sm mt-1">
+                              CEP: {endereco.cep}
+                            </div>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                <button
-                  type="button"
-                  onClick={() => router.push('/endereco')}
-                  className="mt-4 text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
-                >
-                  <MapPin className="h-4 w-4 mr-1" />
-                  Adicionar novo endereço
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/endereco')}
+                    className="mt-4 text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
+                  >
+                    <MapPin className="h-4 w-4 mr-1" />
+                    Adicionar novo endereço
+                  </button>
+                </div>
+              )}
 
               {/* Seção de Pagamento */}
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -337,33 +358,35 @@ export default function Checkout() {
                 </h2>
 
                 <div className="space-y-6">
-                  {/* Campo de cálculo de frete */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      CEP para cálculo do frete <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={cep}
-                        onChange={e => setCep(e.target.value.replace(/\D/g, ''))}
-                        maxLength={8}
-                        className="text-gray-400 flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Digite o CEP"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCalculateShipping}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 transition-colors"
-                        disabled={isCalculatingShipping}
-                      >
-                        {isCalculatingShipping ? 'Calculando' : 'Calcular'}
-                      </button>
+                  {/* Campo de cálculo de frete - Só mostra se houver produto físico */}
+                  {hasPhysicalProduct && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        CEP para cálculo do frete <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={cep}
+                          onChange={e => setCep(e.target.value.replace(/\D/g, ''))}
+                          maxLength={8}
+                          className="text-gray-400 flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="Digite o CEP"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCalculateShipping}
+                          className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                          disabled={isCalculatingShipping || !cep || cep.length < 8}
+                        >
+                          {isCalculatingShipping ? 'Calculando' : 'Calcular'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Exibir opções de frete */}
-                  {shippingOptions.length > 0 && (
+                  {/* Exibir opções de frete - Só mostra se houver produto físico */}
+                  {hasPhysicalProduct && shippingOptions.length > 0 && (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <label className="block text-sm font-medium text-gray-900 mb-2">
                         Opções de frete <span className="text-red-500">*</span>
