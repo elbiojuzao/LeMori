@@ -46,6 +46,28 @@ interface Pagination {
   limit: number;
 }
 
+interface PedidoResumo {
+  _id: string;
+  dataCompra: string;
+  statusPagamento: string;
+  statusPedido: string;
+  valorTotal: number;
+}
+
+interface HomenagemResumo {
+  _id: string;
+  nomeHomenageado: string;
+  dataCriacao: string;
+  ativo: boolean;
+}
+
+interface DepoimentoResumo {
+  _id: string;
+  depoimento: string;
+  status: string;
+  dataCriacao: string;
+}
+
 interface UsuarioDetalhado {
   _id: string;
   nome: string;
@@ -61,9 +83,9 @@ interface UsuarioDetalhado {
   emailVerificado?: boolean;
   ultimoLogin?: string;
   ultimaHomenagem?: string;
-  pedidos?: any[];
-  homenagens?: any[];
-  depoimentos?: any[];
+  pedidos?: PedidoResumo[];
+  homenagens?: HomenagemResumo[];
+  depoimentos?: DepoimentoResumo[];
 }
 
 const Orders: React.FC = () => {
@@ -127,7 +149,7 @@ const Orders: React.FC = () => {
 
   useEffect(() => {
     fetchPedidos();
-  }, [pagination.currentPage, filterStatus, searchTerm, startDate, endDate, sortBy, sortOrder]);
+  }, [pagination.currentPage, filterStatus, searchTerm, startDate, endDate, sortBy, sortOrder, fetchPedidos]);
 
   const handleStatusChange = async (orderId: string, newStatus: 'pendente' | 'processando' | 'enviado' | 'entregue') => {
     try {
@@ -149,16 +171,6 @@ const Orders: React.FC = () => {
 
   const toggleOrderDetails = (orderId: string) => {
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
-  };
-
-  const handleOpenUserModal = (userId: string) => {
-    setSelectedUserId(userId);
-    setShowUserModal(true);
-  };
-
-  const handleCloseUserModal = () => {
-    setShowUserModal(false);
-    setSelectedUserId(null);
   };
 
   const handleSort = (column: string) => {
@@ -188,7 +200,7 @@ const Orders: React.FC = () => {
         depoimentos: depoimentos.data
       });
       setModalAberta(true);
-    } catch (err) {
+    } catch {
       toast.error('Erro ao carregar detalhes do usuário');
     } finally {
       setCarregandoDetalhes(false);

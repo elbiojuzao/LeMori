@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       sortOrder = 'desc'
     } = req.query;
 
-    const query: any = {};
+    const query: Record<string, unknown> = {};
 
     // Aplicar filtros
     if (status && status !== 'all') {
