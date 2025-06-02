@@ -20,6 +20,17 @@ interface Endereco {
   userId: string;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  isFisico: boolean;
+  peso: number;
+  largura: number;
+  altura: number;
+  comprimento: number;
+}
+
 export default function Checkout() {
   const router = useRouter();
   const { items, subtotal, shipping, discount, total, applyCoupon, shippingOptions, selectedShippingOption, calculateShipping, selectShippingOption } = useCart();
@@ -169,12 +180,74 @@ export default function Checkout() {
       setError('Digite um CEP válido para calcular o frete.');
       return;
     }
+
+    if (!selectedAddressId) {
+      setError('Selecione um endereço de entrega.');
+      return;
+    }
+
     setIsCalculatingShipping(true);
     setError(null);
+
     try {
-      await calculateShipping(cep);
-    } catch {
-      setError('Erro ao calcular o frete. Tente novamente.');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const selectedAddress = enderecos.find(addr => addr._id === selectedAddressId);
+      if (!selectedAddress) {
+        setError('Endereço selecionado não encontrado.');
+        return;
+      }
+
+      const physicalProducts = items.filter(item => item.product.isFisico);
+      if (physicalProducts.length === 0) {
+        setError('Não há produtos físicos no carrinho.');
+        return;
+      }
+
+      const products = physicalProducts.map(item => {
+        const product = item.product as unknown as Product;
+        
+        if (!product.peso || !product.largura || !product.altura || !product.comprimento) {
+          throw new Error(`Produto ${product.name} não possui todas as dimensões necessárias ${product.peso} ${product.largura} ${product.altura} ${product.comprimento }`);
+        }
+
+        return {
+          weight: product.peso / 1000, // Converter gramas para kg
+          width: product.largura,
+          height: product.altura,
+          length: product.comprimento,
+          insurance_value: product.price,
+          quantity: item.quantity
+        };
+      });
+
+      const response = await fetch('/api/shipping/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          from: { cep: selectedAddress.cep },
+          to: { cep },
+          products
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao calcular o frete');
+      }
+
+      const shippingOptions = await response.json();
+      calculateShipping(shippingOptions);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Erro ao calcular o frete. Tente novamente.');
+      console.error('Erro ao calcular frete:', error);
     } finally {
       setIsCalculatingShipping(false);
     }

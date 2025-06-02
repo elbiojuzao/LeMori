@@ -24,10 +24,10 @@ interface Product {
   price: number;
   isFisico: boolean;
   imageSrc?: string;
-  width?: number;
-  height?: number;
-  length?: number;
-  weight?: number;
+  peso?: number;      // em gramas
+  largura?: number;   // em cm
+  altura?: number;    // em cm
+  comprimento?: number; // em cm
 }
 
 interface CartContextType {
@@ -127,10 +127,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           cep,
           items: items.map(item => ({
             id: item.product.id,
-            width: item.product.width,
-            height: item.product.height,
-            length: item.product.length,
-            weight: item.product.weight,
+            peso: item.product.peso,
+            largura: item.product.largura,
+            altura: item.product.altura,
+            comprimento: item.product.comprimento,
             quantity: item.quantity
           }))
         })
@@ -166,19 +166,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addItem = (product: Product, quantity = 1) => {
+    // Mapeia campos em inglês para português, se necessário
+    const produtoCorrigido: Product = {
+      ...product,
+      peso: product.peso ?? (product as any).weight ?? 0,
+      largura: product.largura ?? (product as any).width ?? 0,
+      altura: product.altura ?? (product as any).height ?? 0,
+      comprimento: product.comprimento ?? (product as any).length ?? 0,
+    };
+
     setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.product.id === product.id);
+      const existingItem = prevItems.find(item => item.product.id === produtoCorrigido.id);
       
       if (existingItem) {
         // Update quantity if item already exists
         return prevItems.map(item => 
-          item.product.id === product.id 
+          item.product.id === produtoCorrigido.id 
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
         // Add new item
-        return [...prevItems, { product, quantity }];
+        return [...prevItems, { product: produtoCorrigido, quantity }];
       }
     });
     
