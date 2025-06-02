@@ -47,10 +47,10 @@ export default function ProductPage() {
         price: product.preco,
         imageSrc: product.imagens?.[0] || '/placeholder-image.jpg',
         isFisico: product.isFisico,
-        width: product.largura || 0,
-        height: product.altura || 0,
-        length: product.comprimento || 0,
-        weight: product.peso || 0
+        largura: product.largura || 0,
+        altura: product.altura || 0,
+        comprimento: product.comprimento || 0,
+        peso: product.peso || 0
       }, quantity);
       
       setAddedToCart(true);
