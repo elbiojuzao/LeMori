@@ -49,10 +49,10 @@ export default function Shop() {
       price: priceValue,
       imageSrc: produto.imagens?.[0] || '/placeholder-image.jpg',
       isFisico: produto.isFisico,
-      width: produto.largura || 0,
-      height: produto.altura || 0,
-      length: produto.comprimento || 0,
-      weight: produto.peso || 0
+      largura: produto.largura || 0,
+      altura: produto.altura || 0,
+      comprimento: produto.comprimento || 0,
+      peso: produto.peso || 0
     }, 1);
   };
 
